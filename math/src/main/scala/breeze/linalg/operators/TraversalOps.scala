@@ -1,5 +1,6 @@
 package breeze.linalg.operators
 
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 import breeze.linalg.{DenseMatrix, DenseVector, HashVector, SparseVector, Vector}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -27,30 +28,24 @@ trait Vector_TraversalOps {
     }
   }
 
-  // TODO: probably should have just made this virtual and not ufunced
+  // TODO: probably should have just made this virtual and not a typeclass??
   implicit def canMapValues_V[V, V2: Zero](implicit man: ClassTag[V2]): CanMapValues[Vector[V], V, V2, Vector[V2]] = {
     new CanMapValues[Vector[V], V, V2, Vector[V2]] {
-      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
+      def map(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
         case sv: SparseVector[V] => sv.mapValues(fn)(SparseVector.canMapValues)
         case hv: HashVector[V] => hv.mapValues(fn)
         case dv: DenseVector[V] => dv.mapValues(fn)
         case _ => DenseVector.tabulate(from.length)(i => fn(from(i)))
       }
-    }
-  }
 
-  // TODO: probably should have just made this virtual and not ufunced
-  implicit def canMapActiveValues_V[V, V2: Zero: ClassTag]: CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
-    new CanMapActiveValues[Vector[V], V, V2, Vector[V2]] {
-      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
-        case sv: SparseVector[V] => sv.mapActiveValues(fn)(SparseVector.canMapActiveValues)
+      def mapActive(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
+        case sv: SparseVector[V] => sv.mapActiveValues(fn)
         case hv: HashVector[V] => hv.mapActiveValues(fn)
         case dv: DenseVector[V] => dv.mapActiveValues(fn)
         case _ => DenseVector.tabulate(from.length)(i => fn(from(i)))
       }
     }
   }
-
 
   implicit def canZipMapValues_V[V, R: ClassTag]: CanZipMapValuesVector[V, R] = new CanZipMapValuesVector[V, R]
 
@@ -279,7 +274,7 @@ trait DenseMatrix_TraversalOps extends TensorLowPrio {
     }
   }
 
-  implicit def canTransformValues[@specialized(Int, Float, Double) V]: CanTransformValues[DenseMatrix[V], V] = {
+  implicit def canTransformValues_DM[@specialized(Int, Float, Double) V]: CanTransformValues[DenseMatrix[V], V] = {
     new CanTransformValues[DenseMatrix[V], V] {
       def transform(from: DenseMatrix[V], fn: (V) => V): Unit = {
         if (from.isContiguous) {
@@ -323,81 +318,52 @@ trait DenseMatrix_TraversalOps extends TensorLowPrio {
         DenseMatrix.create(from.rows, from.cols, data, 0, from.rows)
       }
 
-      override def mapActive(from: DenseMatrix[V], fn: (((Int, Int), V) => R)) =
+      override def mapActive(from: DenseMatrix[V], fn: (((Int, Int), V) => R)): DenseMatrix[R] =
         map(from, fn)
     }
   }
 
-  implicit def DM_canMapActiveValues[V, V2](implicit man: ClassTag[V2]): CanMapActiveValues[DenseMatrix[V], V, V2, DenseMatrix[V2]] = {
-    val act = DM_canMapValues[V, V2]
-    (from: DenseMatrix[V], fn: (V) => V2) => {
-      act(from, fn)
-    }
-  }
+  implicit def DM_canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R: ClassTag]: CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
+    new DenseCanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] {
 
-  implicit def DM_canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) R](
-                                                                                                     implicit r: ClassTag[R]): CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] = {
-    new CanMapValues[DenseMatrix[V], V, R, DenseMatrix[R]] {
-
-      override def apply(from: DenseMatrix[V], fn: (V => R)): DenseMatrix[R] = {
+      override def map(from: DenseMatrix[V], fn: (V => R)): DenseMatrix[R] = {
         if (from.isContiguous) {
-          val data = new Array[R](from.size)
-          val isTranspose = from.isTranspose
-          val off = from.offset
-          val fd = from.data
-          cforRange (0 until data.length) { i =>
-            data(i) = fn(fd(i + off))
-          }
-          DenseMatrix.create(from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
+          mapContiguous(from, fn)
         } else {
-          // TODO: convert to majorsize etc
-          val data = new Array[R](from.size)
-          var j = 0
-          var off = 0
-          while (j < from.cols) {
-            var i = 0
-            while (i < from.rows) {
-              data(off) = fn(from(i, j))
-              off += 1
-              i += 1
-            }
-            j += 1
-          }
-          DenseMatrix.create[R](from.rows, from.cols, data, 0, from.rows)
+          mapGeneral(from, fn)
         }
       }
 
-    }
-  }
+      private def mapGeneral(from: DenseMatrix[V], fn: V => R) = {
+        // TODO: convert to majorsize etc
+        val data = new Array[R](from.size)
+        var j = 0
+        var off = 0
+        while (j < from.cols) {
+          var i = 0
+          while (i < from.rows) {
+            data(off) = fn(from(i, j))
+            off += 1
+            i += 1
+          }
+          j += 1
+        }
+        DenseMatrix.create[R](from.rows, from.cols, data, 0, from.rows)
+      }
 
-  implicit def canTranspose[V]: CanTranspose[DenseMatrix[V], DenseMatrix[V]] = {
-    new CanTranspose[DenseMatrix[V], DenseMatrix[V]] {
-      def apply(from: DenseMatrix[V]) = {
-        DenseMatrix.create(
-          data = from.data,
-          offset = from.offset,
-          cols = from.rows,
-          rows = from.cols,
-          majorStride = from.majorStride,
-          isTranspose = !from.isTranspose)
+      private def mapContiguous(from: DenseMatrix[V], fn: V => R) = {
+        val data = new Array[R](from.size)
+        val isTranspose = from.isTranspose
+        val off = from.offset
+        val fd = from.data
+        cforRange(0 until data.length) { i =>
+          data(i) = fn(fd(i + off))
+        }
+        DenseMatrix.create(from.rows, from.cols, data, 0, if (isTranspose) from.cols else from.rows, isTranspose)
       }
     }
   }
 
-  implicit def canTransposeComplex: CanTranspose[DenseMatrix[Complex], DenseMatrix[Complex]] = {
-    new CanTranspose[DenseMatrix[Complex], DenseMatrix[Complex]] {
-      def apply(from: DenseMatrix[Complex]) = {
-        // TODO: this is a dumb implementation
-        new DenseMatrix(
-          data = from.data.map { _.conjugate },
-          offset = from.offset,
-          cols = from.rows,
-          rows = from.cols,
-          majorStride = from.majorStride,
-          isTranspose = !from.isTranspose)
-      }
-    }
-  }
 
   implicit def canCopyDenseMatrix[V: ClassTag]: CanCopy[DenseMatrix[V]] = new CanCopy[DenseMatrix[V]] {
     def apply(v1: DenseMatrix[V]) = {

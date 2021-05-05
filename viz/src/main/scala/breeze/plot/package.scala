@@ -6,7 +6,7 @@ import linalg.Matrix
 import org.jfree.chart.renderer.xy.XYItemRenderer
 import org.jfree.chart.ui.RectangleAnchor
 import org.jfree.data.xy
-//import breeze.compat.Scala3Compat.{given_Conversion_T_U}
+import breeze.compat.Scala3Compat.given_Conversion_T_U
 
 /**
  * Basic 2-d plotting package. This API is very experimentable, I

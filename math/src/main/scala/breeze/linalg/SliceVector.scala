@@ -69,22 +69,16 @@ object SliceVector {
     }
   }
 
-  implicit def canMapActiveValues[K, V, V2: ClassTag]: CanMapValues[SliceVector[K, V], V, V2, DenseVector[V2]] = {
-    new CanMapValues[SliceVector[K, V], V, V2, DenseVector[V2]] {
-      override def apply(from: SliceVector[K, V], fn: (V) => V2): DenseVector[V2] = {
-        DenseVector.tabulate(from.length)(i => fn(from(i)))
-      }
-
-    }
-  }
-
+  // TODO: should this be dense?
   implicit def canMapValues[K, V, V2: ClassTag]: CanMapValues[SliceVector[K, V], V, V2, DenseVector[V2]] = {
     new CanMapValues[SliceVector[K, V], V, V2, DenseVector[V2]] {
-      override def apply(from: SliceVector[K, V], fn: (V) => V2): DenseVector[V2] = {
+      override def map(from: SliceVector[K, V], fn: (V) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(from(i)))
       }
 
+      override def mapActive(from: SliceVector[K, V], fn: (V) => V2): DenseVector[V2] = map(from, fn)
     }
+
   }
 
   implicit def canCreateZerosLike[K, V: ClassTag: Zero]: CanCreateZerosLike[SliceVector[K, V], DenseVector[V]] = {

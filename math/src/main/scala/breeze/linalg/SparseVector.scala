@@ -19,6 +19,7 @@ import breeze.collection.mutable.SparseArray
 import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
+import breeze.macros.cforRange
 import breeze.math._
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
@@ -253,23 +254,14 @@ object SparseVector {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
-      override def apply(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
+      override def map(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
         SparseVector.tabulate(from.length)(i => fn(from(i)))
       }
-    }
-  }
 
-  implicit def canMapActiveValues[V, V2: ClassTag: Zero]
-    : CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] = {
-    new CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] {
-
-      /**Maps all active key-value pairs from the given collection. */
-      override def apply(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
+      override def mapActive(from: SparseVector[V], fn: V => V2): SparseVector[V2] = {
         val out = new Array[V2](from.activeSize)
-        var i = 0
-        while (i < from.activeSize) {
+        cforRange (0 until from.activeSize) { i =>
           out(i) = fn(from.data(i))
-          i += 1
         }
         new SparseVector(from.index.take(from.activeSize), out, from.activeSize, from.length)
       }
@@ -379,20 +371,7 @@ object SparseVector {
 //    }
 //  }
 
-  implicit def canTransposeComplex: CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] = {
-    new CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] {
-      def apply(from: SparseVector[Complex]) = {
-        val transposedMtx: CSCMatrix[Complex] = CSCMatrix.zeros[Complex](1, from.length)
-        var i = 0
-        while (i < from.activeSize) {
-          val c = from.index(i)
-          transposedMtx(0, c) = from.data(i).conjugate
-          i += 1
-        }
-        transposedMtx
-      }
-    }
-  }
+
 
   implicit def canDim[E]: dim.Impl[SparseVector[E], Int] = new dim.Impl[SparseVector[E], Int] {
     def apply(v: SparseVector[E]): Int = v.size

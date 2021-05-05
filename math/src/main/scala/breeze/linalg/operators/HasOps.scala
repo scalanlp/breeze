@@ -7,6 +7,7 @@ trait HasOps extends Any
 
 object HasOps extends GenericOps with VectorOps
   with TensorLowPrio
+  with TransposeOps
   with DenseVectorOps
   with SparseVectorOps
   with HashVectorOps

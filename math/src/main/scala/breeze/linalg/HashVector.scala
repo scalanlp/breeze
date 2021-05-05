@@ -132,21 +132,19 @@ object HashVector {
 
   implicit def canMapValues[V, V2: ClassTag: Zero]: CanMapValues[HashVector[V], V, V2, HashVector[V2]] = {
     new CanMapValues[HashVector[V], V, V2, HashVector[V2]] {
-      def apply(from: HashVector[V], fn: (V) => V2) = {
+      def map(from: HashVector[V], fn: (V) => V2) = {
         HashVector.tabulate(from.length)(i => fn(from(i)))
       }
-    }
-  }
 
-  implicit def canMapActiveValues[V, V2: ClassTag: Zero]: CanMapActiveValues[HashVector[V], V, V2, HashVector[V2]] = {
-    new CanMapActiveValues[HashVector[V], V, V2, HashVector[V2]] {
-      def apply(from: HashVector[V], fn: (V) => V2) = {
+      def mapActive(from: HashVector[V], fn: (V) => V2): HashVector[V2] = {
+        val z = implicitly[Zero[V2]].zero
         val out = new OpenAddressHashArray[V2](from.length)
-        var i = 0
-        while (i < from.iterableSize) {
-          if (from.isActive(i))
-            out(from.index(i)) = fn(from.data(i))
-          i += 1
+        cforRange (0 until from.iterableSize) { i =>
+          if (from.isActive(i)) {
+            val vv = fn(from.data(i))
+            if (vv != z)
+              out(from.index(i)) = fn(from.data(i))
+          }
         }
         new HashVector(out)
       }

@@ -35,8 +35,8 @@ object CanCopy {
     }
   }
 
-  class OpMapValues[From, V](implicit op: CanCopy[V], map: CanMapValues[From, V, V, From]) extends CanCopy[From] {
-    def apply(v: From) = map(v, op.apply(_))
+  class OpMapValues[From, V](implicit op: CanCopy[V], cmv: CanMapValues[From, V, V, From]) extends CanCopy[From] {
+    def apply(v: From): From = cmv.map(v, op.apply(_))
   }
 
   // <editor-fold defaultstate="collapsed" desc=" implicit CanCopy[V] implementations ">

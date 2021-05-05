@@ -17,6 +17,7 @@ import scala.reflect.ClassTag
 
 trait DenseVectorOps extends VectorOps with DenseVector_GenericOps with DenseVector_ComparisonOps with DenseVector_FloatOps with DenseVector_DoubleOps
 
+// TODO: names
 trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalOps with DenseVector_SlicingOps {
 
   @expand
@@ -109,6 +110,7 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
     }
 }
 
+// TODO: names
 trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
   @expand
   @expand.valify
@@ -296,7 +298,7 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def impl_Op_DV_DV_eq_S[@expand.args(Int, Long) T](implicit @expand.sequence[T](0, 0L) zero: T)
+  implicit def impl_OpMulInner_DV_DV_eq_S[@expand.args(Int, Long) T](implicit @expand.sequence[T](0, 0L) zero: T)
     : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], DenseVector[T], T] {
       def apply(a: DenseVector[T], b: DenseVector[T]) = {

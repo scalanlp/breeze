@@ -17,6 +17,7 @@ package breeze.linalg
 
 import breeze.linalg
 import breeze.linalg.operators._
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -117,23 +118,11 @@ object Counter extends CounterOps {
   }
 
   implicit def canMapValues[K, V, RV: Zero]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]] = {
-    new CanMapValues[Counter[K, V], V, RV, Counter[K, RV]] {
-      override def apply(from: Counter[K, V], fn: (V => RV)) = {
+    new DenseCanMapValues[Counter[K, V], V, RV, Counter[K, RV]] {
+      override def map(from: Counter[K, V], fn: (V => RV)): Counter[K, RV] = {
         val rv = Counter[K, RV]()
         for ((k, v) <- from.iterator) {
-          rv(k) = fn(from.data(k))
-        }
-        rv
-      }
-    }
-  }
-
-  implicit def canMapActiveValues[K, V, RV: Zero]: CanMapActiveValues[Counter[K, V], V, RV, Counter[K, RV]] = {
-    new CanMapActiveValues[Counter[K, V], V, RV, Counter[K, RV]] {
-      override def apply(from: Counter[K, V], fn: (V => RV)) = {
-        val rv = Counter[K, RV]()
-        for ((k, v) <- from.activeIterator) {
-          rv(k) = fn(from.data(k))
+          rv(k) = fn(v)
         }
         rv
       }

@@ -17,34 +17,7 @@ trait TensorLowPrio extends GenericOps {
     }
   }
 
-  implicit def liftTransposeOps[Op, K, V, T, R, RT](
-      implicit ev: T <:< Tensor[K, V],
-      op: UFunc.UImpl2[Op, T, V, R],
-      canTranspose: CanTranspose[R, RT]): UFunc.UImpl2[Op, Transpose[T], V, RT] = {
-    new UFunc.UImpl2[Op, Transpose[T], V, RT] {
-      def apply(a: Transpose[T], b: V) = {
-        canTranspose(op(a.inner, b))
-      }
-    }
 
-  }
-
-  implicit def liftTransposeInPlaceOps[Op, K, V, T](
-      implicit ev: T <:< Tensor[K, V],
-      op: UFunc.InPlaceImpl2[Op, T, V]): UFunc.InPlaceImpl2[Op, Transpose[T], V] = {
-    new UFunc.InPlaceImpl2[Op, Transpose[T], V] {
-      def apply(a: Transpose[T], b: V): Unit = {
-        op(a.inner, b)
-      }
-    }
-
-  }
-
-  implicit def transposeTensor[K, V, T](implicit ev: T <:< Tensor[K, V]): CanTranspose[T, Transpose[T]] = {
-    new CanTranspose[T, Transpose[T]] {
-      def apply(from: T): Transpose[T] = new Transpose(from)
-    }
-  }
   
   implicit def canSliceTensor[K, V: ClassTag]: CanSlice[Tensor[K, V], Seq[K], SliceVector[K, V]] =
     new CanSlice[Tensor[K, V], Seq[K], SliceVector[K, V]] {

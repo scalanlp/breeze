@@ -27,6 +27,7 @@ import breeze.linalg.support._
 import scala.collection.Set
 import scala.reflect.ClassTag
 import CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 
 import scala.collection.immutable
 import scala.collection.compat._
@@ -147,27 +148,15 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
 
   implicit def CanMapValuesCounter[K1, K2, V, RV: Semiring: Zero]
     : CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] = {
-    new CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] {
-      override def apply(from: Counter2[K1, K2, V], fn: (V => RV)) = {
+    new DenseCanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] {
+      override def map(from: Counter2[K1, K2, V], fn: (V => RV)) = {
         val rv = Counter2[K1, K2, RV]()
         for ((k, v) <- from.iterator) {
           rv(k) = fn(v)
         }
         rv
       }
-    }
-  }
 
-  implicit def CanMapActiveValuesCounter[K1, K2, V, RV: Semiring: Zero]
-    : CanMapActiveValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] = {
-    new CanMapActiveValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] {
-      override def apply(from: Counter2[K1, K2, V], fn: (V => RV)) = {
-        val rv = Counter2[K1, K2, RV]()
-        for ((k, v) <- from.activeIterator) {
-          rv(k) = fn(v)
-        }
-        rv
-      }
     }
   }
 

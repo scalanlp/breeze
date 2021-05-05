@@ -119,7 +119,7 @@ sealed trait maxLowPrio {  self: max.type =>
       maxImpl: max.Impl2[LHS, RHS, LHS],
       cmv: CanMapValues[T, LHS, LHS, U]): max.Impl2[T, RHS, U] = {
     new max.Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
+      override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
     }
   }
 
@@ -212,7 +212,7 @@ sealed trait minLowPrio {  self: min.type =>
       minImpl: min.Impl2[LHS, RHS, LHS],
       cmv: CanMapValues[T, LHS, LHS, U]): min.Impl2[T, RHS, U] = {
     new min.Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv(v, minImpl(_, v2))
+      override def apply(v: T, v2: RHS): U = cmv.map(v, minImpl(_, v2))
     }
   }
 
@@ -226,7 +226,7 @@ object clip extends UFunc {
     new Impl3[T, V, V, T] {
       import ordering.mkOrderingOps
       def apply(v: T, v2: V, v3: V): T = {
-        cmv(v, x => if (x < v2) v2 else if (x > v3) v3 else x)
+        cmv.map(v, x => if (x < v2) v2 else if (x > v3) v3 else x)
       }
     }
   }

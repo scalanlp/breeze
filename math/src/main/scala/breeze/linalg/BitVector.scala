@@ -1,8 +1,8 @@
 package breeze.linalg
 
 import java.util
-
 import breeze.linalg.operators.BitVectorOps
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.storage.Zero
@@ -117,10 +117,10 @@ object BitVector {
   }
 
   implicit def canMapValues[V2](implicit man: ClassTag[V2]): CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] = {
-    new CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] {
+    new DenseCanMapValues[BitVector, Boolean, V2, DenseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
-      def apply(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
+      def map(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(from(i)))
       }
     }

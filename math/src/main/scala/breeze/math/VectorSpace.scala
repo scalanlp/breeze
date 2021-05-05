@@ -27,6 +27,7 @@ import breeze.storage._
 
 import scala.reflect.ClassTag
 import breeze.compat.Scala3Compat._
+import breeze.compat.Scala3Compat.given_Conversion_T_U
 
 /**
  * Used for those vector-types that are "coordinated", meaning that t. (Possibly the coordinates
@@ -37,7 +38,6 @@ import breeze.compat.Scala3Compat._
  */
 trait Coordinated[V, S] {
   implicit def scalarOf: ScalarOf[V, S]
-  implicit def mapActiveValues: CanMapActiveValues[V, S, S, V]
   implicit def mapValues: CanMapValues[V, S, S, V]
   implicit def zipMapValues: CanZipMapValues[V, S, S, V]
   implicit def iterateValues: CanTraverseValues[V, S]
@@ -564,7 +564,6 @@ object MutableCoordinateField {
       _zipMapVals: CanZipMapValues[V, S, S, V],
       _traverseVals: CanTraverseValues[V, S],
       _mapVals: CanMapValues[V, S, S, V],
-      _mapActiveVals: CanMapActiveValues[V, S, S, V],
       _scalarOf: ScalarOf[V, S]): MutableCoordinateField[V, S] = new MutableCoordinateField[V, S] {
 
     def scalars: Field[S] = _field
@@ -590,7 +589,6 @@ object MutableCoordinateField {
     override implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
     override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
     override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
-    override implicit def mapActiveValues: CanMapActiveValues[V, S, S, V] = _mapActiveVals
     override implicit def scalarOf: ScalarOf[V, S] = _scalarOf
     override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
@@ -633,7 +631,6 @@ object MutableFiniteCoordinateField {
       _zipMapKeyVals: CanZipMapKeyValues[V, I, S, S, V],
       _traverseVals: CanTraverseValues[V, S],
       _mapVals: CanMapValues[V, S, S, V],
-      _mapActiveVals: CanMapActiveValues[V, S, S, V],
       _scalarOf: ScalarOf[V, S]): MutableFiniteCoordinateField[V, I, S] = new MutableFiniteCoordinateField[V, I, S] {
     def scalars: Field[S] = _field
 
@@ -665,7 +662,6 @@ object MutableFiniteCoordinateField {
     override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
     override implicit def scalarOf: ScalarOf[V, S] = _scalarOf
     override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
-    override implicit def mapActiveValues: CanMapActiveValues[V, S, S, V] = _mapActiveVals
     override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
     override implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V] = _zipMapKeyVals
     override implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
@@ -788,7 +784,6 @@ object MutableEnumeratedCoordinateField {
       _zipMapKeyVals: CanZipMapKeyValues[V, I, S, S, V],
       _traverseVals: CanTraverseValues[V, S],
       _mapVals: CanMapValues[V, S, S, V],
-      _mapActiveVals: CanMapActiveValues[V, S, S, V],
       _scalarOf: ScalarOf[V, S]): MutableEnumeratedCoordinateField[V, I, S] =
     new MutableEnumeratedCoordinateField[V, I, S] {
       def scalars: Field[S] = _field
@@ -815,7 +810,6 @@ object MutableEnumeratedCoordinateField {
       override implicit def setIntoVV: OpSet.InPlaceImpl2[V, V] = _setIntoVV
       override implicit def scaleAddVV: scaleAdd.InPlaceImpl3[V, S, V] = _scaleAddVSV
       override implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
-      override implicit def mapActiveValues: CanMapActiveValues[V, S, S, V] = _mapActiveVals
       override implicit def scalarOf: ScalarOf[V, S] = _scalarOf
       override implicit def zipMapValues: CanZipMapValues[V, S, S, V] = _zipMapVals
       override implicit def zipMapKeyValues: CanZipMapKeyValues[V, I, S, S, V] = _zipMapKeyVals
@@ -903,7 +897,6 @@ object MutableOptimizationSpace {
       _zipMapVals: CanZipMapValues[V, S, S, V],
       _traverseVals: CanTraverseValues[V, S],
       _mapVals: CanMapValues[V, S, S, V],
-      _mapActiveVals: CanMapActiveValues[V, S, S, V],
       _scalarOf: ScalarOf[V, S],
       _norm2M: norm.Impl2[M, Double, Double],
       _normM: norm.Impl[M, Double],
@@ -992,8 +985,6 @@ object MutableOptimizationSpace {
       override implicit def zipMapKeyValues: CanZipMapKeyValues[V, Int, S, S, V] = _zipMapKeyVals
       implicit def iterateValues: CanTraverseValues[V, S] = _traverseVals
       implicit def mapValues: CanMapValues[V, S, S, V] = _mapVals
-
-      override implicit def mapActiveValues: CanMapActiveValues[V, S, S, V] = _mapActiveVals
 
       implicit def divVV: OpDiv.Impl2[V, V, V] = _divVV
       implicit def subVS: OpSub.Impl2[V, S, V] = _subVS

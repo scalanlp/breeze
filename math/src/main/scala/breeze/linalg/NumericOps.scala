@@ -270,6 +270,8 @@ trait NumericOps[+This] extends ImmutableNumericOps[This] {
     op(repr, b)
     repr
   }
+  
+  
 
 }
 

@@ -252,13 +252,13 @@ trait VectorExpandOps extends Vector_GenericOps {
   }
 
   implicit def impl_OpMulInner_V_V_eq_S_Generic[T](implicit s: Semiring[T])
-    : BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner.type, T] = {
-    new BinaryRegistry[Vector[T], Vector[T], breeze.linalg.operators.OpMulInner.type, T] {
+    : OpMulInner.Impl2[Vector[T], Vector[T], T] = {
+    new OpMulInner.Impl2[Vector[T], Vector[T], T] {
       @tailrec
-      override def bindingMissing(a: Vector[T], b: Vector[T]): T = {
+      override def apply(a: Vector[T], b: Vector[T]): T = {
         require(b.length == a.length, "Vectors must be the same length!")
         if (a.activeSize > b.activeSize) {
-          bindingMissing(b, a)
+          apply(b, a)
         } else {
           var result: T = s.zero
           for ((k, v) <- a.activeIterator) {

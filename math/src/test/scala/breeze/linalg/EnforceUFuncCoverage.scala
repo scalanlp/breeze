@@ -56,7 +56,13 @@ object EnforceUFuncCoverage {
 
   // linear algebra
   EnforceUFuncCoverage.vectors1(norm)
-  EnforceUFuncCoverage.vectors1(normalize)
+  EnforceUFuncCoverage.vectors1(normalize)(wVectors1[normalize.type](
+    implicitly[normalize.Impl[Vector[Double], Any]],
+    implicitly[normalize.Impl[DenseVector[Double], Any]],
+    implicitly[normalize.Impl[SparseVector[Double], Any]],
+    implicitly[normalize.Impl[HashVector[Double], Any]],
+    implicitly[normalize.Impl[SliceVector[Int, Double], Any]]))
+
   EnforceUFuncCoverage.vectorsAndMatrices1(dim)
 
   // numerics

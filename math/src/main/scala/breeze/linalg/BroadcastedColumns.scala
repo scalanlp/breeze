@@ -51,12 +51,17 @@ object BroadcastedColumns {
     def toIndexedSeq: IndexedSeq[DenseVector[T]] = new BroadcastedDMColsISeq(bc.underlying)
   }
 
+  // TODO: sparsity?
   implicit def canMapValues[T, ColumnType, ResultColumn, Result](
       implicit cc: CanCollapseAxis[T, Axis._0.type, ColumnType, ResultColumn, Result])
     : CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] = {
     new CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] {
-      def apply(from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => ResultColumn): Result = {
+      def map(from: BroadcastedColumns[T, ColumnType], fn: (ColumnType) => ResultColumn): Result = {
         cc(from.underlying, Axis._0) { fn }
+      }
+
+      override def mapActive(from: BroadcastedColumns[T, ColumnType], fn: ColumnType => ResultColumn): Result = {
+        map(from, fn)
       }
     }
   }

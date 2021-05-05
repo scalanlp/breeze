@@ -32,8 +32,9 @@ import scala.math.BigInt
 import breeze.macros._
 import CanTraverseValues.ValuesVisitor
 import CanZipAndTraverseValues.PairValuesVisitor
-import java.io.ObjectStreamException
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 
+import java.io.ObjectStreamException
 import scala.collection.mutable.ArrayBuilder
 import scalaxy.debug._
 
@@ -421,19 +422,12 @@ object DenseVector extends VectorConstructors[DenseVector] {
     }
   }
 
-  implicit def DV_canMapActiveValues[V, V2](implicit man: ClassTag[V2]): CanMapActiveValues[DenseVector[V], V, V2, DenseVector[V2]] = {
-    val act = DV_canMapValues[V, V2]
-    (from: DenseVector[V], fn: (V) => V2) => {
-      act(from, fn)
-    }
-  }
-
   implicit def DV_canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](
       implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
-    new CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
+    new DenseCanMapValues[DenseVector[V], V, V2, DenseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
-      def apply(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
+      def map(from: DenseVector[V], fn: (V) => V2): DenseVector[V2] = {
         val out = new Array[V2](from.length)
 
         // threeway fork, following benchmarks and hotspot docs on Array Bounds Check Elimination (ABCE)
@@ -472,66 +466,55 @@ object DenseVector extends VectorConstructors[DenseVector] {
     }
   }
 
-  implicit def DV_canMapValuesToSink[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2]
-    : mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V => V2] = {
-    new mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V => V2] {
-
-      /**Maps all key-value pairs from the given collection. */
-      def apply(sink: DenseVector[V2], from: DenseVector[V], fn: (V) => V2) = {
-        require(sink.length == from.length)
-
-        // threeway fork, following benchmarks and hotspot docs on Array Bounds Check Elimination (ABCE)
-        // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
-        if (sink.noOffsetOrStride && from.noOffsetOrStride) {
-          fastestPath(sink, fn, from.data)
-        } else if (sink.stride == 1 && from.stride == 1) {
-          mediumPath(sink, fn, from.data, from.offset)
-        } else {
-          slowPath(sink, fn, from.data, from.offset, from.stride)
-        }
-      }
-
-      private def mediumPath(sink: DenseVector[V2], fn: (V) => V2, data: Array[V], off: Int): Unit = {
-        val out = sink.data
-        val ooff = sink.offset
-        cforRange(0 until sink.length) { j =>
-          out(j + ooff) = fn(data(j + off))
-        }
-      }
-
-      private def fastestPath(sink: DenseVector[V2], fn: (V) => V2, data: Array[V]): Unit = {
-        val out = sink.data
-        cforRange(0 until sink.length) { j =>
-          out(j) = fn(data(j))
-        }
-      }
-
-      final private def slowPath(out: DenseVector[V2], fn: (V) => V2, data: Array[V], off: Int, stride: Int): Unit = {
-        var i = 0
-        var j = off
-        while (i < out.length) {
-          out(i) = fn(data(j))
-          i += 1
-          j += stride
-        }
-      }
-    }
-  }
+  // TODO: bring back sinks
+//  implicit def DV_canMapValuesToSink[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2]
+//    : mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V => V2] = {
+//    new mapValues.SinkImpl2[DenseVector[V2], DenseVector[V], V => V2] {
+//
+//      /**Maps all key-value pairs from the given collection. */
+//      def apply(sink: DenseVector[V2], from: DenseVector[V], fn: (V) => V2) = {
+//        require(sink.length == from.length)
+//
+//        // threeway fork, following benchmarks and hotspot docs on Array Bounds Check Elimination (ABCE)
+//        // https://wikis.oracle.com/display/HotSpotInternals/RangeCheckElimination
+//        if (sink.noOffsetOrStride && from.noOffsetOrStride) {
+//          fastestPath(sink, fn, from.data)
+//        } else if (sink.stride == 1 && from.stride == 1) {
+//          mediumPath(sink, fn, from.data, from.offset)
+//        } else {
+//          slowPath(sink, fn, from.data, from.offset, from.stride)
+//        }
+//      }
+//
+//      private def mediumPath(sink: DenseVector[V2], fn: (V) => V2, data: Array[V], off: Int): Unit = {
+//        val out = sink.data
+//        val ooff = sink.offset
+//        cforRange(0 until sink.length) { j =>
+//          out(j + ooff) = fn(data(j + off))
+//        }
+//      }
+//
+//      private def fastestPath(sink: DenseVector[V2], fn: (V) => V2, data: Array[V]): Unit = {
+//        val out = sink.data
+//        cforRange(0 until sink.length) { j =>
+//          out(j) = fn(data(j))
+//        }
+//      }
+//
+//      final private def slowPath(out: DenseVector[V2], fn: (V) => V2, data: Array[V], off: Int, stride: Int): Unit = {
+//        var i = 0
+//        var j = off
+//        while (i < out.length) {
+//          out(i) = fn(data(j))
+//          i += 1
+//          j += stride
+//        }
+//      }
+//    }
+//  }
 
   implicit def DV_scalarOf[T]: ScalarOf[DenseVector[T], T] = ScalarOf.dummy
 
-  implicit def canTransposeComplex: CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] = {
-    new CanTranspose[DenseVector[Complex], DenseMatrix[Complex]] {
-      def apply(from: DenseVector[Complex]): DenseMatrix[Complex] = {
-        new DenseMatrix(
-          data = from.data.map { _.conjugate },
-          offset = from.offset,
-          cols = from.length,
-          rows = 1,
-          majorStride = from.stride)
-      }
-    }
-  }
 
   class CanZipMapValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV: ClassTag]
       extends CanZipMapValues[DenseVector[V], V, RV, DenseVector[RV]] {

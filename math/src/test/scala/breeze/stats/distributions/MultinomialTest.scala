@@ -21,7 +21,7 @@ import matchers.should.Matchers._
 import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.linalg.DenseVector
-//import breeze.compat.Scala3Compat.given_Conversion_T_U
+import breeze.compat.Scala3Compat.given_Conversion_T_U
 
 class MultinomialTest extends AnyFunSuite with Checkers {
   // can't use the standard moment tester tools for a categorial distribution, so let's just roll our ownkj

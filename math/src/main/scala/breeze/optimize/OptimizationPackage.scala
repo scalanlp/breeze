@@ -2,7 +2,7 @@ package breeze.optimize
 
 import breeze.linalg
 import breeze.linalg.operators.{HasOps, OpMulMatrix}
-import breeze.linalg.support.{CanMapActiveValues, CanMapValues, CanTraverseValues, CanZipMapValues}
+import breeze.linalg.support.{CanMapValues, CanTraverseValues, CanZipMapValues}
 import breeze.math._
 import breeze.optimize.DiffFunction.castOps
 import breeze.optimize.FirstOrderMinimizer.OptParams
@@ -101,7 +101,6 @@ sealed trait OptimizationPackageLowPriority2 {
       implicit space: CoordinateField[Vector, Double],
       canIterate: CanTraverseValues[Vector, Double],
       canMap: CanMapValues[Vector, Double, Double, Vector],
-      canMapActive: CanMapActiveValues[Vector, Double, Double, Vector],
       canZipMap: CanZipMapValues[Vector, Double, Double, Vector],
       df: DF <:< DiffFunction[Vector])
       extends OptimizationPackage[DF, Vector] {
@@ -123,7 +122,6 @@ sealed trait OptimizationPackageLowPriority2 {
       implicit space: CoordinateField[Vector, Double],
       canIterate: CanTraverseValues[Vector, Double],
       canMap: CanMapValues[Vector, Double, Double, Vector],
-      canMapActive: CanMapActiveValues[Vector, Double, Double, Vector],
       canZipMap: CanZipMapValues[Vector, Double, Double, Vector],
       df: DF <:< DiffFunction[Vector]): ImmutableFirstOrderOptimizationPackage[DF, Vector] = {
     new ImmutableFirstOrderOptimizationPackage[DF, Vector]()

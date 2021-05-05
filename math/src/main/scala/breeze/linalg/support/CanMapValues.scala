@@ -1,3 +1,5 @@
+package breeze.linalg.support
+
 /*
  *
  *  Copyright 2015 David Hall
@@ -16,10 +18,7 @@
  * /
  */
 
-package breeze.linalg
-
 import breeze.generic.UFunc
-import breeze.linalg.support.CanMapValues
 import breeze.math.Complex
 import breeze.macros.cforRange
 
@@ -33,31 +32,43 @@ import scala.{specialized => spec}
  * @author dramage
  * @author dlwh
  */
-object mapValues extends UFunc with mapValuesLowPrio {
+trait CanMapValues[From, @specialized(Int, Float, Long, Double) V, @specialized(Int, Float, Long, Double) V2, +To] {
+//  def apply(from: From, fn: V=>V2): To = map(from, fn)
+  def map(from: From, fn: V => V2): To
+  def mapActive(from: From, fn: V=>V2): To
+}
 
-  implicit def canMapSelfDouble[V2]: Impl2[Double, Double => V2, V2] = canMapSelf[Double, V2]
-  implicit def canMapSelfInt[V2]: Impl2[Int, Int => V2, V2] = canMapSelf[Int, V2]
-  implicit def canMapSelfFloat[V2]: Impl2[Float, Float => V2, V2] = canMapSelf[Float, V2]
-  implicit def canMapSelfLong[V2]: Impl2[Long, Long => V2, V2] = canMapSelf[Long, V2]
-  implicit def canMapSelfShort[V2]: Impl2[Short, Short => V2, V2] = canMapSelf[Short, V2]
-  implicit def canMapSelfByte[V2]: Impl2[Byte, Byte => V2, V2] = canMapSelf[Byte, V2]
-  implicit def canMapSelfChar[V2]: Impl2[Char, Char => V2, V2] = canMapSelf[Char, V2]
+object CanMapValues extends CanMapValuesLowPrio {
+
+  trait DenseCanMapValues[From, V, V2, To] extends CanMapValues[From, V, V2, To] {
+    final def mapActive(from: From, fn: V=>V2): To = map(from, fn)
+  }
+
+  implicit def canMapSelfDouble[V2]: CanMapValues[Double, Double, V2, V2] = canMapSelf[Double, V2]
+  implicit def canMapSelfInt[V2]: CanMapValues[Int, Int, V2, V2] = canMapSelf[Int, V2]
+  implicit def canMapSelfFloat[V2]: CanMapValues[Float, Float, V2, V2] = canMapSelf[Float, V2]
+  implicit def canMapSelfLong[V2]: CanMapValues[Long, Long, V2, V2] = canMapSelf[Long, V2]
+  implicit def canMapSelfShort[V2]: CanMapValues[Short, Short, V2, V2] = canMapSelf[Short, V2]
+  implicit def canMapSelfByte[V2]: CanMapValues[Byte, Byte, V2, V2] = canMapSelf[Byte, V2]
+  implicit def canMapSelfChar[V2]: CanMapValues[Char, Char, V2, V2] = canMapSelf[Char, V2]
 
   //
   // Arrays
   //
 
   class OpArray[@spec(Double, Int, Float, Long) A, @spec(Double, Int, Float, Long) B: ClassTag]
-      extends Impl2[Array[A], A => B, Array[B]] {
+    extends CanMapValues[Array[A], A, B, Array[B]] {
 
     /**Maps all values from the given collection. */
-    def apply(from: Array[A], fn: (A) => B): Array[B] = {
+    def map(from: Array[A], fn: (A) => B): Array[B] = {
       val arr = new Array[B](from.length)
       cforRange(0 until from.length) { i =>
         arr(i) = fn(from(i))
       }
       arr
     }
+
+    override def mapActive(from: Array[A], fn: A => B): Array[B] = map(from, fn)
   }
 
   implicit def opArray[@spec A, @spec B: ClassTag]: OpArray[A, B] =
@@ -85,23 +96,13 @@ object mapValues extends UFunc with mapValuesLowPrio {
 
 }
 
-sealed trait mapValuesLowPrio {  self: mapValues.type =>
+sealed trait CanMapValuesLowPrio { self: CanMapValues.type =>
 
-  /*implicit*/
-  def canMapSelf[V, V2]: Impl2[V, V => V2, V2] = {
-    new Impl2[V, V => V2, V2] {
-      def apply(from: V, fn: (V) => V2) = fn(from)
-      def mapActive(from: V, fn: (V) => V2) = fn(from)
+  def canMapSelf[V, V2]: CanMapValues[V, V, V2, V2] = {
+    new CanMapValues[V, V, V2, V2] {
+      def map(from: V, fn: (V) => V2): V2 = fn(from)
+      def mapActive(from: V, fn: (V) => V2): V2 = fn(from)
     }
   }
-
-}
-
-object mapActiveValues extends UFunc {
-
-  implicit def implFromCanMapValues[T, V, V2, R](implicit cmv: CanMapValues[T, V, V2, R]): Impl2[T, V => V2, R] =
-    new Impl2[T, V => V2, R] {
-      override def apply(v: T, v2: (V) => V2): R = cmv(v, v2)
-    }
 
 }

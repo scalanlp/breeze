@@ -19,10 +19,8 @@ package breeze.stats.distributions
 import breeze.optimize._
 import breeze.linalg._
 import breeze.numerics._
-import breeze.linalg.operators.{OpDiv, BinaryOp}
 import breeze.math._
 import breeze.numerics
-import breeze.storage.Zero
 
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
@@ -45,7 +43,7 @@ case class Dirichlet[T, @specialized(Int) I](params: T)(
    * Returns unnormalized probabilities for a Multinomial distribution.
    */
   def unnormalizedDraw() = {
-    mapActiveValues(params, { (v: Double) =>
+    mapValues.mapActive(params, { (v: Double) =>
       if (v == 0.0) 0.0 else new Gamma(v, 1).draw()
     })
   }
@@ -54,7 +52,7 @@ case class Dirichlet[T, @specialized(Int) I](params: T)(
    * Returns logNormalized probabilities. Use this if you're worried about underflow
    */
   def logDraw() = {
-    val x = mapActiveValues(params, { (v: Double) =>
+    val x = mapValues.mapActive(params, { (v: Double) =>
       if (v == 0.0) 0.0 else new Gamma(v, 1).logDraw()
     })
     val m = softmax(x.activeValuesIterator)

@@ -86,7 +86,7 @@ object Common {
           baseDirectory.value / "src" / "main" / "scala_2.13+"
         )
         case Some( (3, _)) => Seq(
-          baseDirectory.value / "src" / "main" / "scala_2.13",
+          baseDirectory.value / "src" / "main" / "scala_2.13+",
           baseDirectory.value / "src" / "main" / "scala_3"
         )
         case _ => ???

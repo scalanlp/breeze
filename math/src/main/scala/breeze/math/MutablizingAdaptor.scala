@@ -69,7 +69,6 @@ object MutablizingAdaptor {
   def ensureMutable[V, S](vs: CoordinateField[V, S])(
       implicit canIterate: CanTraverseValues[V, S],
       canMap: CanMapValues[V, S, S, V],
-      canMapActive: CanMapActiveValues[V, S, S, V],
       canZipMap: CanZipMapValues[V, S, S, V]): MutablizingAdaptor[CoordinateField, MutableCoordinateField, V, S] = {
     if (vs.isInstanceOf[MutableCoordinateField[_, _]])
       IdentityWrapper[MutableCoordinateField, V, S](vs.asInstanceOf[MutableCoordinateField[V, S]])
@@ -347,15 +346,13 @@ object MutablizingAdaptor {
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
 
-        /** Maps all key-value pairs from the given collection. */
-        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap(_, fn))
+        override def map(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.map(_, fn))
         }
 
-//        /** Maps all active key-value pairs from the given collection. */
-//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
-//          from.map(canMap.mapActive(_, fn))
-//        }
+        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.mapActive(_, fn))
+        }
       }
 
       implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
@@ -508,8 +505,12 @@ object MutablizingAdaptor {
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
 
         /** Maps all key-value pairs from the given collection. */
-        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap(_, fn))
+        override def map(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.map(_, fn))
+        }
+
+        override def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.mapActive(_, fn))
         }
       }
 
@@ -608,7 +609,6 @@ object MutablizingAdaptor {
   case class CoordinateFieldAdaptor[V, S](underlying: CoordinateField[V, S])(
       implicit canIterate: CanTraverseValues[V, S],
       canMap: CanMapValues[V, S, S, V],
-      canMapActive: CanMapActiveValues[V, S, S, V],
       canZipMap: CanZipMapValues[V, S, S, V])
       extends MutablizingAdaptor[CoordinateField, MutableCoordinateField, V, S] {
     type Wrapper = Ref[V]
@@ -647,17 +647,14 @@ object MutablizingAdaptor {
       }
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
-        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap(_, fn))
+        override def map(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.map(_, fn))
+        }
+
+        override def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.mapActive(_, fn))
         }
       }
-
-      implicit def mapActiveValues: CanMapActiveValues[Wrapper, S, S, Wrapper] =
-        new CanMapActiveValues[Wrapper, S, S, Wrapper] {
-          override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-            from.map(canMapActive(_, fn))
-          }
-        }
 
       override implicit def scalarOf: ScalarOf[Wrapper, S] = ScalarOf.dummy
 

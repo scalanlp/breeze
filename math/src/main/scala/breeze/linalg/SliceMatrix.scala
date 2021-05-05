@@ -1,6 +1,7 @@
 package breeze.linalg
 
 import breeze.linalg.operators.OpSet
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -83,8 +84,8 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
       @specialized(Int, Float, Double) V,
       @specialized(Int, Float, Double) V2: ClassTag: Zero]
     : CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] = {
-    new CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] {
-      override def apply(from: SliceMatrix[K1, K2, V], fn: (V) => V2): DenseMatrix[V2] = {
+    new DenseCanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] {
+      override def map(from: SliceMatrix[K1, K2, V], fn: (V) => V2): DenseMatrix[V2] = {
         DenseMatrix.tabulate(from.rows, from.cols)((i, j) => fn(from(i, j)))
       }
 

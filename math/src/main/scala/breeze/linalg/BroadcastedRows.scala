@@ -35,9 +35,12 @@ object BroadcastedRows {
       implicit cc: CanCollapseAxis[T, Axis._1.type, RowType, ResultRow, Result])
     : CanMapValues[BroadcastedRows[T, RowType], RowType, ResultRow, Result] = {
     new CanMapValues[BroadcastedRows[T, RowType], RowType, ResultRow, Result] {
-      def apply(from: BroadcastedRows[T, RowType], fn: (RowType) => ResultRow): Result = {
+      def map(from: BroadcastedRows[T, RowType], fn: (RowType) => ResultRow): Result = {
         cc(from.underlying, Axis._1) { fn }
       }
+
+      // TODO: should we handle sparse here?
+      override def mapActive(from: BroadcastedRows[T, RowType], fn: RowType => ResultRow): Result = map(from, fn)
     }
   }
 

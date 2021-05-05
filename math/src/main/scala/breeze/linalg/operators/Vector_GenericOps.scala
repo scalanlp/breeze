@@ -224,14 +224,15 @@ trait SparseVector_GenericOps extends GenericOps {
     }
   }
 
-  implicit def impl_Op_SV_SV_InPlace_liftFromPure[Op, T, U, V](
-      implicit
-      pureOp: UFunc.UImpl2[Op, SparseVector[T], U, V],
-      opSet: OpSet.InPlaceImpl2[SparseVector[T], V]): UFunc.InPlaceImpl2[Op, SparseVector[T], U] = {
-    (sv: SparseVector[T], u: U) =>
-    val r = pureOp(sv, u)
-    opSet(sv, r)
-  }
+  // this makes Scala 2.12 really sad and isn't really the best a lot of the time.
+//  implicit def impl_Op_SV_SV_InPlace_liftFromPure[Op, T, U, V](
+//      implicit
+//      pureOp: UFunc.UImpl2[Op, SparseVector[T], U, V],
+//      opSet: OpSet.InPlaceImpl2[SparseVector[T], V]): UFunc.InPlaceImpl2[Op, SparseVector[T], U] = {
+//    (sv: SparseVector[T], u: U) =>
+//    val r = pureOp(sv, u)
+//    opSet(sv, r)
+//  }
 
   // TODO: this may not be necessary?
   implicit def impl_Op_SV_S_eq_SV_Generic[Op <: OpType, T: Semiring](

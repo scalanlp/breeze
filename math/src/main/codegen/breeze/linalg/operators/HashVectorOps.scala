@@ -24,29 +24,29 @@ trait HashVectorOps
 
 trait DenseVector_HashVector_Ops extends GenericOps with DenseVectorOps with HashVectorExpandOps {
 
-  @expand
-  implicit def impl_Op_InPlace_DV_HV[
-      @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
-      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (__x, __y) =>
-        __y
-      }, { _ % _ }, { _.pow(_) })
-      op: Op.Impl1[T, T, T]): Op.InPlaceImpl2[DenseVector[T], HashVector[T]] =
-    new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
-      def apply(a: DenseVector[T], b: HashVector[T]): Unit = {
-        require(a.length == b.length, "Vectors must have the same length")
-        val ad = a.data
-        var aoff = a.offset
-        val astride = a.stride
-
-        // TODO: replace OpMulScalar with faster variant for common cases?
-        cforRange(0 until a.length) { i =>
-          ad(aoff) = op(ad(aoff), b(i))
-          aoff += astride
-        }
-
-      }
-    }
+//  @expand
+//  implicit def impl_Op_InPlace_DV_HV[
+//      @expand.args(Int, Double, Float, Long) T,
+//      @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
+//      implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, { (__x, __y) =>
+//        __y
+//      }, { _ % _ }, { _.pow(_) })
+//      op: Op.Impl1[T, T, T]): Op.InPlaceImpl2[DenseVector[T], HashVector[T]] =
+//    new Op.InPlaceImpl2[DenseVector[T], HashVector[T]] {
+//      def apply(a: DenseVector[T], b: HashVector[T]): Unit = {
+//        require(a.length == b.length, "Vectors must have the same length")
+//        val ad = a.data
+//        var aoff = a.offset
+//        val astride = a.stride
+//
+//        // TODO: replace OpMulScalar with faster variant for common cases?
+//        cforRange(0 until a.length) { i =>
+//          ad(aoff) = op(ad(aoff), b(i))
+//          aoff += astride
+//        }
+//
+//      }
+//    }
 
   @expand
   @expand.valify
@@ -510,7 +510,7 @@ trait HashVectorExpandOps extends VectorOps with HashVector_GenericOps {
 
 }
 
-trait HashVector_SparseVector_Ops extends HashVectorExpandOps {
+trait HashVector_SparseVector_Ops extends HashVectorExpandOps with SparseVectorOps {
 
   @expand
   @expand.valify
@@ -622,7 +622,7 @@ trait HashVector_SparseVector_Ops extends HashVectorExpandOps {
   }
 }
 
-trait SparseVector_HashVector_Ops extends HashVectorExpandOps with HashVector_SparseVector_Ops with SparseVector_GenericOps {
+trait SparseVector_HashVector_Ops extends HashVectorExpandOps with HashVector_SparseVector_Ops with SparseVectorOps {
   @expand.valify
   @expand
   implicit def impl_Op_SV_HV_eq_SV_lhs_nilpotent[
@@ -708,13 +708,18 @@ trait SparseVector_HashVector_Ops extends HashVectorExpandOps with HashVector_Sp
     : breeze.linalg.operators.OpMulInner.Impl2[SparseVector[T], HashVector[T], T] =
     (a: SparseVector[T], b: HashVector[T]) => b dot a
 
-  @expand.valify
-  @expand
-  implicit def impl_Op_InPlace_SV_HV[
-      @expand.args(Int, Double, Float, Long) T,
-      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
-    : Op.InPlaceImpl2[SparseVector[T], HashVector[T]] = {
-    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]]
-      .register(GenericOps.updateFromPure[Op.type, SparseVector[T], HashVector[T], SparseVector[T]])
-  }
+//  // TODO: switch to using VectorBuilders
+//  @expand.valify
+//  @expand
+//  implicit def impl_Op_InPlace_SV_HV[
+//      @expand.args(Int, Double, Float, Long) T,
+//      @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType]
+//    : Op.InPlaceImpl2[SparseVector[T], HashVector[T]] = {
+//    // this shouldn't be necessary but somehow Scala 2.12 can't handle it
+//    implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]]
+//      .register(GenericOps.updateFromPure[Op.type, SparseVector[T], HashVector[T], SparseVector[T]](
+//        implicitly,
+//        super.impl_OpSet_InPlace_SV_SV_Generic
+//      ))
+//  }
 }

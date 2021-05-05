@@ -5,7 +5,7 @@ import breeze.generic.UFunc
 import breeze.linalg
 import breeze.linalg.CSCMatrix.{Builder, zeros}
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
-import breeze.linalg.support.{CanCopy, CanCreateZerosLike, CanMapActiveValues, CanMapValues, CanTranspose, CanTraverseKeyValuePairs, CanTraverseValues, CanZipMapKeyValues, CanZipMapValues, ScalarOf}
+import breeze.linalg.support.{CanCopy, CanCreateZerosLike, CanMapValues, CanTranspose, CanTraverseKeyValuePairs, CanTraverseValues, CanZipMapKeyValues, CanZipMapValues, ScalarOf}
 import breeze.macros.expand
 import breeze.math._
 import breeze.storage.Zero
@@ -36,7 +36,7 @@ trait CSCMatrixOps extends CSCMatrixExpandedOps with CSCMatrixOps_Ring {
   implicit def CSC_canMapValues[V, R: ClassTag: Semiring]: CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
     val z = implicitly[Zero[R]].zero
     new CanMapValues[CSCMatrix[V], V, R, CSCMatrix[R]] {
-      override def apply(from: CSCMatrix[V], fn: (V => R)) = {
+      override def map(from: CSCMatrix[V], fn: V => R): CSCMatrix[R] = {
         val fz = fn(from.zero)
         val fzIsNotZero = fz != z
         val builder = new Builder[R](from.rows, from.cols, from.activeSize)
@@ -68,14 +68,8 @@ trait CSCMatrixOps extends CSCMatrixExpandedOps with CSCMatrixOps_Ring {
 
         builder.result()
       }
-    }
-  }
 
-  implicit def CSC_canMapActiveValues[V, R: ClassTag: Zero: Semiring]
-  : CanMapActiveValues[CSCMatrix[V], V, R, CSCMatrix[R]] = {
-    val z = implicitly[Zero[R]].zero
-    new CanMapActiveValues[CSCMatrix[V], V, R, CSCMatrix[R]] {
-      override def apply(from: CSCMatrix[V], fn: (V => R)) = {
+      override def mapActive(from: CSCMatrix[V], fn: V => R): CSCMatrix[R] = {
         var zeroSeen = false
         def ff(v: V) = { val r = fn(v); if (r == z) zeroSeen = true; r }
         val newData = from.data.map(ff)

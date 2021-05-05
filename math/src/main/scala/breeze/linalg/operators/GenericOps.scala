@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc
 import breeze.generic.UFunc.{InPlaceImpl, InPlaceImpl2, UImpl, UImpl2}
-import breeze.gymnastics.{&:&, NotGiven}
+import breeze.gymnastics._
 import breeze.linalg.{Matrix, Vector, scaleAdd}
 import breeze.linalg.support.{CanCopy, CanTransformValues, CanZipMapValues, ScalarOf}
 import breeze.math.{Ring, Semiring}
@@ -159,6 +159,7 @@ trait GenericOps extends GenericOpsLowPrio {
 }
 
 object GenericOps {
+  // TODO: switch to using swap or sink or something
   def updateFromPure[Op, T, Other, R](implicit op: UFunc.UImpl2[Op, T, Other, R],
                                    set: OpSet.InPlaceImpl2[T, R]): UFunc.InPlaceImpl2[Op, T, Other] = {
       (a: T, b: Other) => {

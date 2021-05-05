@@ -17,12 +17,13 @@ package breeze
 
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
-import breeze.io.{FileStreams, CSVWriter, CSVReader}
+import breeze.io.{CSVReader, CSVWriter, FileStreams}
 import linalg.operators._
-import breeze.linalg.support.{RangeExtender, CanCopy}
+import breeze.linalg.support.{CanCopy, CanMapValues, RangeExtender}
 import math.Semiring
 import storage.Zero
-import java.io.{PrintWriter, File, FileReader}
+
+import java.io.{File, FileReader, PrintWriter}
 import scala.reflect.ClassTag
 import breeze.macros._
 
@@ -341,5 +342,9 @@ package object linalg {
    * val to determine if breeze is using natives or f2jblas
    */
   lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
+//
+//  def mapActiveValues[From, V, V2, To](from: From)(fn: V => V2)(implicit cmv: CanMapValues[From, V, V2, To]): To = {
+//    cmv.mapActive(from, fn)
+//  }
 
 }
