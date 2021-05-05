@@ -20,8 +20,10 @@ trait ProvidesTransformedQuasiMonteCarlo {
 
   def quasiMonteCarloIntegrate(f: Array[Double] => Double)(variables: QuasiRandomVariableSpec*)(numSamples: Long) = {
     val generator = new TransformedQuasiMonteCarloGenerator(variables: _*)
-    var i: Long = 0
     var fSum: Double = 0
+
+    // cforRange for longs
+    var i: Long = 0
     while (i < numSamples) {
       fSum += f(generator.getNextUnsafe)
       i += 1
