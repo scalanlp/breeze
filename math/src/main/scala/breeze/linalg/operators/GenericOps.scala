@@ -167,4 +167,6 @@ object GenericOps {
         set(a, result)
       }
   }
+
+  private[breeze] def sparseEnoughForActiveIterator[T](v: Vector[T]) = v.activeSize < v.size / 4
 }
