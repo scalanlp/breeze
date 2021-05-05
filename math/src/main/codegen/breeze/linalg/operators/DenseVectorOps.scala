@@ -101,9 +101,16 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
         val ad = a.data
         var aoff = a.offset
 
-        for ((i, v) <- b.activeIterator) {
-          a(i) = op(a(i), v)
+        if (GenericOps.sparseEnoughForActiveIterator(b)) {
+          for ((i, v) <- b.activeIterator) {
+            a(i) = op(a(i), v)
+          }
+        } else {
+          cforRange(0 until a.length) { i =>
+            a(i) = op(a(i), b(i))
+          }
         }
+
       }
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }

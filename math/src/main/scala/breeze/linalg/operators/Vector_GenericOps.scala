@@ -12,7 +12,6 @@ import scalaxy.debug.{assert, require}
 import java.util
 import scala.reflect.ClassTag
 
-// TODO: names
 trait Vector_GenericOps extends GenericOps with Vector_TraversalOps {
   implicit def zipValuesSubclass[Vec1, Vec2, T, U](
                                                     implicit view1: Vec1 <:< Vector[T],
