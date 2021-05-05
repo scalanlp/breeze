@@ -340,6 +340,6 @@ package object linalg {
   /**
    * val to determine if breeze is using natives or f2jblas
    */
-  lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
+  lazy val usingNatives = dev.ludovic.netlib.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.NativeBLAS]
 
 }

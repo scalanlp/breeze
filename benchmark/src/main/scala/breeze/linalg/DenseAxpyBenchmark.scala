@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.benchmark.{MyRunner, BreezeBenchmark}
 import breeze.linalg.operators.DenseVectorSupportMethods
 import breeze.stats.distributions.Rand
-import com.github.fommil.netlib.BLAS
+import dev.ludovic.netlib.BLAS
 import spire.syntax.cfor._
 
 /**

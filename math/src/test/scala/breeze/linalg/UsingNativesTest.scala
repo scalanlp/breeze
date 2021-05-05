@@ -21,9 +21,9 @@ class UsingNativesTest extends FunSuite with Checkers {
 
   test("Using natives") {
     if (!usingNatives) {
-      assert(com.github.fommil.netlib.BLAS.getInstance.getClass.getName == "com.github.fommil.netlib.F2jBLAS")
+      assert(dev.ludovic.netlib.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.JavaBLAS])
     } else {
-      assert(com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS")
+      assert(dev.ludovic.netlib.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.NativeBLAS])
     }
   }
 
