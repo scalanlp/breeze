@@ -17,13 +17,11 @@ import scala.reflect.ClassTag
 
 trait DenseVectorOps extends VectorOps with DenseVector_GenericOps with DenseVector_ComparisonOps with DenseVector_FloatOps with DenseVector_DoubleOps
 
-// TODO: names
 trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalOps with DenseVector_SlicingOps {
 
   @expand
   @expand.valify
-  implicit def canDot_DV_V[@expand.args(Int, Double, Float, Long) T](
-                                                                      implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T)
+  implicit def impl_OpMulInner_DV_V_eq_S[@expand.args(Int, Double, Float, Long) T](implicit @expand.sequence[T](0, 0.0, 0.0f, 0L) zero: T)
   : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[T], Vector[T], T] {
       def apply(a: DenseVector[T], b: Vector[T]) = {
@@ -46,7 +44,7 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
 
   @expand
   @expand.valify
-  implicit def dv_v_Op[
+  implicit def impl_Op_DV_V_eq_V[
     @expand.args(Int, Double, Float, Long) T,
     @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
                                                                                        implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
@@ -70,7 +68,7 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
 
   @expand
   @expand.valify
-  implicit def dv_v_InPlaceOp[
+  implicit def impl_Op_InPlace_DV_V[
     @expand.args(Int, Double, Float, Long) T,
     @expand.args(OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
                                                                          implicit @expand.sequence[Op]({ _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
@@ -89,9 +87,10 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
       implicitly[BinaryUpdateRegistry[Vector[T], Vector[T], Op.type]].register(this)
     }
 
+  // TODO: profile with and without
   @expand
   @expand.valify
-  implicit def dv_v_ZeroIdempotent_InPlaceOp[
+  implicit def impl_Op_InPlace_DV_V_zero_idempotent[
     @expand.args(Int, Double, Float, Long) T,
     @expand.args(OpAdd, OpSub) Op <: OpType](
                                               implicit @expand.sequence[Op]({ _ + _ }, { _ - _ })
@@ -110,7 +109,6 @@ trait DenseVector_Vector_ExpandOps extends VectorOps with DenseVector_TraversalO
     }
 }
 
-// TODO: names
 trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
   @expand
   @expand.valify
@@ -214,7 +212,7 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def dv_dv_UpdateOp[
+  implicit def impl_Op_InPlace_DV_DV[
       @expand.args(Int, Double, Float, Long) T,
       @expand.args(OpAdd, OpSub, OpMulScalar, OpDiv, OpSet, OpMod, OpPow) Op <: OpType](
       implicit @expand.sequence[Op]({ _ + _ }, { _ - _ }, { _ * _ }, { _ / _ }, {  (__x, __y) => __y }, { _ % _ }, { _.pow(_) })
@@ -325,7 +323,7 @@ trait DenseVectorExpandOps extends VectorOps with DenseVector_Vector_ExpandOps {
 
   @expand
   @expand.valify
-  implicit def canZipValues_DV_DV[@expand.args(Int, Double, Float, Long) T]()
+  implicit def impl_zipValues_DV_DV[@expand.args(Int, Double, Float, Long) T]()
     : zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] = {
     val res = new zipValues.Impl2[DenseVector[T], DenseVector[T], ZippedValues[T, T]] {
       def apply(v1: DenseVector[T], v2: DenseVector[T]) = {
