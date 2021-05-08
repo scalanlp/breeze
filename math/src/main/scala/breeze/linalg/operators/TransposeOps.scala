@@ -5,6 +5,8 @@ import breeze.linalg._
 import breeze.linalg.support._
 import breeze.math.{Complex, Semiring}
 import breeze.storage.Zero
+import breeze.gymnastics._
+import scala.util._
 
 import scala.reflect.ClassTag
 
@@ -81,9 +83,9 @@ trait TransposeOps_LowPrio2 extends GenericOps {
 
   }
 
-  implicit def liftInPlaceOps[Op <: ElementwiseUFunc, T, U, UT](implicit
-                                            transU: CanTranspose[U, UT],
-                                            op: UFunc.InPlaceImpl2[Op, T, UT]): UFunc.InPlaceImpl2[Op, Transpose[T], U] = {
+  implicit def liftInPlaceOps[Op <: ElementwiseUFunc, T, U, UT](implicit notScalar: NotGiven[ScalarOf[T, U]],
+                                                                transU: CanTranspose[U, UT],
+                                                                op: UFunc.InPlaceImpl2[Op, T, UT]): UFunc.InPlaceImpl2[Op, Transpose[T], U] = {
     new UFunc.InPlaceImpl2[Op, Transpose[T], U] {
       def apply(a: Transpose[T], b: U): Unit = {
         op(a.inner, transU(b))
