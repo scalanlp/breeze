@@ -24,7 +24,7 @@ class LassoTest extends AnyWordSpec {
         a.update(i, 2, i * i)
         a.update(i, 3, i * i * i)
         a.update(i, 4, i * i * i * i)
-        b.update(i, 5.0 + 2 * i + math.random * 0.01 + 0.00001 * i * i)
+        b.update(i, 5.0 + 2 * i + math.random() * 0.01 + 0.00001 * i * i)
       })
       val result = lasso(a, b, 0.0001)
       assert(norm(result.coefficients - DenseVector(5.0, 2.0, 0.0, 0.0, 0.0)) < 1e-2, "norm is too large")

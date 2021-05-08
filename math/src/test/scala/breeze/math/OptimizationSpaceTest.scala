@@ -300,9 +300,9 @@ class DenseOptimizationSpaceTest_Double
         z <- RandomInstanceSupport.genReasonableDouble.arbitrary
       } yield {
         (
-          DenseMatrix.fill(N, N)(math.random * x),
-          DenseMatrix.fill(N, N)(math.random * y),
-          DenseMatrix.fill(N, N)(math.random * z))
+          DenseMatrix.fill(N, N)(math.random()* x),
+          DenseMatrix.fill(N, N)(math.random()* y),
+          DenseMatrix.fill(N, N)(math.random()* z))
       }
     }
   }

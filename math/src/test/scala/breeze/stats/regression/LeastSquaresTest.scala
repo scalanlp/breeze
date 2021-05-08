@@ -22,7 +22,7 @@ class LeastSquaresTest extends AnyWordSpec {
       cforRange(0 until 100)(i => {
         a.update(i, 0, i)
         a.update(i, 1, 1)
-        b.update(i, 2 * i + 5 + math.random * 0.01)
+        b.update(i, 2 * i + 5 + math.random() * 0.01)
       })
       val result = leastSquares(a, b)
       val residual = sum(pow(b - result(a), 2))

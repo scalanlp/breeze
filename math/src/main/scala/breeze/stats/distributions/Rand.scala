@@ -291,7 +291,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Samples a gaussian with 0 mean and 1 std
    */
   val gaussian: Rand[Double] = new Rand[Double] {
-    def draw() = generator.nextGaussian
+    def draw() = generator.nextGaussian()
   }
 
   /**

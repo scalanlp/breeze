@@ -140,7 +140,7 @@ case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis = Rand)
 
         var continue = true
         while (continue) {
-          x = rand.generator.nextGaussian
+          x = rand.generator.nextGaussian()
           v = 1.0 + c * x
           continue = v <= 0
         }

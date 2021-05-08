@@ -153,7 +153,7 @@ class DescriptiveStatsTest2 extends AnyFunSuite {
 
   test("mean and variance") {
     val r = new Random(0)
-    val data = Array.fill(100000)(r.nextGaussian)
+    val data = Array.fill(100000)(r.nextGaussian())
     val mav = meanAndVariance(data)
     val mav2 = meanAndVariance(data.iterator)
     assert(breeze.numerics.closeTo(mav.mean, 0.0, 1E-2), mav.mean + " should be 0")
@@ -163,8 +163,8 @@ class DescriptiveStatsTest2 extends AnyFunSuite {
 
   test("mean and variance addition") {
     val r = new Random(0)
-    val data = Array.fill(100000)(r.nextGaussian)
-    val data2 = Array.fill(100000)(r.nextGaussian * 5 + 3)
+    val data = Array.fill(100000)(r.nextGaussian())
+    val data2 = Array.fill(100000)(r.nextGaussian() * 5 + 3)
     val mav = meanAndVariance(data)
     val mav2 = meanAndVariance(data2)
     val mavTotal = meanAndVariance(data ++ data2)

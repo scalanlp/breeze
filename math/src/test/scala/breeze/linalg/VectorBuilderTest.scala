@@ -93,8 +93,8 @@ class VectorBuilderTest extends AnyFunSuite with Checkers {
         yl <- Arbitrary.arbitrary[List[Int]]
       } yield {
         (
-          VectorBuilder(30)(xl.map(i => (i % 30).abs -> math.random * x): _*),
-          VectorBuilder(30)(yl.map(i => (i % 30).abs -> math.random * y): _*))
+          VectorBuilder(30)(xl.map(i => (i % 30).abs -> math.random()* x): _*),
+          VectorBuilder(30)(yl.map(i => (i % 30).abs -> math.random()* y): _*))
 
       }
     }
