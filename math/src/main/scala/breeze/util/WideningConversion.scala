@@ -6,6 +6,7 @@ trait WideningConversion[@specialized(Int, Float, Short, Byte) F, @specialized(I
 }
 
 object WideningConversion {
+  implicit def wc[T]: WideningConversion[T, T] = t => t
   implicit val int2Double: WideningConversion[Int, Double] = scala.Int.int2double _
   implicit val int2Long: WideningConversion[Int, Long] = scala.Int.int2long _
   implicit val float2Double: WideningConversion[Float, Double] = scala.Float.float2double _

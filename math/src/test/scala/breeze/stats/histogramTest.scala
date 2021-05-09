@@ -15,25 +15,25 @@ class histogramTest extends AnyFunSuite {
 
   test("histogram returns correct values") {
     val result = hist(testDV, 3)
-    assert(result.hist == DenseVector(2.0, 2.0, 1.0))
+    assert(result.hist == DenseVector(2, 2, 1))
     assert(result.binEdges == DenseVector(0.0, 5.0 / 3.0, 2 * 5.0 / 3.0, 5.0))
   }
 
   test("histogram respects range argument") {
     val result = hist(testDV, 3, (0.0, 3.0))
-    assert(result.hist == DenseVector(2.0, 0.0, 2.0))
+    assert(result.hist == DenseVector(2, 0, 2))
     assert(result.binEdges == DenseVector(0.0, 1.0, 2.0, 3.0))
   }
 
   test("histogram handles weights") {
-    val result = hist(testDV, 3, testWeights)
+    val result = hist(testDV, 3, testWeights)(hist.defaultHistBinsWeights)
     assert(result.hist == DenseVector(1.0, 4.0, 7.0))
     assert(result.binEdges == DenseVector(0.0, 5.0 / 3.0, 2 * 5.0 / 3.0, 5.0))
   }
 
   test("fails for empty array") {
     intercept[IllegalArgumentException] {
-      hist(DenseVector[Int]())
+      hist(DenseVector[Int]())(hist.defaultHist)
     }
   }
 
