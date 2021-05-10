@@ -190,16 +190,4 @@ object FeatureVector {
     }
   }
 
-  // TODO: shouldn't be necessary. verify
-//  implicit def mulMatrixTrans[M, MTrans, MulResult, MRTrans](
-//      implicit trans: CanTranspose[M, MTrans],
-//      mul: OpMulMatrix.Impl2[MTrans, FeatureVector, MulResult],
-//      mrTrans: CanTranspose[MulResult, MRTrans]): OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] = {
-//    new OpMulMatrix.Impl2[Transpose[FeatureVector], M, MRTrans] {
-//      override def apply(v: Transpose[FeatureVector], v2: M): MRTrans = {
-//        mrTrans(mul(trans(v2), v.inner))
-//      }
-//    }
-//  }
-
 }

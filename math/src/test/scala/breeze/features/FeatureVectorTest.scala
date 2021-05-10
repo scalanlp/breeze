@@ -4,11 +4,6 @@ import breeze.linalg._
 import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg.DenseVector
 
-/**
- * TODO
- *
- * @author dlwh
- **/
 class FeatureVectorTest extends AnyFunSuite {
   test("axpy fv dv") {
     val f = FeatureVector(3, 4, 5, 6, 10)
