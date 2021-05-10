@@ -341,10 +341,6 @@ package object linalg {
   /**
    * val to determine if breeze is using natives or f2jblas
    */
-  lazy val usingNatives = com.github.fommil.netlib.BLAS.getInstance.getClass.getName != "com.github.fommil.netlib.F2jBLAS"
-//
-//  def mapActiveValues[From, V, V2, To](from: From)(fn: V => V2)(implicit cmv: CanMapValues[From, V, V2, To]): To = {
-//    cmv.mapActive(from, fn)
-//  }
+  lazy val usingNatives = dev.ludovic.netlib.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.NativeBLAS]
 
 }
