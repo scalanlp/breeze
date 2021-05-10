@@ -196,16 +196,15 @@ object stddev extends UFunc {
  * A [[breeze.generic.UFunc]] for computing the median of objects
  */
 object median extends UFunc {
-  // todo: make array be the basic op for median
 
   @expand
-  implicit def reduce[@expand.args(Int, Long, Double, Float) T]: median.Impl[DenseVector[T], T] =
-    new Impl[DenseVector[T], T] {
-      def apply(v: DenseVector[T]): T = {
+  implicit def reduceArray[@expand.args(Int, Long, Double, Float) T]: median.Impl[Array[T], T] =
+    new Impl[Array[T], T] {
+      def apply(v: Array[T]): T = {
         if (isOdd(v.length)) {
-          quickSelect(v.toArray, (v.length - 1) / 2)
+          quickSelect(v, (v.length - 1) / 2)
         } else {
-          val tempArray: Array[T] = v.toArray.clone()
+          val tempArray: Array[T] = v.clone()
           val secondMedianPosition = v.length / 2
           //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
           (quickSelectImpl(tempArray, secondMedianPosition) +
@@ -214,14 +213,51 @@ object median extends UFunc {
       }
     }
 
-  @expand
-  implicit def reduceSeq[@expand.args(Int, Long, Double, Float) T]: Impl[Seq[T], T] =
-    new Impl[Seq[T], T] {
-      def apply(v: Seq[T]): T = { median(DenseVector(v.toArray)) }
+
+  implicit def reduceArrayFromQuickselectAndMean[T](implicit qs: quickSelect.Impl2[Array[T], Int, T],
+                                             qsi: quickSelectImpl.Impl2[Array[T], Int, T],
+                                                    mn: mean.Impl2[T, T, T]): median.Impl[Array[T], T] =
+    new Impl[Array[T], T] {
+      def apply(v: Array[T]): T = {
+        if (isOdd(v.length)) {
+          quickSelect(v, (v.length - 1) / 2)
+        } else {
+          val tempArray: Array[T] = v.clone()
+          val secondMedianPosition = v.length / 2
+          //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
+          mean(quickSelectImpl(tempArray, secondMedianPosition), quickSelectImpl(tempArray, secondMedianPosition - 1))
+        }
+      }
     }
 
-  @expand
-  implicit def reduceM[@expand.args(Int, Long, Double) T]: Impl[DenseMatrix[T], T] = m => median(m.toDenseVector)
+  implicit def reduce[T: ClassTag](implicit arrImpl: median.Impl[Array[T], T]): median.Impl[DenseVector[T], T] = { dv =>
+    if (dv.data.length == dv.length) {
+      // avoid extra clone
+      arrImpl(dv.data)
+    } else {
+      arrImpl(dv.toArray)
+    }
+  }
+
+//  implicit def reduce[T: ClassTag](implicit arrImpl: median.Impl[Array[T], T]): median.Impl[DenseVector[T], T] =
+//    new Impl[DenseVector[T], T] {
+//      def apply(v: DenseVector[T]): T = {
+//        if (isOdd(v.length)) {
+//          quickSelect(v.toArray, (v.length - 1) / 2)
+//        } else {
+//          val tempArray: Array[T] = v.toArray.clone()
+//          val secondMedianPosition = v.length / 2
+//          //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
+//          (quickSelectImpl(tempArray, secondMedianPosition) +
+//            quickSelectImpl(tempArray, secondMedianPosition - 1)) / 2
+//        }
+//      }
+//    }
+
+  implicit def reduceSeq[T: ClassTag](implicit arrImpl: median.Impl[Array[T], T]): Impl[Seq[T], T] =
+    v => { median(v.toArray) }
+
+  implicit def reduceM[T](implicit arrImpl: median.Impl[Array[T], T]): Impl[DenseMatrix[T], T] = m => median(m.toArray)
 
 }
 
