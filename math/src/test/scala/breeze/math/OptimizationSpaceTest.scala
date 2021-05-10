@@ -291,18 +291,17 @@ class DenseOptimizationSpaceTest_Double
   override implicit val space: MutableOptimizationSpace[DenseMatrix[Double], DenseVector[Double], Double] =
     MutableOptimizationSpace.DenseDoubleOptimizationSpace.denseDoubleOptSpace
 
+  val myReasonable: Arbitrary[Double] = RandomInstanceSupport.reasonableDouble(1E-4, 10)
+
   val N = 5
   override implicit def genTripleM: Arbitrary[(DenseMatrix[Double], DenseMatrix[Double], DenseMatrix[Double])] = {
     Arbitrary {
       for {
-        x <- RandomInstanceSupport.genReasonableDouble.arbitrary
-        y <- RandomInstanceSupport.genReasonableDouble.arbitrary
-        z <- RandomInstanceSupport.genReasonableDouble.arbitrary
+        x <- RandomInstanceSupport.genDenseMatrix[Double](N, N, myReasonable.arbitrary)
+        y <- RandomInstanceSupport.genDenseMatrix[Double](N, N, myReasonable.arbitrary)
+        z <- RandomInstanceSupport.genDenseMatrix[Double](N, N, myReasonable.arbitrary)
       } yield {
-        (
-          DenseMatrix.fill(N, N)(math.random()* x),
-          DenseMatrix.fill(N, N)(math.random()* y),
-          DenseMatrix.fill(N, N)(math.random()* z))
+        (x, y, z)
       }
     }
   }
