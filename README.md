@@ -27,12 +27,6 @@ libraryDependencies  ++= Seq(
   // Last stable release
   "org.scalanlp" %% "breeze" % "1.2",
   
-  // Native libraries are not included by default. add this if you want them
-  // Native libraries greatly improve performance, but increase jar sizes. 
-  // It also packages various blas implementations, which have licenses that may or may not
-  // be compatible with the Apache License. No GPL code, as best I know.
-  "org.scalanlp" %% "breeze-natives" % "1.2",
-  
   // The visualization library is distributed separately as well.
   // It depends on LGPL code
   "org.scalanlp" %% "breeze-viz" % "1.2"
@@ -41,7 +35,7 @@ libraryDependencies  ++= Seq(
 
 ```
 
-For more details on the optional `breeze-natives` module, please watch Sam Halliday's talk at Scala eXchange 2014 [High Performance Linear Algebra in Scala](https://skillsmatter.com/skillscasts/5849-high-performance-linear-algebra-in-scala) ([follow along with high-res slides](http://fommil.github.io/scalax14/#/)).
+Previous versions of Breeze included a "breeze-natives" artifact that bundled various native libraries. As of Breeze 1.3, we now use a faster, more friendly-licensed library from @luhenry called simply "[netlib](https://github.com/luhenry/netlib)". This library is now bundled by default.
 
 
 ### Maven
