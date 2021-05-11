@@ -37,7 +37,7 @@ class ThreadLocalRandomGeneratorTest extends AnyFunSuite {
       out.writeObject(generator)
       outputStream.toByteArray
     } catch {
-      case _: IOException => fail("cannot serialize")
+      case e: IOException => fail("cannot serialize", e)
     } finally {
       if (out != null) out.close()
     }

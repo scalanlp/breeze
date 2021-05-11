@@ -10,7 +10,7 @@ import org.apache.commons.math3.random.RandomGenerator
  **/
 @SerialVersionUID(1L)
 class ThreadLocalRandomGenerator(genThunk: => RandomGenerator) extends RandomGenerator with Serializable {
-  @transient private lazy val genTL = new ThreadLocal[RandomGenerator] {
+  @transient private lazy val genTL = new ThreadLocal[RandomGenerator] with Serializable {
     override def initialValue(): RandomGenerator = genThunk
   }
   def nextBytes(bytes: Array[Byte]) = genTL.get().nextBytes(bytes)
