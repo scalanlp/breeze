@@ -241,6 +241,14 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
   def toScalaVector()(implicit cm: ClassTag[V]): scala.Vector[V] = this.toArray.toVector
   // </editor-fold>
 
+  def asCscRow(implicit man: ClassTag[V], zero: Zero[V]): CSCMatrix[V] = {
+    if (length == 0)
+      CSCMatrix.zeros[V](1, length)
+    else {
+      CSCMatrix.create(1, length, data)
+    }
+  }
+
   @throws(classOf[ObjectStreamException])
   protected def writeReplace(): Object = {
     new DenseVector.SerializedForm(data, offset, stride, length)
@@ -400,6 +408,23 @@ object DenseVector
       offset += v.size
     }
     result
+  }
+
+  def fromCSCMatrix[V: ClassTag](csc: CSCMatrix[V]): DenseVector[V] = {
+    assert(csc.rows == 1)
+    val indices = new Array[V](csc.cols)
+    var i = 0
+    while (i < csc.cols) {
+      var j = csc.colPtrs(i)
+      while (j < csc.colPtrs(i + 1)) {
+        indices(i) = csc.data(j)
+        j += 1
+      }
+      i += 1
+    }
+
+    DenseVector.create(indices, 0 ,1, csc.cols)
+
   }
 
   // capabilities
