@@ -1,23 +1,25 @@
 package breeze.stats.distributions
 
 import org.apache.commons.math3.random.MersenneTwister
-import org.scalatest.{FunSuite, Matchers}
+import org.scalatest.funsuite.AnyFunSuite
+
+import org.scalatest.matchers.should.Matchers._
 
 import java.io._
 
-class ThreadLocalRandomGeneratorTest extends FunSuite with Matchers {
-  test("ThreadLocalRandomGeneratorTest should be serializable") {
+class ThreadLocalRandomGeneratorTest extends AnyFunSuite {
+  test("ThreadLocalRandomGenerator should be serializable") {
     val generator = new ThreadLocalRandomGenerator(new MersenneTwister())
     serialize(generator)
   }
 
-  test("ThreadLocalRandomGeneratorTest should be serializable after usage") {
+  test("ThreadLocalRandomGenerator should be serializable after usage") {
     val generator = new ThreadLocalRandomGenerator(new MersenneTwister())
     generator.nextInt()
     serialize(generator)
   }
 
-  test("ThreadLocalRandomGeneratorTest should be deserializable") {
+  test("ThreadLocalRandomGenerator should be deserializable") {
     val generator = new ThreadLocalRandomGenerator(new MersenneTwister())
     val i1 = generator.nextInt()
     val bytes = serialize(generator)
@@ -26,6 +28,7 @@ class ThreadLocalRandomGeneratorTest extends FunSuite with Matchers {
 
     i1 should not be i2
   }
+
 
   private def serialize(generator: ThreadLocalRandomGenerator): Array[Byte] = {
     val outputStream = new ByteArrayOutputStream(512)

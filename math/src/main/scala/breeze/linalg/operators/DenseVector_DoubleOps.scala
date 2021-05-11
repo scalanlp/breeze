@@ -3,9 +3,8 @@ package breeze.linalg.operators
 import breeze.linalg._
 import breeze.macros.cforRange
 import scalaxy.debug.require
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import dev.ludovic.netlib.BLAS.{getInstance => blas}
 
-// TODO: rename this
 trait DenseVector_DoubleOps extends DenseVectorExpandOps {
 
   // TODO: try deleting (axpy)
