@@ -29,6 +29,9 @@ class BernoulliTest extends AnyFunSuite with Checkers with MomentsTestBase[Boole
 
   import Arbitrary.arbitrary
 
+
+  override val numSamples: Int = 30000
+
   def arbParameter = Arbitrary(arbitrary[Double].map(x => math.max(math.abs(x) % 1.0, 1E-1)))
 
   def paramsClose(p: Double, b: Double) = if (b == 0.0) p < 1E-4 else (p - b).abs / b.abs.max(1E-4) < 1E-1
