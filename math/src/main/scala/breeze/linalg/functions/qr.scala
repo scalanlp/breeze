@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import org.netlib.util.intW
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.macros.{cforRange, cforRange2}
 
 sealed private[this] trait QRMode

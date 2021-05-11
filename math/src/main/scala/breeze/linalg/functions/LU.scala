@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import org.netlib.util.intW
-import dev.ludovic.netlib.LAPACK.{ getInstance => lapack }
+import com.github.fommil.netlib.LAPACK.{ getInstance => lapack }
 import breeze.generic.UFunc
 import breeze.math.Semiring
 import breeze.storage.Zero

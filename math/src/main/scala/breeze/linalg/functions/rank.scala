@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.linalg.svd.SVD
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.math.Field
