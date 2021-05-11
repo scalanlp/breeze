@@ -3,7 +3,9 @@ name := "breeze"
 Common.commonSettings
 
 libraryDependencies ++= Seq(
-  "com.github.fommil.netlib" % "core" % "1.1.2",
+  "dev.ludovic.netlib" % "blas" % "2.0.0",
+  "dev.ludovic.netlib" % "lapack" % "2.0.0",
+  "dev.ludovic.netlib" % "arpack" % "2.0.0",
   "net.sourceforge.f2j" % "arpack_combined_all" % "0.1",
   "net.sf.opencsv" % "opencsv" % "2.3",
   "com.github.wendykierp" % "JTransforms" % "3.1",

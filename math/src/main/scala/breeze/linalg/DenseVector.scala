@@ -25,7 +25,7 @@ import breeze.util._
 import breeze.storage.Zero
 
 import scala.reflect.ClassTag
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import dev.ludovic.netlib.BLAS.{getInstance => blas}
 import breeze.macros.expand
 
 import scala.math.BigInt

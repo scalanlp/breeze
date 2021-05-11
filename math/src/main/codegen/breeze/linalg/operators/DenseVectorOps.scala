@@ -6,7 +6,7 @@ import breeze.linalg.support._
 import breeze.macros.expand
 import breeze.math.{Complex, Field, Ring, Semiring}
 import breeze.util.ArrayUtil
-import com.github.fommil.netlib.BLAS.{getInstance => blas}
+import dev.ludovic.netlib.BLAS.{getInstance => blas}
 import scalaxy.debug._
 import breeze.macros._
 import breeze.math.PowImplicits._
