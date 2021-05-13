@@ -15,7 +15,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("3.0.0-RC3", "2.12.13", "2.13.5")
+  val buildCrossScalaVersions = Seq("3.0.0", "2.12.13", "2.13.5")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
