@@ -10,7 +10,7 @@ dist: trusty
 before_install:
  - sudo apt-get update -qq
    #- sudo apt-get install -qq libatlas3gf-base libopenblas-base
-sbt_args:
+sbt_args: -Dcom.github.fommil.netlib.BLAS=com.github.fommil.netlib.F2jBLAS -Dcom.github.fommil.netlib.LAPACK=com.github.fommil.netlib.F2jLAPACK -Dcom.github.fommil.netlib.ARPACK=com.github.fommil.netlib.F2jARPACK
 cache:
   directories:
   - $HOME/.ivy2

@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.macros.expand
 import org.netlib.util.intW
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import breeze.generic.UFunc
 import breeze.linalg.operators.{OpSolveMatrixBy, OpMulMatrix}
 import breeze.linalg.support.CanTranspose

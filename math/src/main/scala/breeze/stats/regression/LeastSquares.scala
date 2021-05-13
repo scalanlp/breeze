@@ -3,7 +3,7 @@ package breeze.stats.regression
 import breeze.generic.UFunc
 import breeze.linalg._
 import org.netlib.util.intW
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
 import java.util.Arrays
 
 private object leastSquaresImplementation {

@@ -8,8 +8,8 @@ import org.netlib.util.intW
 import breeze.optimize.proximal.Constraint._
 import scala.math.abs
 import breeze.numerics._
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
-import dev.ludovic.netlib.BLAS.{getInstance => blas}
+import com.github.fommil.netlib.LAPACK.{getInstance => lapack}
+import com.github.fommil.netlib.BLAS.{getInstance => blas}
 import breeze.optimize.linear.{PowerMethod, NNLS, ConjugateGradient}
 import breeze.stats.distributions.Rand
 import breeze.macros._
