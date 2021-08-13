@@ -7,7 +7,7 @@ libraryDependencies ++= {
     case Some((2, _)) => 
       Seq(
         "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}",
-        ("org.typelevel" %% "spire" % "0.17.0").withDottyCompat(scalaVersion.value),
+//        ("org.typelevel" %% "spire" % "0.17.0").withDottyCompat(scalaVersion.value),
       )
     case Some((3, _)) => Seq(
     )

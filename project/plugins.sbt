@@ -11,4 +11,4 @@ addSbtPlugin("org.scalanlp" % "sbt-breeze-expand-codegen" % "0.2.1-SNAPSHOT")
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.3")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
 
-addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.5.2")
+ addSbtPlugin("ch.epfl.lamp" % "sbt-dotty" % "0.5.5")

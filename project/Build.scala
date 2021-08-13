@@ -4,7 +4,7 @@ import breeze.codegen.plugin.SbtBreezeCodegenPlugin.breezeCodegenSettings
 import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeProjectHosting, sonatypePublishTo}
 import xerial.sbt.Sonatype._
 
-import dotty.tools.sbtplugin.DottyPlugin.autoImport._
+//import dotty.tools.sbtplugin.DottyPlugin.autoImport._
 
 object Common {
 
@@ -15,7 +15,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("3.0.0", "2.12.13", "2.13.5")
+  val buildCrossScalaVersions = Seq("3.0.1", "2.12.13", "2.13.5")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -37,10 +37,10 @@ object Common {
 
     // test dependencies
     libraryDependencies ++= Seq(
-      "org.scalatest" %% "scalatest" % "3.2.8" % "test",
-      "org.scalatest" %% "scalatest-funsuite" % "3.2.8" % "test",
-      "org.scalatest" %% "scalatest-wordspec" % "3.2.8" % "test",
-      "org.scalatestplus" %% "scalacheck-1-15" % "3.2.8.0" % "test",
+      "org.scalatest" %% "scalatest" % "3.2.9" % "test",
+      "org.scalatest" %% "scalatest-funsuite" % "3.2.9" % "test",
+      "org.scalatest" %% "scalatest-wordspec" % "3.2.9" % "test",
+      "org.scalatestplus" %% "scalacheck-1-15" % "3.2.9.0" % "test",
       "org.scalacheck" %% "scalacheck" % "1.15.3" % "test"
     ),
     libraryDependencies ++= {
