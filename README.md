@@ -2,7 +2,7 @@
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
 
-The latest release is 1.2, which is cross-built against Scala 2.12 and 2.13.
+The latest release is 1.3, which is cross-built against Scala 2.12 and 2.13.
 
 ## Documentation
 
@@ -102,3 +102,16 @@ Corporate (Code) Contributors:
 
 
 And others (contact David Hall if you've contributed and aren't listed).
+
+## Common Issues
+
+### Segmentation Fault or Other Crashes on Linux
+
+Netlib, the new low level BLAS library Breeze uses, in turn uses OpenBLAS by default on Linux, which has some quirky behavior w.r.t. threading. (Please see https://github.com/luhenry/netlib/issues/2).
+As work arounds:
+
+* Use MKL, if possible
+* Increase the size of the stack of Java threads with `-Xss10M` (set the Java threads' stack size to 10 Mbytes)
+* Make sure OpenBLAS doesn't use the parallel implementation by defining the environment variable `OPENBLAS_NUM_THREADS=1`
+* Compile a custom version of OpenBLAS that unconditionally define `USE_ALLOC_HEAP` at https://github.com/xianyi/OpenBLAS/blob/develop/lapack/getrf/getrf_parallel.c#L49
+
