@@ -37,6 +37,7 @@ object eig extends UFunc {
       val Wi = DenseVector.zeros[Double](n)
 
       val Vr = DenseMatrix.zeros[Double](n, n)
+      val Vl = DenseMatrix.zeros[Double](n, n)
 
       // Find the needed workspace
       val worksize = Array.ofDim[Double](1)
@@ -80,7 +81,7 @@ object eig extends UFunc {
         scala.math.max(1, n),
         Wr.data,
         Wi.data,
-        Array.empty[Double],
+        Vl.data,
         scala.math.max(1, n),
         Vr.data,
         scala.math.max(1, n),
