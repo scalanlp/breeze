@@ -17,14 +17,15 @@ package breeze
 
 import breeze.linalg.DenseMatrix
 import breeze.numerics.abs
-import breeze.io.{FileStreams, CSVWriter, CSVReader}
+import breeze.io.{CSVReader, CSVWriter, FileStreams}
 import linalg.operators._
-import breeze.linalg.support.{RangeExtender, CanCopy}
+import breeze.linalg.support.{CanCopy, CanMapValues, RangeExtender}
 import math.Semiring
 import storage.Zero
-import java.io.{PrintWriter, File, FileReader}
+
+import java.io.{File, FileReader, PrintWriter}
 import scala.reflect.ClassTag
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * This package contains everything relating to Vectors, Matrices, Tensors, etc.

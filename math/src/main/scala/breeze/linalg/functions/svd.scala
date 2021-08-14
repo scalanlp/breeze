@@ -7,7 +7,7 @@ import org.netlib.util.intW
 import org.netlib.util.doubleW
 import breeze.linalg.operators.OpMulMatrix
 import breeze.linalg.support.CanTranspose
-import spire.implicits.cforRange
+import breeze.macros.cforRange
 
 //  Options fot the singular value decomposition (SVD) of a real M-by-N matrix
 sealed private[this] abstract class SVDMode(val JOBZ: String)
@@ -186,7 +186,7 @@ object svd extends UFunc {
     SVD(U, S, Vt)
   }
 
-  type OpMulMatrixDenseVector[Mat] = OpMulMatrix.Impl2[Mat, DenseVector[Double], DenseVector[Double]]
+  type OpMulMatrix_Mat_DV_eq_DV[Mat] = OpMulMatrix.Impl2[Mat, DenseVector[Double], DenseVector[Double]]
 
   /**
    * Implementation of svds for a sparse matrix. The caller provides two operations: mul - matrix
@@ -223,10 +223,10 @@ object svd extends UFunc {
    *         transpose of right singular vectors matrix of size k*m.
    */
   implicit def Svd_Sparse_Impl[Mat, MatTranspose](
-      implicit mul: OpMulMatrixDenseVector[Mat],
-      trans: CanTranspose[Mat, MatTranspose],
-      mulTrans: OpMulMatrixDenseVector[MatTranspose],
-      dimImpl: dim.Impl[Mat, (Int, Int)]): Impl3[Mat, Int, Double, DenseSVD] = {
+                                                   implicit mul: OpMulMatrix_Mat_DV_eq_DV[Mat],
+                                                   trans: CanTranspose[Mat, MatTranspose],
+                                                   mulTrans: OpMulMatrix_Mat_DV_eq_DV[MatTranspose],
+                                                   dimImpl: dim.Impl[Mat, (Int, Int)]): Impl3[Mat, Int, Double, DenseSVD] = {
 
     class Svd_Sparse_Impl_Instance extends Impl3[Mat, Int, Double, DenseSVD] {
       val arpack = ARPACK.getInstance()

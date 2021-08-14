@@ -14,7 +14,7 @@ import scala.math.abs
 import scala.Double.NegativeInfinity
 import scala.Double.PositiveInfinity
 import breeze.linalg._
-import spire.syntax.cfor._
+import breeze.macros._
 import breeze.linalg.norm
 
 trait Proximal {
@@ -51,9 +51,7 @@ case class ProjectL1(s: Double) extends Proximal {
   val projectSimplex = ProjectProbabilitySimplex(s)
 
   def prox(x: DenseVector[Double], rho: Double = 1.0): Unit = {
-    val u = x.mapValues {
-      _.abs
-    }
+    val u = breeze.numerics.abs(x)
     projectSimplex.prox(u, rho)
     cforRange(0 until x.length) { i =>
       x.update(i, signum(x(i)) * u(i))

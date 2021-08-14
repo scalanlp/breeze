@@ -7,15 +7,15 @@ import breeze.math.{Complex, Semiring}
 import java.util
 import scala.math.BigInt
 
-trait BitVectorOps {
+trait BitVectorOps extends GenericOps {
 
-  implicit object anyImpl extends any.Impl[BitVector, Boolean] {
+  implicit object impl_any_BV_eq_Boolean extends any.Impl[BitVector, Boolean] {
     override def apply(v: BitVector): Boolean = {
       v.data.cardinality() != 0
     }
   }
 
-  implicit object allImpl extends all.Impl[BitVector, Boolean] {
+  implicit object impl_all_BV_eq_Boolean extends all.Impl[BitVector, Boolean] {
     override def apply(v: BitVector): Boolean = {
       v.data.cardinality() == v.size
     }
@@ -23,7 +23,7 @@ trait BitVectorOps {
 
   @expand
   @expand.valify
-  implicit def bv_bv_UpdateOp[@expand.args(OpAnd, OpOr, OpXor) Op <: OpType](
+  implicit def impl_Op_InPlace_BV_BV[@expand.args(OpAnd, OpOr, OpXor) Op <: OpType](
                                                                                      implicit @expand.sequence[Op]({
     _.and(_)
   }, {
@@ -40,7 +40,7 @@ trait BitVectorOps {
     }
 
 
-  implicit val bv_bv_UpdateOp_OpSet: OpSet.InPlaceImpl2[BitVector, BitVector] =
+  implicit val impl_OpSet_InPlace_BV_BV: OpSet.InPlaceImpl2[BitVector, BitVector] =
     new OpSet.InPlaceImpl2[BitVector, BitVector] {
       def apply(a: BitVector, b: BitVector): Unit = {
         if (!a.lengthsMatch(b)) throw new IllegalArgumentException(s"Lengths don't match: ${a.length} ${b.length}")
@@ -51,7 +51,7 @@ trait BitVectorOps {
 
   @expand
   @expand.valify
-  implicit def bv_bv_Op[@expand.args(OpAnd, OpOr, OpXor) Op <: OpType](
+  implicit def impl_Op_BV_BV_eq_BV[@expand.args(OpAnd, OpOr, OpXor) Op <: OpType](
                                                                         implicit @expand.sequence[Op]({
     _.and(_)
   }, {

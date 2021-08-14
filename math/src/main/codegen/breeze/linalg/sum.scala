@@ -11,10 +11,10 @@ import breeze.storage.Zero
 
 import scala.collection.TraversableOnce
 import scala.reflect.ClassTag
-import spire.syntax.cfor._
+import breeze.macros._
 import scala.collection.compat._
 
-object sum extends UFunc with sumLowPrio with VectorizedReduceUFunc {
+object sum extends VectorizedReduceUFunc with sumLowPrio {
   override type Op = OpAdd.type
 
   @expand
@@ -185,7 +185,7 @@ trait VectorizedReduceUFunc extends UFunc {
 
 }
 
-sealed trait sumLowPrio { this: sum.type =>
+sealed trait sumLowPrio {  self: sum.type =>
   implicit def sumSummableThings[CC, T](implicit view: CC <:< Iterable[T], tSum: OpAdd.Impl2[T, T, T]): Impl[CC, T] = {
     new Impl[CC, T] {
       override def apply(v: CC): T = v.reduceLeft(tSum(_, _))

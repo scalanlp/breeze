@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.benchmark._
 import breeze.numerics.sin
 import breeze.stats.distributions._
-import spire.implicits._
+import breeze.macros._
 
 object DenseMatrixBenchmark extends MyRunner(classOf[DenseMatrixBenchmark])
 
@@ -27,109 +27,32 @@ trait BuildsRandomMatrices {
 }
 
 class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
-  def timeValueAtRowCol(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      var t: Double = 0
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
-          t += mat(i, j)
-        })
-      })
-      t
-    })
-
-  def timeUnsafeValueAtRowCol(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      var t: Double = 0
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
-          t += mat.unsafeValueAt(i, j)
-        })
-      })
-      t
-    })
-
-  def timeValueAtColRow(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      var t: Double = 0
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
-          t += mat(i, j)
-        })
-      })
-      t
-    })
-
-  def timeUnsafeValueAtColRow(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      var t: Double = 0
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
-          t += mat.unsafeValueAt(i, j)
-        })
-      })
-      t
-    })
-
-  def timeUpdateRowCol(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
-          mat.update(i, j, i + j)
-        })
-      })
-      mat
-    })
-  def timeUnsafeUpdateRowCol(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      cfor(0)(i => i < size, i => i + 1)(i => {
-        cfor(0)(j => j < size, j => j + 1)(j => {
-          mat.unsafeUpdate(i, j, i + j)
-        })
-      })
-      mat
-    })
-  def timeUpdateColRow(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
-          mat.update(i, j, i + j)
-        })
-      })
-      mat
-    })
-  def timeUnsafeUpdateColRow(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      val size = 2048
-      cfor(0)(j => j < size, j => j + 1)(j => {
-        cfor(0)(i => i < size, i => i + 1)(i => {
-          mat.unsafeUpdate(i, j, i + j)
-        })
-      })
-      mat
-    })
-
-  def timeMapPairs(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
-      mat.mapPairs((x: (Int, Int), v: Double) => (x._1 * x._2 * v))
-    })
-  def timeMapPairsTranspose(reps: Int) =
-    runWith(reps, { randomMatrix(2048, 2048, true) })((mat: DenseMatrix[Double]) => {
-      mat.mapPairs((x: (Int, Int), v: Double) => (x._1 * x._2 * v))
-    })
-
-  def timeSinMatrix(reps: Int) = runWith(reps, randomMatrix(2500, 2500)): Unit = { dm =>
-    sin(dm)
-  }
-
-//  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(2500, 2500)): Unit = { dm =>
-//    dm * dm
+//
+//  def timeUpdateRowCol(reps: Int) =
+//    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
+//      val size = 2048
+//      cforRange(0 until size)(i => {
+//        cforRange(0 until size)(j => {
+//          mat.update(i, j, i + j)
+//        })
+//      })
+//      mat
+//    })
+//
+//  def timeMapPairs(reps: Int): DenseMatrix[Double] =
+//    runWith(reps, { randomMatrix(2048, 2048) })((mat: DenseMatrix[Double]) => {
+//      mat.mapPairs((x: (Int, Int), v: Double) => (x._1 * x._2 * v))
+//    })
+//  def timeMapPairsTranspose(reps: Int): DenseMatrix[Double] =
+//    runWith(reps, { randomMatrix(2048, 2048, true) })((mat: DenseMatrix[Double]) => {
+//      mat.mapPairs((x: (Int, Int), v: Double) => (x._1 * x._2 * v))
+//    })
+//
+//  def timeSinMatrix(reps: Int): DenseMatrix[Double] = runWith(reps, randomMatrix(2500, 2500)) { dm =>
+//    sin(dm)
 //  }
+
+  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(2500, 2500)): Unit = { dm =>
+    dm * dm
+  }
 }

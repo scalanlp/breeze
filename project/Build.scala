@@ -4,6 +4,8 @@ import breeze.codegen.plugin.SbtBreezeCodegenPlugin.breezeCodegenSettings
 import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeProjectHosting, sonatypePublishTo}
 import xerial.sbt.Sonatype._
 
+//import dotty.tools.sbtplugin.DottyPlugin.autoImport._
+
 object Common {
 
   def priorTo2_13(scalaVersion: String): Boolean = {
@@ -13,7 +15,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("2.12.10", "2.13.3")
+  val buildCrossScalaVersions = Seq("3.0.1", "2.12.13", "2.13.5")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -22,13 +24,9 @@ object Common {
     scalaVersion := buildScalaVersion,
     crossScalaVersions := buildCrossScalaVersions,
     scalacOptions ++= Seq("-deprecation", "-language:_"),
-    javacOptions ++= Seq("-target", "1.7", "-source", "1.7"),
+    javacOptions ++= Seq("-target", "1.8", "-source", "1.8"),
     credentials += Credentials(Path.userHome / ".ivy2" / ".credentials"),
-    libraryDependencies ++= Seq(
-      "org.scalacheck" %% "scalacheck" % "1.15.1" % "test",
-      "org.scalatest" %% "scalatest" % "3.0.8" % "test",
-   //   "org.scala-lang.modules" %% "scala-collection-compat" % "1.0.0"
-    ),
+
     resolvers ++= Seq(
       Resolver.mavenLocal,
       Resolver.sonatypeRepo("snapshots"),
@@ -36,32 +34,71 @@ object Common {
       Resolver.typesafeRepo("releases")
     ),
     testOptions in Test += Tests.Argument("-oDF"),
+
+    // test dependencies
+    libraryDependencies ++= Seq(
+      "org.scalatest" %% "scalatest" % "3.2.9" % "test",
+      "org.scalatest" %% "scalatest-funsuite" % "3.2.9" % "test",
+      "org.scalatest" %% "scalatest-wordspec" % "3.2.9" % "test",
+      "org.scalatestplus" %% "scalacheck-1-15" % "3.2.9.0" % "test",
+      "org.scalacheck" %% "scalacheck" % "1.15.3" % "test"
+    ),
+    libraryDependencies ++= {
+      if (priorTo2_13(scalaVersion.value)) {
+        Seq(
+          compilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.patch),
+        )
+      } else {
+        Seq(
+
+        )
+      }
+    },
+    scalacOptions ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, minor)) if minor < 13 => Seq.empty
+        case Some((2, 13)) =>
+          Seq("-Ymacro-annotations", "-language:implicitConversions")
+        case _ =>
+          Seq("-language:implicitConversions")
+      }
+    },
+
+    // stuff related to publishing
     publishArtifact in Test := false,
     pomIncludeRepository := { _ =>
       false
     },
-    libraryDependencies ++= {
-      if (priorTo2_13(scalaVersion.value)) {
-        Seq(compilerPlugin("org.scalamacros" % "paradise" % "2.1.0" cross CrossVersion.patch))
-      } else {
-        Seq.empty
-      }
-    },
-    scalacOptions ++= {
-      if (priorTo2_13(scalaVersion.value)) {
-        Seq.empty
-      } else {
-        Seq("-Ymacro-annotations")
-      }
-    },
-
     sonatypeProfileName := "org.scalanlp",
     publishMavenStyle := true,
-    licenses := Seq("Apache Publich License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
+    licenses := Seq("Apache Public License 2.0" -> url("http://www.apache.org/licenses/LICENSE-2.0.html")),
     publishTo := sonatypePublishTo.value,
+    sonatypeProjectHosting := Some(GitHubHosting("scalanlp", "breeze", "David Hall", "david.lw.hall@gmail.com")),
 
-    // Where is the source code hosted: GitHub or GitLab?
-    sonatypeProjectHosting := Some(GitHubHosting("dlwh", "sbt-breeze-expand-codegen", "david.lw.hall@gmail.com"))
-
+    unmanagedSourceDirectories in Compile ++= {
+      CrossVersion.partialVersion(scalaVersion.value) match {
+        case Some((2, 11|12)) => Seq(
+          baseDirectory.value / "src" / "main" / "scala_2.11_2.12",
+          baseDirectory.value / "src" / "main" / "scala_2",
+        )
+        case Some((2, 13)) => Seq(
+          baseDirectory.value / "src" / "main" / "scala_2",
+          baseDirectory.value / "src" / "main" / "scala_2.13+"
+        )
+        case Some( (3, _)) => Seq(
+          baseDirectory.value / "src" / "main" / "scala_2.13+",
+          baseDirectory.value / "src" / "main" / "scala_3"
+        )
+        case _ => ???
+      }
+    }, 
+    // TODO: remove when possibl`e
+   // publishArtifact in (Compile, packageDoc) := {
+    //  CrossVersion.partialVersion(scalaVersion.value) match {
+     //   case Some( (3, _)) => false
+    //    case _ => true
+//      
+     // }
+   // }
   ) ++ breezeCodegenSettings
 }

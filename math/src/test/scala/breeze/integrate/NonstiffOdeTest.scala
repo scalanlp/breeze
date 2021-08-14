@@ -1,6 +1,6 @@
 package breeze.integrate
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import breeze.integrate
 import breeze.linalg._
@@ -11,7 +11,7 @@ import scala.math.Pi
  *
  * @author jaketimothy
  **/
-class NonstiffOdeTest extends FunSuite {
+class NonstiffOdeTest extends AnyFunSuite {
 
   // allowable percent difference
   val limit = 0.005

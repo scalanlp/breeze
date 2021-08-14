@@ -21,7 +21,6 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-@SerialVersionUID(1L)
 trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
   def value(implicit zero: Zero[V]): V
 
@@ -48,7 +47,7 @@ trait ConfigurableDefault[@specialized V] extends Serializable { outer =>
   }
 }
 
-sealed trait LowPriorityConfigurableImplicits { this: ConfigurableDefault.type =>
+sealed trait LowPriorityConfigurableImplicits {  self: ConfigurableDefault.type =>
   implicit def default[V]: ConfigurableDefault[V] = DefaultConfigurableDefault[V]()
 }
 

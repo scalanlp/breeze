@@ -1,8 +1,10 @@
 package breeze.stats.hypothesis
 
 import org.scalatest._
+import org.scalatest.funsuite._
+import matchers.should.Matchers._
 
-class chi2TestTest extends FunSuite with Matchers {
+class chi2TestTest extends AnyFunSuite {
   val threshold = 0.01
   test("Chi2 test single comparisons") {
     chi2Test(14, 200, 20, 200).pVal should be(0.2820 +- threshold)

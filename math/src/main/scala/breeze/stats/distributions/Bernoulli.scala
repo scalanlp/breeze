@@ -37,7 +37,7 @@ case class Bernoulli(p: Double)(implicit rand: RandBasis = Rand)
   def probabilityOf(b: Boolean) = if (b) p else (1 - p)
 
   override def draw() = {
-    rand.uniform.get < p
+    rand.uniform.draw() < p
   }
 
   override def toString() = "Bernoulli(" + p + ")"
@@ -50,11 +50,11 @@ case class Bernoulli(p: Double)(implicit rand: RandBasis = Rand)
 
 object Bernoulli extends ExponentialFamily[Bernoulli, Boolean] with HasConjugatePrior[Bernoulli, Boolean] {
   type ConjugatePrior = Beta
-  val conjugateFamily = Beta
+  val conjugateFamily: Beta.type = Beta
 
-  def predictive(parameter: Beta.Parameter) = new Polya(Counter(true -> parameter._1, false -> parameter._2))
+  override def predictive(parameter: Beta.Parameter)(implicit basis: RandBasis) = new Polya(Counter(true -> parameter._1, false -> parameter._2))
 
-  def posterior(prior: Beta.Parameter, evidence: IterableOnce[Boolean]) = {
+  override def posterior(prior: Beta.Parameter, evidence: IterableOnce[Boolean]) = {
     evidence.foldLeft(prior) { (acc, ev) =>
       if (ev) acc.copy(_1 = acc._1 + 1)
       else acc.copy(_2 = acc._2 + 1)

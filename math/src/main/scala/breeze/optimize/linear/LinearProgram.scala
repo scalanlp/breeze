@@ -4,6 +4,7 @@ import collection.mutable.ArrayBuffer
 import breeze.linalg._
 import org.apache.commons.math3.optim.linear._
 import org.apache.commons.math3.optim.nonlinear.scalar._
+
 import scala.collection.JavaConverters._
 
 /**
@@ -82,9 +83,12 @@ class LinearProgram {
         case _ => "problem "
       }
 
+      val beg = "\nsubject to"
+      val sep = "\n          "
+
       s"${_goal}    " + objective + {
         if (constraints.nonEmpty) {
-          "\nsubject to  " + constraints.mkString("\n" + " " * "subject to  ".length)
+          constraints.mkString(beg, sep, "")
         } else ""
       }
     }
@@ -309,7 +313,7 @@ object LinearProgram {
     def minimize(lp: LinearProgram)(obj: lp.Problem): lp.Result
   }
 
-  implicit val mySolver = {
+  implicit val mySolver: Solver = {
 //    NativeLPSolver
 //  } catch {
 //    case ex: SecurityException =>

@@ -1,7 +1,7 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import spire.implicits.cforRange
+import breeze.macros.cforRange
 
 /**
  * Computes the determinant of the given real matrix.

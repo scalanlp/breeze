@@ -1,8 +1,10 @@
 package breeze.optimize
 
-import breeze.linalg.operators.OpMulMatrix
+import breeze.linalg
+import breeze.linalg.operators.{HasOps, OpMulMatrix}
 import breeze.linalg.support.{CanMapValues, CanTraverseValues, CanZipMapValues}
 import breeze.math._
+import breeze.optimize.DiffFunction.castOps
 import breeze.optimize.FirstOrderMinimizer.OptParams
 import breeze.util.Implicits._
 
@@ -45,14 +47,14 @@ object OptimizationPackage extends OptimizationPackageLowPriority {
 
   implicit def secondOrderPackage[Vector, Hessian](
       implicit space: MutableFiniteCoordinateField[Vector, _, Double],
-      mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]) = new SecondOrderOptimizationPackage[Vector, Hessian]()
+      mult: OpMulMatrix.Impl2[Hessian, Vector, Vector]): SecondOrderOptimizationPackage[Vector, Hessian] = new SecondOrderOptimizationPackage[Vector, Hessian]()
 
   class FirstOrderStochasticOptimizationPackage[Vector]()(
       implicit space: MutableFiniteCoordinateField[Vector, _, Double])
       extends IterableOptimizationPackage[
         StochasticDiffFunction[Vector],
         Vector,
-        FirstOrderMinimizer[Vector, StochasticDiffFunction[Vector]]#State] {
+        FirstOrderMinimizer.State[Vector, _, _]] {
     def minimize(fn: StochasticDiffFunction[Vector], init: Vector, options: OptimizationOption*): Vector = {
       iterations(fn, init, options: _*).last.x
     }
@@ -60,7 +62,7 @@ object OptimizationPackage extends OptimizationPackageLowPriority {
     override def iterations(
         fn: StochasticDiffFunction[Vector],
         init: Vector,
-        options: OptimizationOption*): Iterator[FirstOrderMinimizer[Vector, StochasticDiffFunction[Vector]]#State] = {
+        options: OptimizationOption*): Iterator[FirstOrderMinimizer.State[Vector, _, _]] = {
       options.foldLeft(OptParams())((a, b) => b.apply(a)).iterations(fn, init)
     }
   }
@@ -129,8 +131,8 @@ sealed trait OptimizationPackageLowPriority2 {
 
 sealed trait OptimizationPackageLowPriority extends OptimizationPackageLowPriority2 {
 
-  class LBFGSMinimizationPackage[DF, Vector]()(
-      implicit space: MutableEnumeratedCoordinateField[Vector, _, Double],
+  class LBFGSMinimizationPackage[DF, Vector, I]()(
+      implicit space: MutableEnumeratedCoordinateField[Vector, I, Double],
       df: DF <:< DiffFunction[Vector])
       extends IterableOptimizationPackage[DF, Vector, LBFGS[Vector]#State] {
     def minimize(fn: DF, init: Vector, options: OptimizationOption*): Vector = {
@@ -138,13 +140,13 @@ sealed trait OptimizationPackageLowPriority extends OptimizationPackageLowPriori
     }
 
     override def iterations(fn: DF, init: Vector, options: OptimizationOption*): Iterator[LBFGS[Vector]#State] = {
-      options.foldLeft(OptParams())((a, b) => b.apply(a)).iterations(new CachedDiffFunction(fn)(space.copy), init)
+      options.foldLeft(OptParams())((a, b) => b.apply(a)).iterations(new CachedDiffFunction(fn)(space.copy), init)(space)
     }
   }
 
-  implicit def lbfgsMinimizationPackage[DF, Vector](
-      implicit space: MutableFiniteCoordinateField[Vector, _, Double],
-      df: DF <:< DiffFunction[Vector]): LBFGSMinimizationPackage[DF, Vector] = {
-    new LBFGSMinimizationPackage[DF, Vector]()
+  implicit def lbfgsMinimizationPackage[DF, I, Vector](
+      implicit space: MutableFiniteCoordinateField[Vector, I, Double],
+      df: DF <:< DiffFunction[Vector]): LBFGSMinimizationPackage[DF, Vector, I] = {
+    new LBFGSMinimizationPackage[DF, Vector, I]()
   }
 }

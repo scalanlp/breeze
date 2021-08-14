@@ -23,7 +23,7 @@ import java.util
 import scalaxy.debug._
 
 import scala.reflect.ClassTag
-import spire.syntax.cfor._
+import breeze.macros.cforRange
 import java.io.Serializable
 
 /**
@@ -42,7 +42,7 @@ final class SparseArray[@specialized(Double, Int, Float, Long) V](
     private var used: Int,
     val size: Int,
     val default: V)
-    extends ArrayLike[V]
+    extends SparseArrayLike[V]
     with Storage[V]
     with Serializable {
 
@@ -499,7 +499,7 @@ object SparseArray {
     }
   }
 
-  def create[@specialized(Int, Float, Double) T: ClassTag: Zero](length: Int)(values: (Int, T)*) = {
+  def create[@specialized(Int, Float, Double) T: ClassTag: Zero](length: Int)(values: (Int, T)*): SparseArray[T] = {
     val rv = new SparseArray[T](length)
     for ((k, v) <- values) {
       rv(k) = v
@@ -507,7 +507,7 @@ object SparseArray {
     rv
   }
 
-  def tabulate[@specialized(Int, Float, Double) T: ClassTag: Zero](length: Int)(fn: (Int => T)) = {
+  def tabulate[@specialized(Int, Float, Double) T: ClassTag: Zero](length: Int)(fn: (Int => T)): SparseArray[T] = {
     val rv = new SparseArray[T](length)
     var i = 0
     while (i < length) {

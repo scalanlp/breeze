@@ -1,12 +1,13 @@
 package breeze.linalg
 
 import breeze.linalg.operators.OpSet
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.math.Semiring
 import breeze.storage.Zero
-import spire.syntax.cfor.cforRange
+import breeze.macros._
 
 import scala.reflect.ClassTag
 
@@ -83,8 +84,8 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
       @specialized(Int, Float, Double) V,
       @specialized(Int, Float, Double) V2: ClassTag: Zero]
     : CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] = {
-    new CanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] {
-      override def apply(from: SliceMatrix[K1, K2, V], fn: (V) => V2): DenseMatrix[V2] = {
+    new DenseCanMapValues[SliceMatrix[K1, K2, V], V, V2, DenseMatrix[V2]] {
+      override def map(from: SliceMatrix[K1, K2, V], fn: (V) => V2): DenseMatrix[V2] = {
         DenseMatrix.tabulate(from.rows, from.cols)((i, j) => fn(from(i, j)))
       }
 
@@ -105,11 +106,11 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
 
       def isTraversableAgain(from: SliceMatrix[K1, K2, V]): Boolean = true
 
-      /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: SliceMatrix[K1, K2, V], fn: ValuesVisitor[V]): Unit = {
-        from.activeValuesIterator.foreach {
+      def traverse(from: SliceMatrix[K1, K2, V], fn: ValuesVisitor[V]): fn.type = {
+        from.valuesIterator.foreach {
           fn.visit(_)
         }
+        fn
       }
 
     }
@@ -168,7 +169,7 @@ object SliceMatrix extends LowPrioritySliceMatrix with SliceMatrixOps {
   }
 }
 
-trait LowPrioritySliceMatrix { this: SliceMatrix.type =>
+trait LowPrioritySliceMatrix {  self: SliceMatrix.type =>
   // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
   // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
   // return a SliceMatrix

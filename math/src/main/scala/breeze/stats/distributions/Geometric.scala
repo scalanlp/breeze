@@ -16,12 +16,14 @@ case class Geometric(p: Double)(implicit rand: RandBasis = Rand)
   require(p <= 1)
 
   def draw() = {
-    // from "Random Number Generation and Monte CArlo Methods"
-    if (p < 1.0 / 3.0) math.ceil(math.log(rand.uniform.get) / math.log(1 - p)).toInt
+    // from "Random Number Generation and Monte Carlo Methods"
+    if (p < 1.0 / 3.0) math.ceil(math.log(rand.uniform.draw()) / math.log(1 - p)).toInt
     else {
       // look at the cmf
-      var i = 0
-      do i += 1 while (rand.uniform.draw() > p)
+      var i = 1
+      while (rand.uniform.draw() > p) {
+        i += 1
+      }
       i
     }
   }
@@ -65,9 +67,9 @@ object Geometric extends ExponentialFamily[Geometric, Int] with HasConjugatePrio
   def distribution(p: Geometric.Parameter) = new Geometric(p)
 
   type ConjugatePrior = Beta
-  val conjugateFamily = Beta
+  val conjugateFamily: Beta.type = Beta
 
-  def predictive(parameter: conjugateFamily.Parameter) = TODO
+  def predictive(parameter: conjugateFamily.Parameter)(implicit basis: RandBasis) = ???
 
   def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[Int]) = {
     evidence.foldLeft(prior) { (acc, x) =>

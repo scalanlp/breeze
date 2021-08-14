@@ -22,7 +22,7 @@ package breeze
 package object math {
   val i = Complex.i
 
-  class RichField(value: Double) {
+  implicit class RichField(value: Double) {
     def +(c: Complex): Complex = Complex(value, 0) + c
     def -(c: Complex): Complex = Complex(value, 0) - c
     def *(c: Complex): Complex = Complex(value, 0) * c
@@ -31,15 +31,12 @@ package object math {
     def pow(c: Complex): Complex = Complex(value, 0).pow(c)
   }
 
-  implicit def richInt(value: Int) =
+  implicit def richInt(value: Int): RichField =
     new RichField(value)
 
-  implicit def richLong(value: Long) =
-    new RichField(value)
+//  implicit def richLong(value: Long): RichField =
+//    new RichField(value)
 
-  implicit def richFloat(value: Float) =
-    new RichField(value)
-
-  implicit def richDouble(value: Double) =
+  implicit def richFloat(value: Float): RichField =
     new RichField(value)
 }

@@ -32,7 +32,7 @@ class CompactHessian(
     extends NumericOps[CompactHessian] {
   def this(m: Int) = this(null, new RingBuffer(m), new RingBuffer(m), 1.0, m)
   def repr: CompactHessian = this
-  implicit def collectionOfVectorsToMatrix(coll: scala.collection.Seq[DenseVector[Double]]) =
+  implicit def collectionOfVectorsToMatrix(coll: scala.collection.Seq[DenseVector[Double]]): DenseMatrix[Double] =
     DenseMatrix.tabulate(coll.size, coll.headOption.map(_.size).getOrElse(0)) { case (i, j) => coll(i)(j) }
   def updated(y: DenseVector[Double], s: DenseVector[Double]): CompactHessian = {
     // Compute scaling factor for initial Hessian, which we choose as
@@ -110,12 +110,6 @@ class ProjectedQuasiNewton(
       relativeTolerance: Boolean = true)(implicit space: MutableInnerProductModule[DenseVector[Double], Double]) = this(
     convergenceCheck =
       FirstOrderMinimizer.defaultConvergenceCheck[DenseVector[Double]](maxIter, tolerance, relativeTolerance),
-    m = m,
-    initFeas = initFeas,
-    testOpt = testOpt,
-    maxSrchIt = maxSrchIt,
-    gamma = gamma,
-    projection = projection,
     innerOptimizer = new SpectralProjectedGradient[DenseVector[Double]](
       tolerance = tolerance,
       maxIter = 50,
@@ -123,7 +117,14 @@ class ProjectedQuasiNewton(
       initFeas = true,
       fvalMemory = 10,
       projection = projection
-    )
+    ),
+    m = m,
+    initFeas = initFeas,
+    testOpt = testOpt,
+    maxSrchIt = maxSrchIt,
+    gamma = gamma,
+    projection = projection,
+
   )
 
   type History = CompactHessian

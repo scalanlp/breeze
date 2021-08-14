@@ -46,7 +46,7 @@ package object hypothesis {
   case class Chi2Result(chi2: Double, pVal: Double)
   private def chiSquaredTerm(e: Double, o: Double) = (e - o) * (e - o) / e
 
-  def chi2Test(successControl: Long, trialsControl: Long, successVariant: Long, trialsVariant: Long): Chi2Result = {
+  def chi2Test(successControl: Int, trialsControl: Int, successVariant: Int, trialsVariant: Int): Chi2Result = {
     /*
      * Takes 2 Bernoulli trials, and determines using a chi2 test whether there is a
      * statistically significant difference between the probabilities of success
@@ -73,7 +73,7 @@ package object hypothesis {
    * a false positive at least this large in *any* variant, not in one particular variant.
    * I.e., multiple comparisons are corrected for.
    */
-  def chi2Test(control: (Long, Long), trials: Seq[(Long, Long)]): Seq[Chi2Result] = {
+  def chi2Test(control: (Int, Int), trials: Seq[(Int, Int)]): Seq[Chi2Result] = {
     val numTrials = trials.size
     trials
       .map(x => chi2Test(control._1, control._2, x._1, x._2))

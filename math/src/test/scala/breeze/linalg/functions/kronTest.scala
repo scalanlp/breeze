@@ -2,9 +2,9 @@ package breeze.linalg
 package functions
 
 import breeze.math.Complex
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class kronTest extends FunSuite {
+class kronTest extends AnyFunSuite {
 
   test("kron complex") {
     val m = DenseMatrix((Complex(0, 1), Complex(2, 1)), (Complex(3, 3), Complex(4, 4)))

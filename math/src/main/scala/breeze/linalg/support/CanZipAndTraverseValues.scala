@@ -18,6 +18,7 @@ package breeze.linalg.support
 import breeze.math.Complex
 import scala.reflect.ClassTag
 import breeze.linalg.support.CanZipAndTraverseValues.PairValuesVisitor
+import breeze.macros._
 
 /**
  * Marker for being able to traverse over the values in a pair oof collections
@@ -34,13 +35,11 @@ object CanZipAndTraverseValues {
   trait PairValuesVisitor[A, B] {
     def visit(a: A, b: B): Unit
     def visitArray(arr: Array[A], arr2: Array[B]): Unit = {
-      var i = 0
       if (arr.length != arr2.length) {
         throw new IllegalArgumentException("Arrays to be visited must have same size")
       }
-      while (i < arr.length) {
+      cforRange (0 until arr.length) { i =>
         visit(arr(i), arr2(i))
-        i += 1
       }
     }
   }

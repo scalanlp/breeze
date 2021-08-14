@@ -15,10 +15,11 @@ package breeze.optimize
  limitations under the License.
  */
 
+import breeze.linalg.operators.HasOps
 import breeze.linalg.{DenseMatrix, DenseVector, _}
 import breeze.optimize.FirstOrderMinimizer.{ConvergenceCheck, ProjectedStepConverged, State}
 import breeze.util.SerializableLogging
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * This algorithm is refered the paper
@@ -185,7 +186,7 @@ class LBFGSB(
     var p = W.t * d
     var c = DenseVector.zeros[Double](M.rows)
     var fDerivative: Double = g.dot(d)
-    var fSecondDerivative = (-1.0 * theta) * fDerivative - p.dot(M * p)
+    var fSecondDerivative: Double = (-1.0 * theta) * fDerivative - p.dot(M * p)
     var dtMin = -(fDerivative / fSecondDerivative)
     var oldT = 0.0
     val sortedIndeces = t.map(x => x._1).toArray.sortWith((ia, ib) => t(ia)._2 < t(ib)._2)
@@ -277,7 +278,7 @@ class LBFGSB(
     val rc = fullR(freeVariableIndexes)
 
     //step2 && step3 v=M*W^T*Z*rc
-    var v: DenseVector[Double] = M * (WZ * rc)
+    var v: DenseVector[Double] = M * (WZ.*(rc)(HasOps.castOps_M_V))
     //step4 N = 1/theta * W^T*Z * (W^T*Z)^T
     var N: DenseMatrix[Double] = WZ * WZ.t
     N = N *:* invTheta

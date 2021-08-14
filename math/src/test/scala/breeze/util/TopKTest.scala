@@ -17,9 +17,10 @@
 package breeze.util
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
-class TopKTest extends FunSuite with Checkers {
+class TopKTest extends AnyFunSuite with Checkers {
 
   test("Check that we always get the top elements: doubles") {
     check { (values: List[Double], k: Int) =>

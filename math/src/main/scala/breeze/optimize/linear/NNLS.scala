@@ -3,7 +3,7 @@ package breeze.optimize.linear
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.stats.distributions.Rand
 import breeze.util.SerializableLogging
-import spire.syntax.cfor._
+import breeze.macros._
 import breeze.optimize.proximal.QpGenerator
 import breeze.optimize.proximal.QuadraticMinimizer.gemv
 import breeze.linalg.axpy

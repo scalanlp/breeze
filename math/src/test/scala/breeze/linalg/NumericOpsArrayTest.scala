@@ -1,12 +1,12 @@
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  *
  * @author dlwh
  */
-class NumericOpsArrayTest extends FunSuite {
+class NumericOpsArrayTest extends AnyFunSuite {
   import NumericOps.Arrays._
   // mostly just for compilation
   test("Array ops, non mutating") {

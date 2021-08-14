@@ -17,18 +17,19 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 
 class LogNormalTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with MomentsTestBase[Double]
     with ExpFamTest[LogNormal, Double]
     with HasCdfTestBase {
   import Arbitrary.arbitrary
-  val expFam = LogNormal
+  val expFam: LogNormal.type = LogNormal
 
   def arbParameter = Arbitrary {
     for (mean <- arbitrary[Double].map { _ % 10.0 };

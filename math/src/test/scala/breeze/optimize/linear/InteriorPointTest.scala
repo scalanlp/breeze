@@ -17,9 +17,10 @@ package breeze.optimize.linear
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.linalg._
 
-class InteriorPointTest extends FunSuite {
+class InteriorPointTest extends AnyFunSuite {
   // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm
   test("Small example") {
     val x0 = DenseVector(.2, .2)

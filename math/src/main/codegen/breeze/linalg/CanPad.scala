@@ -1,10 +1,9 @@
 package breeze.linalg
 
 import breeze.linalg.Options._
-import breeze.macros.expand
+import breeze.macros._
 import breeze.math.Semiring
 import breeze.stats.{mean, median}
-import spire.syntax.cfor._
 
 import java.util
 import scala.reflect.ClassTag
@@ -39,7 +38,6 @@ object CanPadRight {
           case Wrap => padRight1ImplDV(v, optDim, v)
           case Reflect => padRight1ImplDV(v, optDim, reverse(v))
 
-          case _ => throw new IllegalArgumentException("Option " + optMode.toString + " is not supported!")
         }
       }
 
@@ -94,7 +92,6 @@ object CanPadRight {
           case Wrap => throw new IllegalArgumentException("Option <Wrap> is not supported for 2D padding.")
           case Reflect => throw new IllegalArgumentException("Option <Reflect> is not supported for 2D padding.")
 
-          case _ => throw new IllegalArgumentException("Option " + optMode.toString + " is not supported!")
         }
       }
 
@@ -143,7 +140,6 @@ object CanPadLeft {
           case Wrap => padLeft1ImplDV(v, optDim, v)
           case Reflect => padLeft1ImplDV(v, optDim, reverse(v))
 
-          case _ => throw new IllegalArgumentException("Option " + optMode.toString + " is not supported!")
         }
       }
 
@@ -201,7 +197,6 @@ object CanPadLeft {
           case Wrap => throw new IllegalArgumentException("Option <Wrap> is not supported for 2D padding.")
           case Reflect => throw new IllegalArgumentException("Option <Reflect> is not supported for 2D padding.")
 
-          case _ => throw new IllegalArgumentException("Option " + optMode.toString + " is not supported!")
         }
       }
 

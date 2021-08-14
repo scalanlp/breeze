@@ -2,33 +2,36 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc
 import breeze.generic.UFunc.UImpl2
-import shapeless.=:!=
+import breeze.gymnastics.&:&
+import breeze.linalg
 
+import scala.util._
 import scala.reflect.ClassTag
-import breeze.linalg.support.{LiteralRow, CanCopy}
+import breeze.linalg.support.{CanCopy, LiteralRow}
 import breeze.storage.Zero
-import breeze.math.{Field, Ring, Complex, Semiring}
-import breeze.macros.expand
+import breeze.math.{Complex, Field, Ring, Semiring}
+import breeze.macros._
+
 import scala.math.BigInt
 import breeze.linalg._
 
-trait MatrixGenericOps { this: Matrix.type =>
-  class SetMMOp[@specialized(Double, Int, Float, Long) V, MM](implicit subtype: MM <:< Matrix[V])
-      extends OpSet.InPlaceImpl2[Matrix[V], MM] {
-    def apply(a: Matrix[V], b: MM): Unit = {
-      require(a.rows == b.rows, "Row dimension mismatch!")
-      require(a.cols == b.cols, "Col dimension mismatch!")
-      val bb = subtype(b)
-      // TODO: might make sense to have a "am I sparse?" check and use activeIterator instead?
-      for (i <- 0 until a.rows; j <- 0 until a.cols) {
-        a(i, j) = bb(i, j)
-      }
+trait MatrixGenericOps extends TensorLowPrio {
+//  class SetMMOp[@specialized(Double, Int, Float, Long) V, MM](implicit subtype: MM <:< Matrix[V])
+//      extends OpSet.InPlaceImpl2[Matrix[V], MM] {
+//    def apply(a: Matrix[V], b: MM): Unit = {
+//      require(a.rows == b.rows, "Row dimension mismatch!")
+//      require(a.cols == b.cols, "Col dimension mismatch!")
+//      val bb = subtype(b)
+//      // TODO: might make sense to have a "am I sparse?" check and use activeIterator instead?
+//      for (i <- 0 until a.rows; j <- 0 until a.cols) {
+//        a(i, j) = bb(i, j)
+//      }
+//
+//    }
+//  }
+//  implicit def setDMDV[V, MM](implicit st: MM <:< Matrix[V]): OpSet.InPlaceImpl2[Matrix[V], MM] = new SetMMOp[V, MM]
 
-    }
-  }
-  implicit def setDMDV[V, MM](implicit st: MM <:< Matrix[V]) = new SetMMOp[V, MM]
-
-  implicit def canCopyMatrix[V: ClassTag] = new CanCopy[Matrix[V]] {
+  implicit def canCopyMatrix[V: ClassTag]: CanCopy[Matrix[V]] = new CanCopy[Matrix[V]] {
     def apply(v1: Matrix[V]) = {
       v1.copy
     }
@@ -108,24 +111,10 @@ trait MatrixGenericOps { this: Matrix.type =>
       }
     }
 
-  implicit def castOps[M1, M2, T, Op, MR](
-      implicit v1ev: M1 <:< Matrix[T],
-      v1ne: M1 =:!= Matrix[T],
-      v2ev: M2 <:< Matrix[T],
-      v2ne: M2 =:!= Matrix[T],
-      op: UImpl2[Op, Matrix[T], Matrix[T], MR]): UImpl2[Op, M1, M2, MR] = {
-    op.asInstanceOf[UFunc.UImpl2[Op, M1, M2, MR]]
-  }
 
-  implicit def castUpdateOps[M1, M2, T, Op <: OpType](
-      implicit v1ev: M1 <:< Matrix[T],
-      v2ev: M2 <:< Matrix[T],
-      op: UFunc.InPlaceImpl2[Op, Matrix[T], Matrix[T]]): UFunc.InPlaceImpl2[Op, M1, M2] = {
-    op.asInstanceOf[UFunc.InPlaceImpl2[Op, M1, M2]]
-  }
 }
 
-trait MatrixOps extends MatrixGenericOps { this: Matrix.type =>
+trait MatrixExpandedOps extends MatrixGenericOps {
 
   import breeze.math.PowImplicits._
 
@@ -339,23 +328,24 @@ trait MatrixOps extends MatrixGenericOps { this: Matrix.type =>
 
 }
 
-trait MatrixOpsLowPrio extends MatrixGenericOps { this: MatrixOps with Matrix.type =>
-  implicit def canMulM_V_def[T, B <: Vector[T]](
-      implicit bb: B <:< Vector[T],
-      op: OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]) = (
-    implicitly[OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]]
-      .asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[Matrix[T], B, Vector[T]]]
-    )
-
-  // ibid.
-  implicit def canMulM_M_def[T, B <: Matrix[T]](
-      implicit bb: B <:< Matrix[T],
-      op: OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]]) = (
-    op.asInstanceOf[OpMulMatrix.Impl2[Matrix[T], B, Matrix[T]]]
-  )
+trait MatrixExpandedOpsLowPrio extends MatrixGenericOps {
+  // TODO: rm
+//  implicit def canMulM_V_def[T, B <: Vector[T]](
+//      implicit bb: B <:< Vector[T],
+//      op: OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]): OpMulMatrix.Impl2[Matrix[T], B, Vector[T]] = (
+//    implicitly[OpMulMatrix.Impl2[Matrix[T], Vector[T], Vector[T]]]
+//      .asInstanceOf[breeze.linalg.operators.OpMulMatrix.Impl2[Matrix[T], B, Vector[T]]]
+//    )
+//
+//  // ibid.
+//  implicit def canMulM_M_def[T, B <: Matrix[T]](
+//      implicit bb: B <:< Matrix[T],
+//      op: OpMulMatrix.Impl2[Matrix[T], Matrix[T], Matrix[T]]): OpMulMatrix.Impl2[Matrix[T], B, Matrix[T]] = (
+//    op.asInstanceOf[OpMulMatrix.Impl2[Matrix[T], B, Matrix[T]]]
+//  )
 }
 
-trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type =>
+trait MatrixMultOps extends MatrixExpandedOps with MatrixExpandedOpsLowPrio {
   @expand
   @expand.valify
   implicit def op_M_V[@expand.args(Int, Long, Float, Double, BigInt, Complex) T]
@@ -457,3 +447,5 @@ trait MatrixMultOps extends MatrixOps with MatrixOpsLowPrio { this: Matrix.type 
       }
     }
 }
+
+trait MatrixOps extends MatrixMultOps with MatrixExpandedOps with MatrixGenericOps with MatrixExpandedOpsLowPrio

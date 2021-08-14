@@ -17,11 +17,12 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.linalg.{softmax, DenseVector, SparseVector}
 import math.{abs, exp}
 
-class DirichletTest extends FunSuite with Checkers {
+class DirichletTest extends AnyFunSuite with Checkers {
 
   test("logDraw for small values") {
     val g = new Dirichlet(DenseVector(1E-5, 5.0, 50.0))

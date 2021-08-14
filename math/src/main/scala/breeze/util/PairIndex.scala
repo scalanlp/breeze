@@ -5,7 +5,7 @@ package breeze.util
  * @author dlwh
  */
 class PairIndex[T, U](tIndex: Index[T], uIndex: Index[U]) extends Index[(T, U)] {
-  def iterator = for (t <- tIndex iterator; u <- uIndex iterator) yield (t, u);
+  def iterator = for (t <- tIndex.iterator; u <- uIndex.iterator) yield (t, u);
 
   def pairs = iterator.zipWithIndex;
 

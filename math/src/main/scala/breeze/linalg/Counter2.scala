@@ -19,6 +19,7 @@ import breeze.linalg.operators.Counter2Ops
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.storage.Zero
 
+import collection.mutable
 import collection.mutable.HashMap
 import breeze.math.Semiring
 import breeze.linalg.support._
@@ -26,13 +27,13 @@ import breeze.linalg.support._
 import scala.collection.Set
 import scala.reflect.ClassTag
 import CanTraverseValues.ValuesVisitor
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 
 import scala.collection.immutable
+import scala.collection.compat._
 
-/**
- *
- * @author dlwh
- */
+
+// TODO: remove the Like stuff.
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
  * the set of values may grow arbitrarily.
@@ -43,12 +44,11 @@ trait Counter2Like[
     K1,
     K2,
     V,
-    +M1[VV] <: Curried[scala.collection.mutable.Map, K1]#Result[VV],
-    +T <: Counter[K2, V],
+    T <: Counter[K2, V],
     +This <: Counter2[K1, K2, V]]
     extends TensorLike[(K1, K2), V, This] { self =>
 
-  def data: M1[_ <: T]
+  def data: mutable.Map[K1, T]
 
   def default: V
 
@@ -92,7 +92,7 @@ trait Counter2Like[
   def repr = this.asInstanceOf[This]
 
   override def toString: String = {
-    data.iterator.map { case (k1, c) => k1 + " -> " + c.toString }.mkString("Counter2(", ",\n", ")")
+    data.iterator.map { case (k1, c) => s"$k1 -> ${c.toString}" }.mkString("Counter2(", ",\n", ")")
   }
 
   override def equals(p1: Any): Boolean = p1 match {
@@ -105,7 +105,7 @@ trait Counter2Like[
 
 trait Counter2[K1, K2, V]
     extends Tensor[(K1, K2), V]
-    with Counter2Like[K1, K2, V, Curried[scala.collection.mutable.Map, K1]#Result, Counter[K2, V], Counter2[K1, K2, V]]
+    with Counter2Like[K1, K2, V, Counter[K2, V], Counter2[K1, K2, V]]
 
 object Counter2 extends LowPriorityCounter2 with Counter2Ops {
 
@@ -135,40 +135,28 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
   /** Aggregates the counts in the given items. */
   def apply[K1, K2, V: Semiring: Zero](values: TraversableOnce[(K1, K2, V)]): Counter2[K1, K2, V] = {
     val rv = apply[K1, K2, V]()
-    values.foreach({ case (k1, k2, v) => rv(k1, k2) = implicitly[Semiring[V]].+(rv(k1, k2), v) })
+    values.iterator.foreach({ case (k1, k2, v) => rv(k1, k2) = implicitly[Semiring[V]].+(rv(k1, k2), v) })
     rv
   }
 
   /** Counts the given elements. */
   def count[K1, K2](values: TraversableOnce[(K1, K2)]): Counter2[K1, K2, Int] = {
     val rv = apply[K1, K2, Int]()
-    values.foreach({ case (k1, k2) => rv(k1, k2) += 1; })
+    values.iterator.foreach({ case (k1, k2) => rv(k1, k2) += 1; })
     rv
   }
 
   implicit def CanMapValuesCounter[K1, K2, V, RV: Semiring: Zero]
     : CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] = {
-    new CanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] {
-      override def apply(from: Counter2[K1, K2, V], fn: (V => RV)) = {
+    new DenseCanMapValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] {
+      override def map(from: Counter2[K1, K2, V], fn: (V => RV)) = {
         val rv = Counter2[K1, K2, RV]()
         for ((k, v) <- from.iterator) {
           rv(k) = fn(v)
         }
         rv
       }
-    }
-  }
 
-  implicit def CanMapActiveValuesCounter[K1, K2, V, RV: Semiring: Zero]
-    : CanMapActiveValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] = {
-    new CanMapActiveValues[Counter2[K1, K2, V], V, RV, Counter2[K1, K2, RV]] {
-      override def apply(from: Counter2[K1, K2, V], fn: (V => RV)) = {
-        val rv = Counter2[K1, K2, RV]()
-        for ((k, v) <- from.activeIterator) {
-          rv(k) = fn(v)
-        }
-        rv
-      }
     }
   }
 
@@ -176,10 +164,11 @@ object Counter2 extends LowPriorityCounter2 with Counter2Ops {
     new CanTraverseValues[Counter2[K1, K2, V], V] {
       def isTraversableAgain(from: Counter2[K1, K2, V]): Boolean = true
 
-      def traverse(from: Counter2[K1, K2, V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: Counter2[K1, K2, V], fn: ValuesVisitor[V]): fn.type = {
         for (v <- from.valuesIterator) {
           fn.visit(v)
         }
+        fn
       }
     }
 

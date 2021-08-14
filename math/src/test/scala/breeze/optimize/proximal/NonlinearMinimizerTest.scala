@@ -5,9 +5,7 @@ import breeze.optimize.proximal.Constraint._
 import breeze.optimize.OptimizeTestBase
 import breeze.numerics._
 
-import org.scalatest.Matchers
-
-class NonlinearMinimizerTest extends OptimizeTestBase with Matchers {
+class NonlinearMinimizerTest extends OptimizeTestBase {
   val n = 5
   val H = new DenseMatrix(
     n,

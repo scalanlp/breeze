@@ -19,6 +19,7 @@ import breeze.collection.mutable.SparseArray
 import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
+import breeze.macros.cforRange
 import breeze.math._
 import breeze.storage.Zero
 import breeze.util.ArrayUtil
@@ -104,6 +105,9 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
     case _ => false
   }
 
+  /**
+   * This hashcode is consistent with over [[breeze.linalg.Vector]] hashcodes so long as the hashcode of "0" is 0.
+   **/
   override def hashCode = array.hashCode
 
   def isActive(rawIndex: Int) = array.isActive(rawIndex)
@@ -186,11 +190,7 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
   }
 }
 
-object SparseVector
-    extends SparseVectorOps
-    with DenseVector_SparseVector_Ops
-    with SparseVector_DenseMatrixOps
-    with SparseVector_DenseVector_Ops {
+object SparseVector {
 
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Zero](size: Int) =
     new SparseVector(Array.empty, Array.empty[V], 0, size)
@@ -248,46 +248,22 @@ object SparseVector
     }
   }
 
-  implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero] = new CanCopySparseVector[V]
+  implicit def canCopySparse[@spec(Double, Int, Float, Long) V: ClassTag: Zero]: CanCopySparseVector[V] = new CanCopySparseVector[V]
 
   implicit def canMapValues[V, V2: ClassTag: Zero]: CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] = {
     new CanMapValues[SparseVector[V], V, V2, SparseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
-      override def apply(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
+      override def map(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
         SparseVector.tabulate(from.length)(i => fn(from(i)))
       }
-    }
-  }
 
-  implicit def canMapActiveValues[V, V2: ClassTag: Zero]
-    : CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] = {
-    new CanMapActiveValues[SparseVector[V], V, V2, SparseVector[V2]] {
-
-      /**Maps all active key-value pairs from the given collection. */
-      override def apply(from: SparseVector[V], fn: (V) => V2): SparseVector[V2] = {
+      override def mapActive(from: SparseVector[V], fn: V => V2): SparseVector[V2] = {
         val out = new Array[V2](from.activeSize)
-        var i = 0
-        while (i < from.activeSize) {
+        cforRange (0 until from.activeSize) { i =>
           out(i) = fn(from.data(i))
-          i += 1
         }
         new SparseVector(from.index.take(from.activeSize), out, from.activeSize, from.length)
-      }
-    }
-  }
-
-  implicit def scalarOf[T]: ScalarOf[SparseVector[T], T] = ScalarOf.dummy
-
-  implicit def canIterateValues[V]: CanTraverseValues[SparseVector[V], V] = {
-    new CanTraverseValues[SparseVector[V], V] {
-
-      def isTraversableAgain(from: SparseVector[V]): Boolean = true
-
-      /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: SparseVector[V], fn: ValuesVisitor[V]): Unit = {
-        fn.zeros(from.size - from.activeSize, from.default)
-        fn.visitArray(from.data, 0, from.activeSize, 1)
       }
     }
   }
@@ -395,20 +371,7 @@ object SparseVector
 //    }
 //  }
 
-  implicit def canTransposeComplex: CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] = {
-    new CanTranspose[SparseVector[Complex], CSCMatrix[Complex]] {
-      def apply(from: SparseVector[Complex]) = {
-        val transposedMtx: CSCMatrix[Complex] = CSCMatrix.zeros[Complex](1, from.length)
-        var i = 0
-        while (i < from.activeSize) {
-          val c = from.index(i)
-          transposedMtx(0, c) = from.data(i).conjugate
-          i += 1
-        }
-        transposedMtx
-      }
-    }
-  }
+
 
   implicit def canDim[E]: dim.Impl[SparseVector[E], Int] = new dim.Impl[SparseVector[E], Int] {
     def apply(v: SparseVector[E]): Int = v.size
@@ -417,6 +380,8 @@ object SparseVector
   implicit def space[E: Field: ClassTag: Zero]: MutableFiniteCoordinateField[SparseVector[E], Int, E] = {
     MutableFiniteCoordinateField.make[SparseVector[E], Int, E]
   }
+
+  implicit def scalarOf[T]: ScalarOf[SparseVector[T], T] = ScalarOf.dummy
 
   @noinline
   private def init() = {}

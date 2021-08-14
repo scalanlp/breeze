@@ -1,6 +1,6 @@
 package breeze.numerics
 
-import breeze.generic.UFunc
+import breeze.generic._
 
 /*
 Copyright 2012 David Hall
@@ -25,7 +25,7 @@ limitations under the License.
  */
 object Bessel {
 
-  object i0 extends UFunc {
+  object i0 extends MappingUFunc {
     implicit object ImplInt extends Impl[Int, Double] {
       def apply(x: Int): Double = ImplDouble(x.toDouble)
     }
@@ -44,13 +44,12 @@ object Bessel {
     }
   }
 
-  object i1 extends UFunc {
+  object i1 extends ZeroPreservingUFunc {
     def apply(x: Double): Double = {
-      var y: Double = Double.NaN
       var z = x.abs
 
       if (z <= 8.0) {
-        y = (z / 2.0) - 2.0
+        val y = (z / 2.0) - 2.0
         z = chbevl(y, A_i1, 29) * z * math.exp(z)
       } else {
         z = math.exp(z) * chbevl(32.0 / z - 2.0, B_i1, 25) / math.sqrt(z)
@@ -75,13 +74,13 @@ object Bessel {
     b1 = 0.0
     i = N - 1
 
-    do {
+    while (i > 0) {
       b2 = b1
       b1 = b0
       b0 = x * b1 - b2 + coef(p)
       p += 1
       i -= 1
-    } while (i > 0)
+    }
 
     (0.5 * (b0 - b2))
   }

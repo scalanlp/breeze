@@ -17,13 +17,13 @@ package breeze.linalg
 import breeze.math.TensorSpaceTestBase
 import breeze.stats.mean
 import org.scalacheck.Arbitrary
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 
 /**
  * @author dlwh
  */
-class CounterTest extends FunSuite with Checkers {
+class CounterTest extends AnyFunSuite with Checkers {
   val TOLERANCE = 1e-4
   def assertClose(a: Double, b: Double) =
     assert(math.abs(a - b) < TOLERANCE)

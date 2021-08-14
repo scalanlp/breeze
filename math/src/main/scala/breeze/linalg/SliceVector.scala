@@ -11,7 +11,7 @@ import breeze.storage.Zero
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
 
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * A SliceVector is a vector that is a view of another underlying tensor. For instance:
@@ -53,7 +53,7 @@ class SliceVector[@spec(Int) K, @spec(Double, Int, Float, Long) V: ClassTag](
   }
 }
 
-object SliceVector extends SliceVectorOps {
+object SliceVector {
   implicit def scalarOf[K, T]: ScalarOf[SliceVector[K, T], T] = ScalarOf.dummy
 
   implicit def canMapKeyValuePairs[K, V, V2: ClassTag]
@@ -69,13 +69,16 @@ object SliceVector extends SliceVectorOps {
     }
   }
 
+  // TODO: should this be dense?
   implicit def canMapValues[K, V, V2: ClassTag]: CanMapValues[SliceVector[K, V], V, V2, DenseVector[V2]] = {
     new CanMapValues[SliceVector[K, V], V, V2, DenseVector[V2]] {
-      override def apply(from: SliceVector[K, V], fn: (V) => V2): DenseVector[V2] = {
+      override def map(from: SliceVector[K, V], fn: (V) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(from(i)))
       }
 
+      override def mapActive(from: SliceVector[K, V], fn: (V) => V2): DenseVector[V2] = map(from, fn)
     }
+
   }
 
   implicit def canCreateZerosLike[K, V: ClassTag: Zero]: CanCreateZerosLike[SliceVector[K, V], DenseVector[V]] = {
@@ -92,10 +95,11 @@ object SliceVector extends SliceVectorOps {
       def isTraversableAgain(from: SliceVector[K, V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: SliceVector[K, V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: SliceVector[K, V], fn: ValuesVisitor[V]): fn.type = {
         from.valuesIterator.foreach {
           fn.visit(_)
         }
+        fn
       }
 
     }

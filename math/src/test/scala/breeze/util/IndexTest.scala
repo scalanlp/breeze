@@ -17,9 +17,10 @@
 package breeze.util
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
-class IndexTest extends FunSuite with Checkers {
+class IndexTest extends AnyFunSuite with Checkers {
 
   test("CompositeIndex") {
     val index = Index(List("a", "b", "c", "d"))

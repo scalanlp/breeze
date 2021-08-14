@@ -2,14 +2,14 @@ package breeze.math
 
 import org.scalacheck.Prop.propBoolean
 import org.scalacheck._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 
 /**
  *
  * @author dlwh
  */
-trait MutableModuleTestBase[V, S] extends FunSuite with Checkers {
+trait MutableModuleTestBase[V, S] extends AnyFunSuite with Checkers {
   implicit val space: MutableModule[V, S]
   import space._
 

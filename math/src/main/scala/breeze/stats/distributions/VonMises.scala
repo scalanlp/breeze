@@ -58,9 +58,7 @@ case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis = Rand)
     theta = if (choice > 0.5) mu + acos(w) else mu - acos(w)
   } yield theta
 
-  def draw = {
-    myRandom.draw
-  }
+  def draw() = myRandom.draw()
 
   override lazy val toString = "VonMises(mu=" + mu + ", k=" + k + ")"
 

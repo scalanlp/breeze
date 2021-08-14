@@ -22,7 +22,6 @@ package breeze.linalg.support
  * @author dramage
  * @author dlwh
  */
-// Don't inherit Function1 or you will make kittens cry.
 trait CanTranspose[From, +To] {
   def apply(from: From): To
 }

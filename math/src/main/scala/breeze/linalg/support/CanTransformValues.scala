@@ -45,7 +45,7 @@ object CanTransformValues {
 
     /**Transforms all values from the given collection. */
     def transform(from: Array[A], fn: A => A): Unit = {
-      import spire.syntax.cfor._
+      import breeze.macros._
       cforRange(0 until from.length) { i =>
         from(i) = fn(from(i))
       }

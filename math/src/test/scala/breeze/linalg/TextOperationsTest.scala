@@ -1,12 +1,12 @@
 package breeze.linalg
 
 import java.io.File
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * Created by Luca Puggini: lucapuggio@gmail.com on 19/02/16.
  */
-class TextOperationsTest extends FunSuite {
+class TextOperationsTest extends AnyFunSuite {
   test("csvread and String2File methods") {
     // A csv file can be read both using the java File function and the toFile method of the string class
     val file_path = if (new File(".").getAbsolutePath.endsWith("math/.")) {

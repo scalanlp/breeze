@@ -17,11 +17,12 @@
 package breeze.util
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 import TopKImplicits._
 
-class BloomFilterTest extends FunSuite with Checkers {
+class BloomFilterTest extends AnyFunSuite with Checkers {
   test("add a bunch of strings and they're all there") {
     check { (strings: List[String], _numBuckets: Int, _numHashes: Int) =>
       {

@@ -3,6 +3,8 @@ package breeze.plot
 import java.awt.{TexturePaint, Color, Paint}
 import java.awt.image.BufferedImage
 import java.awt.geom.Rectangle2D
+import breeze.compat.Scala3Compat._
+import scala.language.implicitConversions
 
 /**
  * Maps items of type T to a well defined Paint (usually a color).
@@ -24,7 +26,7 @@ sealed trait PaintScale[T] extends (T => Paint)
  * @author dramage
  */
 case class GradientPaintScale[T](lower: T, upper: T, gradient: Array[Color] = PaintScale.WhiteToBlack)(
-    implicit view: T => Double)
+    implicit view: Conversion[T, Double])
     extends PaintScale[T] {
   def apply(value: T): Paint = {
     if (view(value).isNaN) {
@@ -87,7 +89,7 @@ object PaintScale {
   }
 
   /** Creates a GradientPaintScale automatically for the given range. */
-  implicit def gradientTuple[T](vLowerUpper: (T, T))(implicit view: T => Double): GradientPaintScale[T] =
+  implicit def gradientTuple[T](vLowerUpper: (T, T))(implicit view: Conversion[T, Double]): GradientPaintScale[T] =
     GradientPaintScale[T](vLowerUpper._1, vLowerUpper._2)
 
   /** Creates a CategoricalPaintScale from the provided partial function. */

@@ -32,10 +32,10 @@ case class InvWishart(df: Int, scale: DenseMatrix[Double])
 
   def mode: DenseMatrix[Double] = scale /:/ (df.toDouble - p - 1)
 
-  def unnormalizedLogPdf(x: DenseMatrix[Double]): Double = {(
+  def unnormalizedLogPdf(x: DenseMatrix[Double]): Double = (
     - log(det(x)) * 0.5 * (df + p + 1)
     - 0.5 * trace(scale * inv(x))
-  )}
+  )
 
   def logNormalizer: Double = {(
     - log(2) * 0.5 * (df * p)

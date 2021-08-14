@@ -23,9 +23,12 @@ import breeze.util.Terminal
 import breeze.linalg.support._
 import breeze.math._
 import breeze.linalg.operators._
+
 import scala.reflect.ClassTag
 import scala.annotation.unchecked.uncheckedVariance
 import breeze.stats.distributions.Rand
+
+import scala.collection.immutable.StringOps
 
 /**
  *
@@ -92,7 +95,7 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
     for (row <- 0 until showRows; col <- 0 until colWidths.length) {
       val cell = if (this(row, col) != null) this(row, col).toString else "--"
       rv.append(cell)
-      rv.append(" " * (colWidths(col) - cell.length))
+      rv.append(new StringOps(" ") * (colWidths(col) - cell.length))
       if (col == colWidths.length - 1) {
         if (col < cols - 1) {
           rv.append("...")
@@ -142,11 +145,7 @@ trait Matrix[@spec(Double, Int, Float, Long) V] extends MatrixLike[V, Matrix[V]]
 
 object Matrix
     extends MatrixConstructors[Matrix]
-    with LowPriorityMatrix
-    with MatrixGenericOps
-    with MatrixOpsLowPrio
-    with MatrixOps
-    with MatrixMultOps {
+    with LowPriorityMatrix {
 
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Zero](rows: Int, cols: Int): Matrix[V] =
     DenseMatrix.zeros(rows, cols)
@@ -200,8 +199,9 @@ object Matrix
       def isTraversableAgain(from: Matrix[V]): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: Matrix[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: Matrix[V], fn: ValuesVisitor[V]): fn.type = {
         from.valuesIterator.foreach(fn.visit)
+        fn
       }
     }
   }

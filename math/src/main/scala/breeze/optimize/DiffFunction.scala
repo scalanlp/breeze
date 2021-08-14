@@ -108,7 +108,7 @@ object DiffFunction extends DiffFunctionOpImplicits {
   }
 }
 
-sealed trait DiffFunctionOpImplicits { this: DiffFunction.type =>
+sealed trait DiffFunctionOpImplicits {  self: DiffFunction.type =>
 
   implicit def opAddDiffFunction[T](
       implicit opAdd: OpAdd.Impl2[T, T, T]): OpAdd.Impl2[DiffFunction[T], DiffFunction[T], DiffFunction[T]] = {

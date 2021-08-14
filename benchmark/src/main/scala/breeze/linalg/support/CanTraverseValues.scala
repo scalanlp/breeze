@@ -26,7 +26,7 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
   def timePrimitiveSum(reps: Int) = runWith(reps, {randomArray(1024 * 8)}): Unit = { arr =>
     val d = arr.data
     var sum = 0.0
-    import spire.syntax.cfor._
+    import breeze.macros._
     cforRange(0 until d.length) {
       sum += d(_)
     }
@@ -40,7 +40,7 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
   def timePrimitiveSumStrided(reps: Int) = runWith(reps, {randomArray(1024 * 8 * 5)}): Unit = { arr =>
     val d = arr.data
     var sum = 0.0
-    import spire.syntax.cfor._
+    import breeze.macros._
     cforRange(0 until d.length by 5) {
       sum += d(_)
     }

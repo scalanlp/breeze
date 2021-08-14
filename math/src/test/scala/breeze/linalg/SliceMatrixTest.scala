@@ -1,12 +1,15 @@
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import breeze.generic.UFunc
+import breeze.linalg.operators.{HasOps, OpAdd}
+import org.scalatest.funsuite.AnyFunSuite
+import breeze.gymnastics._
 
 /**
  *
  * @author dlwh
  */
-class SliceMatrixTest extends FunSuite {
+class SliceMatrixTest extends AnyFunSuite {
   val originalMatrix = DenseMatrix.tabulate[Int](5, 5) { (i, j) =>
     5 * i + j + 1
   }
@@ -51,11 +54,10 @@ class SliceMatrixTest extends FunSuite {
     }
 
     val as = a(indices, indices)
-    val bs = b(indices, indices)
-
+    val bs: SliceMatrix[Int, Int, Double] = b(indices, indices)
     as += bs
 
-    assert(expected.equals(a), "Failed to execute the addition on the slices")
+    assert(expected === a, "Failed to execute the addition on the slices")
   }
 
   test("slices of a slice matrix") {

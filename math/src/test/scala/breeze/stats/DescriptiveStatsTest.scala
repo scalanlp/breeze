@@ -1,14 +1,15 @@
 package breeze.stats
 
-import org.scalatest.{FunSuite, WordSpec}
-import org.scalatest.Matchers
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.wordspec.AnyWordSpec
+import org.scalatest.matchers.should.Matchers._
 
 import scala.util.Random
-import breeze.linalg.{DenseMatrix, DenseVector, SparseVector}
-import breeze.math.Complex
+import breeze.linalg._
+import breeze.math._
 import breeze.stats.meanAndVariance.MeanAndVariance
 
-class DescriptiveStatsTest extends WordSpec with Matchers {
+class DescriptiveStatsTest extends AnyWordSpec {
   "DescriptiveStats" should {
     "percentile should not explode when p = 1" in {
       val a = List.fill(100)(1.0)
@@ -140,7 +141,7 @@ class DescriptiveStatsTest extends WordSpec with Matchers {
   }
 }
 
-class DescriptiveStatsTest2 extends FunSuite {
+class DescriptiveStatsTest2 extends AnyFunSuite {
   //Tests copied over from LinearAlgebraTests.scala
 
   test("complex mean") {
@@ -152,7 +153,7 @@ class DescriptiveStatsTest2 extends FunSuite {
 
   test("mean and variance") {
     val r = new Random(0)
-    val data = Array.fill(100000)(r.nextGaussian)
+    val data = Array.fill(100000)(r.nextGaussian())
     val mav = meanAndVariance(data)
     val mav2 = meanAndVariance(data.iterator)
     assert(breeze.numerics.closeTo(mav.mean, 0.0, 1E-2), mav.mean + " should be 0")
@@ -162,8 +163,8 @@ class DescriptiveStatsTest2 extends FunSuite {
 
   test("mean and variance addition") {
     val r = new Random(0)
-    val data = Array.fill(100000)(r.nextGaussian)
-    val data2 = Array.fill(100000)(r.nextGaussian * 5 + 3)
+    val data = Array.fill(100000)(r.nextGaussian())
+    val data2 = Array.fill(100000)(r.nextGaussian() * 5 + 3)
     val mav = meanAndVariance(data)
     val mav2 = meanAndVariance(data2)
     val mavTotal = meanAndVariance(data ++ data2)

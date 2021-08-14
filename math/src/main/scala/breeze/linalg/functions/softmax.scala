@@ -1,10 +1,10 @@
 package breeze.linalg
 
-import breeze.generic.UFunc
+import breeze.generic.{MappingUFunc, UFunc}
 import breeze.linalg.support.CanTraverseValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * Computes the softmax (a.k.a. logSum) of an object. Softmax is defined as \log \sum_i \exp(x(i)), but
@@ -56,7 +56,7 @@ object softmax extends UFunc {
         return Double.NegativeInfinity
       }
 
-      val visit = new ValuesVisitor[Double] {
+      object visit extends ValuesVisitor[Double] {
         var accum = 0.0
         def visit(a: Double): Unit = {
           accum += scala.math.exp(a - max)
@@ -97,7 +97,7 @@ object softmax extends UFunc {
           return Float.NegativeInfinity
         }
 
-        val visit = new ValuesVisitor[Float] {
+        object visit extends ValuesVisitor[Float] {
           var accum = 0.0f
           def visit(a: Float): Unit = {
             accum += scala.math.exp(a - max).toFloat
@@ -131,7 +131,7 @@ object softmax extends UFunc {
     }
 }
 
-object logDiff extends UFunc {
+object logDiff extends MappingUFunc {
   implicit object implDoubleDouble extends Impl2[Double, Double, Double] {
     def apply(a: Double, b: Double): Double = {
       require(a >= b, s"a should be greater than b, but got $a and $b")

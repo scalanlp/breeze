@@ -1,9 +1,9 @@
 package breeze.linalg.functions
 
 import breeze.linalg.{SparseVector, DenseVector}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class tanimotoDistanceTest extends FunSuite {
+class tanimotoDistanceTest extends AnyFunSuite {
 
   test("it should be correct") {
     val v1 = DenseVector(1.0, 2.0)

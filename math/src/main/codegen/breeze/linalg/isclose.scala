@@ -1,12 +1,16 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
+import breeze.linalg.operators.{GenericOps, HasOps}
 import breeze.macros.expand
+
+// this is some nonsense to force Scala to prefer one implicit over another.
+private class isClose extends GenericOps
 
 /**
  * Created by dlwh on 11/1/15.
  */
-object isClose extends UFunc {
+object isClose extends UFunc  {
 
   val DEFAULT_TOLERANCE = 1E-8
 

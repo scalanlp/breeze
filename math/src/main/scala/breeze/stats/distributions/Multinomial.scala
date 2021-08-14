@@ -23,6 +23,8 @@ import breeze.numerics._
 import breeze.optimize.DiffFunction
 
 import scala.collection.mutable
+import scala.collection.compat._
+import breeze.compat.Scala3Compat._
 
 /**
  * Represents a Multinomial distribution over elements.
@@ -35,7 +37,7 @@ import scala.collection.mutable
  * @author dlwh
  */
 case class Multinomial[T, I](params: T)(
-    implicit ev: T => QuasiTensor[I, Double],
+    implicit ev: Conversion[T, QuasiTensor[I, Double]],
     sumImpl: breeze.linalg.sum.Impl[T, Double],
     rand: RandBasis = Rand)
     extends DiscreteDistr[I] {
@@ -65,13 +67,13 @@ case class Multinomial[T, I](params: T)(
   }
 
   def drawNaive(): I = {
-    var prob = rand.uniform.get() * sum
+    var prob = rand.uniform.draw() * sum
     assert(!prob.isNaN, "NaN Probability!")
-    for ((i, w) <- params.activeIterator) {
+    for ((i, w) <- ev(params).activeIterator) {
       prob -= w
       if (prob <= 0) return i
     }
-    params.activeKeysIterator.next()
+    ev(params).activeKeysIterator.next()
   }
 
   private def buildAliasTable(): AliasTable[I] = {
@@ -132,8 +134,8 @@ case class AliasTable[I](
     outcomes: IndexedSeq[I],
     rand: RandBasis) {
   def draw(): I = {
-    val roll = rand.randInt(outcomes.length).get()
-    val toss = rand.uniform.get()
+    val roll = rand.randInt(outcomes.length).draw()
+    val toss = rand.uniform.draw()
     if (toss < probs(roll))
       outcomes(roll)
     else
@@ -153,13 +155,13 @@ object Multinomial {
 
     import space._
     type ConjugatePrior = Dirichlet[T, I]
-    val conjugateFamily = new Dirichlet.ExpFam[T, I](exemplar)
+    val conjugateFamily: Dirichlet.ExpFam[T, I] = new Dirichlet.ExpFam[T, I](exemplar)
 
-    def predictive(parameter: conjugateFamily.Parameter) = new Polya(parameter)
+    def predictive(parameter: conjugateFamily.Parameter)(implicit basis: RandBasis) = new Polya(parameter)
 
     def posterior(prior: conjugateFamily.Parameter, evidence: TraversableOnce[I]) = {
       val localCopy: T = space.copy(prior)
-      for (e <- evidence) {
+      for (e <- evidence.iterator) {
         localCopy(e) += 1.0
       }
       localCopy
@@ -183,7 +185,7 @@ object Multinomial {
 
     def mle(stats: SufficientStatistic) = log(stats.counts)
 
-    def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[T] {
+    def likelihoodFunction(stats: SufficientStatistic): DiffFunction[T] = new DiffFunction[T] {
       def calculate(x: T) = {
         val nn: T = logNormalize(x)
         val lp = nn.dot(stats.counts)

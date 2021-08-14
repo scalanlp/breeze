@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import scala.reflect.ClassTag
-import spire.implicits._
+import breeze.macros._
 
 /**
  * roll the array
@@ -18,12 +18,12 @@ object roll extends UFunc {
         require(n < v.size)
         val result = DenseVector(new Array[T](v.size))
         val endOfBeginning = v.size - n
-        cfor(0)(j => j < n, j => j + 1)(j => {
+        cforRange(0 until n){j =>
           result(j) = v(endOfBeginning + j)
-        })
-        cfor(n)(j => j < v.size, j => j + 1)(j => {
+        }
+        cforRange(n until v.size) { j =>
           result(j) = v(j - n)
-        })
+        }
         result
       }
     }

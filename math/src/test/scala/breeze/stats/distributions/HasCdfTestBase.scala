@@ -19,15 +19,10 @@
 package breeze.stats.distributions
 
 import org.scalacheck.{Arbitrary, Prop}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 
-/**
- * TODO
- *
- * @author dlwh
- **/
-trait HasCdfTestBase extends FunSuite with Checkers {
+trait HasCdfTestBase extends AnyFunSuite with Checkers {
   type Distr <: Density[Double] with Rand[Double] with HasCdf
   implicit def arbDistr: Arbitrary[Distr]
 
@@ -44,7 +39,7 @@ trait HasCdfTestBase extends FunSuite with Checkers {
       if (prob >= 0 && math.abs(inRange - prob) <= 2E-2) {
         true
       } else {
-        println(inRange, prob)
+        println((inRange, prob))
         false
       }
     })
@@ -60,7 +55,7 @@ trait HasCdfTestBase extends FunSuite with Checkers {
       if (prob >= 0 && math.abs(inRange - prob) <= 2E-2) {
         true
       } else {
-        println(inRange, prob)
+        println((inRange, prob))
         false
       }
     })

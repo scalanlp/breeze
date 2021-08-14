@@ -51,9 +51,6 @@ case class Complex(real: Double, imag: Double) {
   def +(that: Int) =
     Complex(this.real + that, this.imag)
 
-  def +(that: Long) =
-    Complex(this.real + that, this.imag)
-
   def +(that: Float) =
     Complex(this.real + that, this.imag)
 
@@ -66,9 +63,6 @@ case class Complex(real: Double, imag: Double) {
   def -(that: Int) =
     Complex(this.real - that, this.imag)
 
-  def -(that: Long) =
-    Complex(this.real - that, this.imag)
-
   def -(that: Float) =
     Complex(this.real - that, this.imag)
 
@@ -79,9 +73,6 @@ case class Complex(real: Double, imag: Double) {
     Complex(this.real * that.real - this.imag * that.imag, this.real * that.imag + this.imag * that.real)
 
   def *(that: Int) =
-    Complex(this.real * that, this.imag * that)
-
-  def *(that: Long) =
     Complex(this.real * that, this.imag * that)
 
   def *(that: Float) =
@@ -100,9 +91,6 @@ case class Complex(real: Double, imag: Double) {
   def /(that: Int) =
     Complex(this.real / that, this.imag / that)
 
-  def /(that: Long) =
-    Complex(this.real / that, this.imag / that)
-
   def /(that: Float) =
     Complex(this.real / that, this.imag / that)
 
@@ -115,7 +103,6 @@ case class Complex(real: Double, imag: Double) {
   }
 
   def %(that: Int): Complex = this.%(Complex(that, 0))
-  def %(that: Long): Complex = %(Complex(that, 0))
   def %(that: Float): Complex = %(Complex(that, 0))
   def %(that: Double): Complex = %(Complex(that, 0))
 
@@ -242,9 +229,7 @@ object Complex { outer =>
     def apply(v1: Complex): Double = v1.abs
   }
 
-  implicit object ComplexZero extends Zero[Complex] {
-    val zero = Complex(0, 0)
-  }
+  implicit val ComplexZero : Zero[Complex] = Zero(Complex.zero)
 
   //
   // neg
@@ -260,15 +245,11 @@ object Complex { outer =>
 
   implicit object AddIC extends OpAdd.Impl2[Int, Complex, Complex] { def apply(a: Int, b: Complex) = a + b }
 
-  implicit object AddLC extends OpAdd.Impl2[Long, Complex, Complex] { def apply(a: Long, b: Complex) = a + b }
-
   implicit object AddFC extends OpAdd.Impl2[Float, Complex, Complex] { def apply(a: Float, b: Complex) = a + b }
 
   implicit object AddDC extends OpAdd.Impl2[Double, Complex, Complex] { def apply(a: Double, b: Complex) = a + b }
 
   implicit object AddCI extends OpAdd.Impl2[Complex, Int, Complex] { def apply(a: Complex, b: Int) = a + b }
-
-  implicit object AddCL extends OpAdd.Impl2[Complex, Long, Complex] { def apply(a: Complex, b: Long) = a + b }
 
   implicit object AddCF extends OpAdd.Impl2[Complex, Float, Complex] { def apply(a: Complex, b: Float) = a + b }
 
@@ -282,15 +263,11 @@ object Complex { outer =>
 
   implicit object SubIC extends OpSub.Impl2[Int, Complex, Complex] { def apply(a: Int, b: Complex) = a - b }
 
-  implicit object SubLC extends OpSub.Impl2[Long, Complex, Complex] { def apply(a: Long, b: Complex) = a - b }
-
   implicit object SubFC extends OpSub.Impl2[Float, Complex, Complex] { def apply(a: Float, b: Complex) = a - b }
 
   implicit object SubDC extends OpSub.Impl2[Double, Complex, Complex] { def apply(a: Double, b: Complex) = a - b }
 
   implicit object SubCI extends OpSub.Impl2[Complex, Int, Complex] { def apply(a: Complex, b: Int) = a - b }
-
-  implicit object SubCL extends OpSub.Impl2[Complex, Long, Complex] { def apply(a: Complex, b: Long) = a - b }
 
   implicit object SubCF extends OpSub.Impl2[Complex, Float, Complex] { def apply(a: Complex, b: Float) = a - b }
 
@@ -306,15 +283,11 @@ object Complex { outer =>
 
   implicit object MulIC extends OpMulMatrix.Impl2[Int, Complex, Complex] { def apply(a: Int, b: Complex) = a * b }
 
-  implicit object MulLC extends OpMulMatrix.Impl2[Long, Complex, Complex] { def apply(a: Long, b: Complex) = a * b }
-
   implicit object MulFC extends OpMulMatrix.Impl2[Float, Complex, Complex] { def apply(a: Float, b: Complex) = a * b }
 
   implicit object MulDC extends OpMulMatrix.Impl2[Double, Complex, Complex] { def apply(a: Double, b: Complex) = a * b }
 
   implicit object MulCI extends OpMulMatrix.Impl2[Complex, Int, Complex] { def apply(a: Complex, b: Int) = a * b }
-
-  implicit object MulCL extends OpMulMatrix.Impl2[Complex, Long, Complex] { def apply(a: Complex, b: Long) = a * b }
 
   implicit object MulCF extends OpMulMatrix.Impl2[Complex, Float, Complex] { def apply(a: Complex, b: Float) = a * b }
 
@@ -328,15 +301,11 @@ object Complex { outer =>
 
   implicit object DivIC extends OpDiv.Impl2[Int, Complex, Complex] { def apply(a: Int, b: Complex) = a / b }
 
-  implicit object DivLC extends OpDiv.Impl2[Long, Complex, Complex] { def apply(a: Long, b: Complex) = a / b }
-
   implicit object DivFC extends OpDiv.Impl2[Float, Complex, Complex] { def apply(a: Float, b: Complex) = a / b }
 
   implicit object DivDC extends OpDiv.Impl2[Double, Complex, Complex] { def apply(a: Double, b: Complex) = a / b }
 
   implicit object DivCI extends OpDiv.Impl2[Complex, Int, Complex] { def apply(a: Complex, b: Int) = a / b }
-
-  implicit object DivCL extends OpDiv.Impl2[Complex, Long, Complex] { def apply(a: Complex, b: Long) = a / b }
 
   implicit object DivCF extends OpDiv.Impl2[Complex, Float, Complex] { def apply(a: Complex, b: Float) = a / b }
 
@@ -347,8 +316,6 @@ object Complex { outer =>
 
   implicit object ModCC extends OpMod.Impl2[Complex, Complex, Complex] { def apply(a: Complex, b: Complex) = a % b }
 
-  implicit object ModCL extends OpMod.Impl2[Complex, Long, Complex] { def apply(a: Complex, b: Long) = a % b }
-
   implicit object ModCF extends OpMod.Impl2[Complex, Float, Complex] { def apply(a: Complex, b: Float) = a % b }
 
   implicit object ModCI extends OpMod.Impl2[Complex, Int, Complex] { def apply(a: Complex, b: Int) = a % b }
@@ -357,8 +324,6 @@ object Complex { outer =>
 
   implicit object ModIC extends OpMod.Impl2[Int, Complex, Complex] { def apply(a: Int, b: Complex) = a % b }
 
-  implicit object ModLC extends OpMod.Impl2[Long, Complex, Complex] { def apply(a: Long, b: Complex) = a % b }
-
   implicit object ModFC extends OpMod.Impl2[Float, Complex, Complex] { def apply(a: Float, b: Complex) = a % b }
 
   // pow
@@ -366,14 +331,11 @@ object Complex { outer =>
 
   implicit object PowCC extends OpPow.Impl2[Complex, Complex, Complex] { def apply(a: Complex, b: Complex) = a.pow(b) }
 
-  //
   // scala.math.Numeric and scala.math.Fractional
-  //
-  // TODO: Implement scala.math.Integral trait, if this is ever required
-  //       for some reason.
+
 
   /** `Complex` as `scala.math.Numeric` trait.
-   * Conversions to `Int`, `Long`, `Float` and `Double` are only performed
+   * Conversions to `Int`, `Float` and `Double` are only performed
    * if the imaginary component of the complex number is exactly 0. */
   trait ComplexIsConflicted extends Numeric[Complex] {
     def plus(x: Complex, y: Complex): Complex = x + y

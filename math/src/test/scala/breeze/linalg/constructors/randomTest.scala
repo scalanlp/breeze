@@ -1,6 +1,6 @@
 package breeze.linalg.constructors
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg._
 import breeze.stats.mean
 import breeze.numerics.abs
@@ -10,9 +10,9 @@ import breeze.stats.distributions.RandBasis
  * @author ktakagaki
  * @date 04/30/2014.
  */
-class randomTest extends FunSuite {
+class randomTest extends AnyFunSuite {
 
-  implicit val basis = RandBasis.mt0
+  implicit val basis: RandBasis = RandBasis.mt0
 
   test("rand/randn") {
     val rand1000 = rand(1000)

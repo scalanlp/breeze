@@ -7,6 +7,9 @@ import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.util.Isomorphism
+import breeze.compat.Scala3Compat._
+
+import scala.language.{higherKinds, implicitConversions}
 
 /**
  *
@@ -72,21 +75,6 @@ object MutablizingAdaptor {
     else CoordinateFieldAdaptor(vs)
   }
 
-  trait Lambda2[Fun[_, _, _], Second] {
-    type Result[A, B] = Fun[A, Second, B]
-  }
-
-  /*
-  def ensureMutable[V, I, S](vs: MutableRestrictedDomainTensorField[V, I, S])(implicit canIterate: CanTraverseValues[V,S],
-                                                 canMap: CanMapValues[V,S,S,V],
-                                                 canZipMap: CanZipMapValues[V,S,S,V])
-  : MutablizingAdaptor[Lambda2[RestrictedDomainTensorField, I]#Result, Lambda2[MutableRestrictedDomainTensorField, I]#Result, V, S] = {
-    if(vs.isInstanceOf[MutableRestrictedDomainTensorField[_, _, _]])
-      IdentityWrapper[Lambda2[MutableRestrictedDomainTensorField, I]#Result,V,S](vs.asInstanceOf[MutableRestrictedDomainTensorField[V, I, S]])
-    else RestrictedTensorFieldAdaptor(vs)
-  }
-   */
-
   case class IdentityWrapper[VS[_, _], V, S](underlying: VS[V, S]) extends MutablizingAdaptor[VS, VS, V, S] {
     type Wrapper = V
     implicit val mutaVspace: VS[Wrapper, S] = underlying
@@ -107,43 +95,11 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      implicit def hasOps(v: Wrapper): NumericOps[Wrapper] = v
-
-//      implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
-//        /** Maps all key-value pairs from the given collection. */
-//        def map(from: Wrapper, fn: (S) => S): Wrapper = {
-//          from.map(u.mapValues.map(_, fn))
-//        }
-//
-//        /** Maps all active key-value pairs from the given collection. */
-//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
-//          from.map(u.mapValues.mapActive(_, fn))
-//        }
-//      }
-//
-//      implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
-//        /** Maps all corresponding values from the two collections. */
-//        def map(from: Wrapper, from2: Wrapper, fn: (S, S) => S): Wrapper = {
-//          from.map(u.zipMapValues.map(_, from2.value, fn))
-//        }
-//      }
-//
-//      implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper,S] {
-//        /** Traverses all values from the given collection. */
-//        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
-//          from.map(u.iterateValues.traverse(_,fn))
-//        }
-//
-//        override def isTraversableAgain(from: Wrapper): Boolean = u.iterateValues.isTraversableAgain(from.value)
-//      }
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
-
-//      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
-//        override def apply(dw: I): Wrapper = wrap(u.z(dw))
-//      }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -182,17 +138,10 @@ object MutablizingAdaptor {
 
       implicit def divIntoVS: OpDiv.InPlaceImpl2[Wrapper, S] = liftUpdate(u.divVS)
 
+      // TODO: we should be able to get rid of these...
       implicit def addIntoVV: OpAdd.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.addVV)
 
       implicit def subIntoVV: OpSub.InPlaceImpl2[Wrapper, Wrapper] = liftUpdateV(u.subVV)
-
-//      override implicit def addVS: OpAdd.Impl2[Wrapper, S, Wrapper] = liftOp(u.addVS)
-
-//      override implicit def addIntoVS: OpAdd.InPlaceImpl2[Wrapper, S] = liftUpdate(u.addVS)
-
-//      override implicit def subIntoVS: OpSub.InPlaceImpl2[Wrapper, S] = liftUpdate(u.subVS)
-
-//      override implicit def subVS: OpSub.Impl2[Wrapper, S, Wrapper] = liftOp(u.subVS)
 
       implicit def setIntoVV: OpSet.InPlaceImpl2[Wrapper, Wrapper] = new OpSet.InPlaceImpl2[Wrapper, Wrapper] {
         def apply(a: Wrapper, b: Wrapper): Unit = {
@@ -231,11 +180,11 @@ object MutablizingAdaptor {
         val u = underlying
         def scalars: Field[S] = underlying.scalars
 
-        implicit def hasOps(v: Wrapper) = v
+        val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
         implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
           // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-          def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+          def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
         }
 
 //      implicit def zero: CanCreateZeros[Wrapper,I] = new CanCreateZeros[Wrapper,I] {
@@ -368,11 +317,11 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      implicit def hasOps(v: Wrapper) = v
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
@@ -387,8 +336,9 @@ object MutablizingAdaptor {
       implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper, S] {
 
         /** Traverses all values from the given collection. */
-        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): fn.type = {
           from.map(canIterate.traverse(_, fn))
+          fn
         }
 
         override def isTraversableAgain(from: Wrapper): Boolean = canIterate.isTraversableAgain(from.value)
@@ -396,15 +346,13 @@ object MutablizingAdaptor {
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
 
-        /** Maps all key-value pairs from the given collection. */
-        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap(_, fn))
+        override def map(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.map(_, fn))
         }
 
-//        /** Maps all active key-value pairs from the given collection. */
-//        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
-//          from.map(canMap.mapActive(_, fn))
-//        }
+        def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.mapActive(_, fn))
+        }
       }
 
       implicit def zipMapValues: CanZipMapValues[Wrapper, S, S, Wrapper] = new CanZipMapValues[Wrapper, S, S, Wrapper] {
@@ -496,7 +444,7 @@ object MutablizingAdaptor {
 
       // default implementations
       implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
-        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+        def apply(a: Wrapper): Wrapper = a.map(u.neg.apply)
       }
 
       implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
@@ -527,11 +475,11 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Ring[S] = underlying.scalars
 
-      implicit def hasOps(v: Wrapper) = v
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
@@ -546,8 +494,9 @@ object MutablizingAdaptor {
       implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper, S] {
 
         /** Traverses all values from the given collection. */
-        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): fn.type = {
           from.map(canIterate.traverse(_, fn))
+          fn
         }
 
         override def isTraversableAgain(from: Wrapper): Boolean = canIterate.isTraversableAgain(from.value)
@@ -556,8 +505,12 @@ object MutablizingAdaptor {
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
 
         /** Maps all key-value pairs from the given collection. */
-        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap(_, fn))
+        override def map(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.map(_, fn))
+        }
+
+        override def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.mapActive(_, fn))
         }
       }
 
@@ -642,7 +595,7 @@ object MutablizingAdaptor {
 
       // default implementations
       implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
-        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+        def apply(a: Wrapper): Wrapper = a.map(u.neg.apply)
       }
 
       implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {
@@ -656,7 +609,6 @@ object MutablizingAdaptor {
   case class CoordinateFieldAdaptor[V, S](underlying: CoordinateField[V, S])(
       implicit canIterate: CanTraverseValues[V, S],
       canMap: CanMapValues[V, S, S, V],
-      canMapActive: CanMapActiveValues[V, S, S, V],
       canZipMap: CanZipMapValues[V, S, S, V])
       extends MutablizingAdaptor[CoordinateField, MutableCoordinateField, V, S] {
     type Wrapper = Ref[V]
@@ -669,11 +621,11 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars = underlying.scalars
 
-      implicit def hasOps(v: Wrapper) = v
+      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
-        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike apply)
+        def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
       }
 
       implicit def copy: CanCopy[Wrapper] = new CanCopy[Wrapper] {
@@ -686,25 +638,23 @@ object MutablizingAdaptor {
 //      }
 
       implicit def iterateValues: CanTraverseValues[Wrapper, S] = new CanTraverseValues[Wrapper, S] {
-        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): Unit = {
+        override def traverse(from: Wrapper, fn: ValuesVisitor[S]): fn.type = {
           from.map(canIterate.traverse(_, fn))
+          fn
         }
 
         override def isTraversableAgain(from: Wrapper): Boolean = canIterate.isTraversableAgain(from.value)
       }
 
       implicit def mapValues: CanMapValues[Wrapper, S, S, Wrapper] = new CanMapValues[Wrapper, S, S, Wrapper] {
-        override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-          from.map(canMap(_, fn))
+        override def map(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.map(_, fn))
+        }
+
+        override def mapActive(from: Wrapper, fn: (S) => S): Wrapper = {
+          from.map(canMap.mapActive(_, fn))
         }
       }
-
-      implicit def mapActiveValues: CanMapActiveValues[Wrapper, S, S, Wrapper] =
-        new CanMapActiveValues[Wrapper, S, S, Wrapper] {
-          override def apply(from: Wrapper, fn: (S) => S): Wrapper = {
-            from.map(canMapActive(_, fn))
-          }
-        }
 
       override implicit def scalarOf: ScalarOf[Wrapper, S] = ScalarOf.dummy
 
@@ -774,7 +724,7 @@ object MutablizingAdaptor {
 
       // default implementations
       implicit def neg: OpNeg.Impl[Wrapper, Wrapper] = new OpNeg.Impl[Wrapper, Wrapper] {
-        def apply(a: Wrapper): Wrapper = a.map(u.neg apply)
+        def apply(a: Wrapper): Wrapper = a.map(u.neg.apply)
       }
 
       implicit def dotVV: OpMulInner.Impl2[Wrapper, Wrapper, S] = new OpMulInner.Impl2[Wrapper, Wrapper, S] {

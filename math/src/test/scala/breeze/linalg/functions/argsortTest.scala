@@ -2,13 +2,13 @@ package breeze.linalg.functions
 
 import breeze.linalg.{DenseMatrix, DenseVector, SparseVector, argsort, argtopk}
 import org.scalacheck.Prop
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 
 /**
  * Created by dlwh on 9/18/15.
  */
-class argsortTest extends FunSuite with Checkers {
+class argsortTest extends AnyFunSuite with Checkers {
   test("argsort dv") {
     check(Prop.forAll { (array: Array[Double]) =>
       val ax = argsort(new DenseVector(array))
@@ -18,7 +18,7 @@ class argsortTest extends FunSuite with Checkers {
 
 }
 
-class argtopkTest extends FunSuite {
+class argtopkTest extends AnyFunSuite {
 
   test("argtopk vector") {
     val dv = DenseVector(2, 0, 3, 2, -1)

@@ -19,6 +19,7 @@ package breeze.optimize
 import breeze.linalg._
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 trait OptimizeTestBaseTrait {
@@ -50,4 +51,4 @@ trait OptimizeTestBaseTrait {
 
 }
 
-class OptimizeTestBase extends FunSuite with Checkers with OptimizeTestBaseTrait
+class OptimizeTestBase extends AnyFunSuite with Checkers with OptimizeTestBaseTrait

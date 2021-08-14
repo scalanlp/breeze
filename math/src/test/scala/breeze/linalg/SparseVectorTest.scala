@@ -1,6 +1,8 @@
 package breeze.linalg
 
+import breeze.linalg.operators.HasOps
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.math._
 import breeze.numerics.{log, sin}
 import org.scalacheck.{Arbitrary, Gen}
@@ -13,11 +15,11 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-class SparseVectorTest extends FunSuite {
+class SparseVectorTest extends AnyFunSuite {
 
   val TOLERANCE = 1e-4
   def assertClose(a: Double, b: Double) =
-    assert(math.abs(a - b) < TOLERANCE, a + " vs. " + b)
+    assert(math.abs(a - b) < TOLERANCE, s"$a vs. $b")
 
   test("Min/Max") {
     val v = SparseVector(5)(0 -> 2, 2 -> 3, 3 -> 2)
@@ -357,7 +359,7 @@ class SparseVectorTest extends FunSuite {
     val v2 = SparseVector(0, 1, 0, 0)
 
     // do in two stages to ensure that telling the return type doesn't change type inference
-    val r = v1 + v2 //type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
+    val r = v1.+(v2) //type mismatch; found : breeze.linalg.Vector[Int] required: breeze.linalg.DenseVector[Int]
     val q = r: DenseVector[Int]
     assert(q == DenseVector(0, 1, 0, 0))
   }

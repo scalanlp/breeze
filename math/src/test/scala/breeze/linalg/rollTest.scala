@@ -1,19 +1,20 @@
 package breeze.linalg
 
 import org.scalatest._
-import spire.implicits._
+import org.scalatest.funsuite._
+import breeze.macros._
 
 /**
  *
  *
  * @author stucchio
  */
-class rollTest extends FunSuite {
+class rollTest extends AnyFunSuite {
   test("roll works") {
     val M = 12
     val v = DenseVector.zeros[Double](M)
     val expected = DenseVector.zeros[Double](M)
-    cfor(0)(i => i < M, i => i + 1)(i => {
+    cforRange(0 until M)(i => {
       v(i) = i
       expected(i) = if (i - 3 < 0) { M + i - 3 } else { i - 3 }
     })

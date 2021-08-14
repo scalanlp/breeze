@@ -4,7 +4,7 @@ import breeze.benchmark.{MyRunner, BreezeBenchmark}
 import breeze.linalg.operators.DenseVectorSupportMethods
 import breeze.stats.distributions.Rand
 import dev.ludovic.netlib.BLAS
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * Created by dlwh on 8/14/15.
@@ -17,7 +17,7 @@ class DenseAxpyBenchmark extends BreezeBenchmark {
 
   def timeSaxpy(reps: Int) = {
     cforRange(0 until reps) { _ =>
-      axpy(0.042f, fv, fv2)
+      scaleAdd.inPlace(fv2, 0.042f, fv)
     }
   }
 

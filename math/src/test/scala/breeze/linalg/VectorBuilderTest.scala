@@ -1,6 +1,6 @@
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.math._
 import org.scalacheck.{Arbitrary, Gen, Prop}
 import org.scalatestplus.scalacheck.Checkers
@@ -10,7 +10,7 @@ import breeze.numerics.closeTo
  *
  * @author dlwh
  */
-class VectorBuilderTest extends FunSuite with Checkers {
+class VectorBuilderTest extends AnyFunSuite with Checkers {
   test("VectorBuilder respects initialNonZero") {
     val vb = new VectorBuilder[Double](32, initialNonZero = 4)
     assert(vb.index.length === 4)
@@ -46,7 +46,7 @@ class VectorBuilderTest extends FunSuite with Checkers {
       } yield actives.distinct
     }
 
-    check(Prop.forAll(uniqueGen.arbitrary) { vs: List[Int] =>
+    check(Prop.forAll(uniqueGen.arbitrary) { (vs: List[Int]) =>
       val vb = new VectorBuilder[Int](300)
 
       vs.foreach { v =>
@@ -68,7 +68,7 @@ class VectorBuilderTest extends FunSuite with Checkers {
       } yield actives
     }
 
-    check(Prop.forAll(inputGen.arbitrary) { vs: List[Int] =>
+    check(Prop.forAll(inputGen.arbitrary) { (vs: List[Int]) =>
       val vb = new VectorBuilder[Int](300)
 
       vs.foreach { v =>
@@ -93,8 +93,8 @@ class VectorBuilderTest extends FunSuite with Checkers {
         yl <- Arbitrary.arbitrary[List[Int]]
       } yield {
         (
-          VectorBuilder(30)(xl.map(i => (i % 30).abs -> math.random * x): _*),
-          VectorBuilder(30)(yl.map(i => (i % 30).abs -> math.random * y): _*))
+          VectorBuilder(30)(xl.map(i => (i % 30).abs -> math.random()* x): _*),
+          VectorBuilder(30)(yl.map(i => (i % 30).abs -> math.random()* y): _*))
 
       }
     }

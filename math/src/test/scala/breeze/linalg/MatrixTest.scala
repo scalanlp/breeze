@@ -16,11 +16,12 @@ package breeze.linalg
  limitations under the License.
  */
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.math.Complex
 
 
-class MatrixTest extends FunSuite with Checkers {
+class MatrixTest extends AnyFunSuite with Checkers {
   test("Multiply") {
     val a = Matrix((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
     val ad = DenseMatrix((1.0, 2.0, 3.0), (4.0, 5.0, 6.0))
@@ -88,6 +89,7 @@ class MatrixTest extends FunSuite with Checkers {
       (Complex(-3, -3), Complex(-3, -3), Complex(1, 1)),
       (Complex(12, 12), Complex(0, 0), Complex(5, 5)))
     val c = DenseVector(Complex(6, 0), Complex(2, 0), Complex(3, 0))
+    val cv: Vector[Complex] = c
     val cs = SparseVector(Complex(6, 0), Complex(2, 0), Complex(3, 0))
     val value: Matrix[Complex] = a * b
     assert(
@@ -95,6 +97,7 @@ class MatrixTest extends FunSuite with Checkers {
         (Complex(0, 74), Complex(0, -16), Complex(0, 50)),
         (Complex(0, 170), Complex(0, -46), Complex(0, 134))))
     assert(b * c === DenseVector(Complex(62, 62), Complex(-21, -21), Complex(87, 87)))
+    assert(b * c === b * cv)
     assert(b * cs === DenseVector(Complex(62, 62), Complex(-21, -21), Complex(87, 87)))
 //    assert(b.t * c === DenseVector(Complex(72,-72), Complex(-18,18), Complex(65,-65)))
   }

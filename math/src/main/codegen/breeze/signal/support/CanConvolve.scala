@@ -109,7 +109,7 @@ object CanConvolve extends SerializableLogging {
                 case OptPadding.Cyclical => data(dl - leftPadding to dl - 1)
                 case OptPadding.Boundary => DenseVector.ones[T](leftPadding /*kernel.length-1*/ ) * data(0)
                 case OptPadding.Zero => DenseVector.zeros[T](leftPadding)
-                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](leftPadding) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](leftPadding) * (v: T)
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               },
               data,
@@ -117,7 +117,7 @@ object CanConvolve extends SerializableLogging {
                 case OptPadding.Cyclical => data(0 to rightPadding - 1)
                 case OptPadding.Boundary => DenseVector.ones[T](rightPadding) * data(dl - 1)
                 case OptPadding.Zero => DenseVector.zeros[T](rightPadding)
-                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](rightPadding) * v
+                case OptPadding.ValueOpt(v: T) => DenseVector.ones[T](rightPadding) * (v: T)
                 case op => require(false, "cannot handle OptPadding value " + op); DenseVector[T]()
               }
             )
@@ -197,8 +197,8 @@ object CanConvolve extends SerializableLogging {
             s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!")
         )
 
-        val dataVect = data.toScalaVector() //make immutable
-        val kernelVect = kernel.toScalaVector()
+        val dataVect = data.toScalaVector //make immutable
+        val kernelVect = kernel.toScalaVector
         val zero = 0.asInstanceOf[T]
 
         val tempArr = range
@@ -231,8 +231,8 @@ object CanConvolve extends SerializableLogging {
             s"range (start ${range.start}, end ${range.end}, step ${range.step}, inclusive ${range.isInclusive}) is OOB for data (length ${data.length}) and kernel (length ${kernel.length})!")
         )
 
-        val dataL = convert(data, Long).toScalaVector() //make immutable
-        val kernelL = convert(kernel, Long).toScalaVector()
+        val dataL = convert(data, Long).toScalaVector //make immutable
+        val kernelL = convert(kernel, Long).toScalaVector
 
         DenseVector.tabulate(range) { count =>
           var ki: Int = 0

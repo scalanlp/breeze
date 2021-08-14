@@ -1,12 +1,12 @@
 package breeze.numerics
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  *
  * @author dlwh
  */
-class ScalingTest extends FunSuite {
+class ScalingTest extends AnyFunSuite {
   test("Simple Test, big") {
     val array = Array(math.pow(2, 300), math.pow(2, 301), math.pow(2, 150))
     val target = Array(math.pow(2, 10), math.pow(2, 11), math.pow(2, 150 - 290))

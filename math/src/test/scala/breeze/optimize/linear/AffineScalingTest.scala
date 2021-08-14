@@ -16,10 +16,11 @@ package breeze.optimize.linear
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 
 import breeze.linalg._
 
-class AffineScalingTest extends FunSuite {
+class AffineScalingTest extends AnyFunSuite {
   // from: http://en.wikipedia.org/wiki/Karmarkar's_algorithm
   test("Small example") {
     val x0 = DenseVector(0.0, 0.0)

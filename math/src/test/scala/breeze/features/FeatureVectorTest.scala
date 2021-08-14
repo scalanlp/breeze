@@ -1,15 +1,10 @@
 package breeze.features
 
 import breeze.linalg._
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg.DenseVector
 
-/**
- * TODO
- *
- * @author dlwh
- **/
-class FeatureVectorTest extends FunSuite {
+class FeatureVectorTest extends AnyFunSuite {
   test("axpy fv dv") {
     val f = FeatureVector(3, 4, 5, 6, 10)
     val dv = DenseVector.zeros[Double](12)

@@ -1,6 +1,6 @@
 package breeze.stats
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg._
 
 /**Tests for breeze.linalg.max.scala
@@ -8,32 +8,32 @@ import breeze.linalg._
  * @author ktakagaki
  * @date 3/13/14.
  */
-class histogramTest extends FunSuite {
+class histogramTest extends AnyFunSuite {
 
   val testDV = DenseVector(0.0, 0.1, 2.8, 2.9, 5)
   val testWeights = DenseVector(0.5, 0.5, 1.0, 3.0, 7.0)
 
   test("histogram returns correct values") {
     val result = hist(testDV, 3)
-    assert(result.hist == DenseVector(2.0, 2.0, 1.0))
+    assert(result.hist == DenseVector(2, 2, 1))
     assert(result.binEdges == DenseVector(0.0, 5.0 / 3.0, 2 * 5.0 / 3.0, 5.0))
   }
 
   test("histogram respects range argument") {
     val result = hist(testDV, 3, (0.0, 3.0))
-    assert(result.hist == DenseVector(2.0, 0.0, 2.0))
+    assert(result.hist == DenseVector(2, 0, 2))
     assert(result.binEdges == DenseVector(0.0, 1.0, 2.0, 3.0))
   }
 
   test("histogram handles weights") {
-    val result = hist(testDV, 3, testWeights)
+    val result = hist(testDV, 3, testWeights)(hist.defaultHistBinsWeights)
     assert(result.hist == DenseVector(1.0, 4.0, 7.0))
     assert(result.binEdges == DenseVector(0.0, 5.0 / 3.0, 2 * 5.0 / 3.0, 5.0))
   }
 
   test("fails for empty array") {
     intercept[IllegalArgumentException] {
-      hist(DenseVector[Int]())
+      hist(DenseVector[Int]())(hist.defaultHist)
     }
   }
 

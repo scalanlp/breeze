@@ -21,6 +21,7 @@ import scala.jdk.CollectionConverters._
 import scala.collection.mutable.{ArrayBuffer, HashMap}
 import java.util.Arrays
 import java.util
+import scala.io.Source
 
 /**
  * Trait that marks an O(1) bidirectional map between Ints (increasing from 0)
@@ -31,7 +32,6 @@ import java.util
  *
  * @author dlwh, dramage
  */
-@SerialVersionUID(1L)
 trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
 
   /** Number of elements in this index. */
@@ -94,31 +94,12 @@ trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
 }
 
 /**
- * Synchronized view of an Index for thread-safe access.
- *
- * @author dramage
- */
-@SerialVersionUID(1L)
-trait SynchronizedIndex[T] extends Index[T] {
-  abstract override def size = this synchronized super.size
-  abstract override def apply(t: T) = this synchronized super.apply(t)
-  abstract override def unapply(pos: Int) = this synchronized super.unapply(pos)
-  abstract override def contains(t: T) = this synchronized super.contains(t)
-  abstract override def indexOpt(t: T) = this synchronized super.indexOpt(t)
-  abstract override def indexOf(t: T) = this synchronized super.indexOf(t)
-  abstract override def get(pos: Int) = this synchronized super.get(pos)
-  abstract override def equals(other: Any) = this synchronized super.equals(other)
-  abstract override def hashCode = this synchronized super.hashCode
-}
-
-/**
  * An Index that contains an extra method: <em>index</em> that adds the
  * given element (if necessary), returning its (possibly new) position in
  * the index.
  *
  * @author dramage
  */
-@SerialVersionUID(1L)
 trait MutableIndex[T] extends Index[T] {
 
   /**
@@ -260,12 +241,10 @@ object Index {
   /** Constructs an empty index. */
   import scala.reflect.ClassTag.{Char => MChar}
   import scala.reflect.OptManifest
-  def apply[T: OptManifest](): MutableIndex[T] = implicitly[OptManifest[T]] match {
-    case _ => new HashIndex[T];
-  }
+  def apply[T](): MutableIndex[T] = new HashIndex[T]
 
   /** Constructs an Index from some iterator. */
-  def apply[T: OptManifest](iterator: Iterator[T]): Index[T] = {
+  def apply[T](iterator: Iterator[T]): Index[T] = {
     val index = Index[T]()
     // read through all iterator now -- don't lazily defer evaluation
     for (element <- iterator) {
@@ -288,8 +267,8 @@ object Index {
    * Loads a String index, one line per item with line
    * numbers (starting at 0) as the indices.
    */
-  def load(source: { def getLines: Iterator[String] }): Index[String] = {
-    apply(source.getLines.map(_.stripLineEnd))
+  def load(source: Source): Index[String] = {
+    apply(source.getLines().map(_.stripLineEnd))
   }
 
 }

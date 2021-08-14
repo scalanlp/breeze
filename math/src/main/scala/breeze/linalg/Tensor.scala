@@ -19,7 +19,9 @@ import support._
 import breeze.collection.mutable.Beam
 import breeze.generic.UFunc
 import breeze.math.Semiring
+import breeze.linalg.operators.{HasOps, TensorLowPrio}
 
+import scala.annotation.unchecked.uncheckedVariance
 import scala.util.hashing.MurmurHash3
 import scala.{specialized => spec}
 import scala.reflect.ClassTag
@@ -29,39 +31,10 @@ import scala.reflect.ClassTag
  * @tparam K
  * @tparam V
  */
-trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
+trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] extends HasOps {
   def apply(i: K): V
   def update(i: K, v: V): Unit
   def keySet: scala.collection.Set[K]
-
-  // Aggregators
-  @deprecated("Use max(t) instead of t.max", "0.6")
-  def max(implicit ord: Ordering[V]) = valuesIterator.max
-  @deprecated("Use min(t) instead of t.min", "0.6")
-  def min(implicit ord: Ordering[V]) = valuesIterator.min
-  @deprecated("Use argmax(t) instead of t.argmax", "0.6")
-  def argmax(implicit ord: Ordering[V]) = keysIterator.maxBy(apply _)
-  @deprecated("Use argmin(t) instead of t.argmin", "0.6")
-  def argmin(implicit ord: Ordering[V]) = keysIterator.minBy(apply _)
-  @deprecated("Use sum(t) instead of t.sum", "0.6")
-  def sum(implicit num: Numeric[V]) = activeValuesIterator.sum
-  @deprecated("Use argsort(t) instead of t.argsort", "0.6")
-  def argsort(implicit ord: Ordering[V]): IndexedSeq[K] =
-    keysIterator.toIndexedSeq.sorted(ord.on[K](apply _))
-
-  /**
-   * Returns the k indices with maximum value. (NOT absolute value.)
-   * @param k how many to return
-   * @param ordering
-   * @return
-   */
-  @deprecated("Use argtopk(t, k) instead of t.argtopk(k)", "0.6")
-  def argtopk(k: Int)(implicit ordering: Ordering[V]) = {
-    implicit val ordK = ordering.on(apply _)
-    val queue = new Beam[K](k)
-    queue ++= keysIterator
-    queue.toIndexedSeq.reverse
-  }
 
   def iterator: Iterator[(K, V)]
   def activeIterator: Iterator[(K, V)]
@@ -75,15 +48,6 @@ trait QuasiTensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] {
   /** Returns all indices k whose value satisfies a predicate. */
   def findAll(f: V => Boolean) = activeIterator.filter(p => f(p._2)).map(_._1).toIndexedSeq
 
-  /** Returns true if all elements are non-zero */
-  @deprecated("Use breeze.linalg.all instead", "0.6")
-  def all(implicit semi: Semiring[V]) = valuesIterator.forall(_ != semi.zero)
-
-  /** Returns true if some element is non-zero */
-  @deprecated("Use breeze.linalg.any instead", "0.6")
-  def any(implicit semi: Semiring[V]) = valuesIterator.exists(_ != semi.zero)
-
-  // TODO: this is only consistent if the hashcode of inactive elements is 0!!!
   override def hashCode() = {
     var hash = 43
     for (v <- activeValuesIterator) {
@@ -129,7 +93,7 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
    * @tparam Result
    * @return
    */
-  def apply[Result](a: K, b: K, c: K, slice: K*)(implicit canSlice: CanSlice[This, Seq[K], Result]) = {
+  def apply[Result](a: K, b: K, c: K, slice: K*)(implicit canSlice: CanSlice[This, Seq[K], Result]): Result = {
     canSlice(repr, a +: b +: c +: slice)
   }
 
@@ -138,28 +102,28 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
    * @return
    */
   def apply[Slice1, Slice2, Result](slice1: Slice1, slice2: Slice2)(
-      implicit canSlice: CanSlice2[This, Slice1, Slice2, Result]) = {
+      implicit canSlice: CanSlice2[This, Slice1, Slice2, Result]): Result = {
     canSlice(repr, slice1, slice2)
   }
 
   /** Creates a new map containing a transformed copy of this map. */
-  def mapPairs[TT >: This, O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[TT, K, V, O, That]): That = {
+  def mapPairs[O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[This, K, V, O, That]): That = {
     bf.map(repr, f)
   }
 
   /** Maps all active key-value pairs values. */
-  def mapActivePairs[TT >: This, O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[TT, K, V, O, That]): That = {
-    bf.mapActive(repr.asInstanceOf[TT], f)
+  def mapActivePairs[O, That](f: (K, V) => O)(implicit bf: CanMapKeyValuePairs[This, K, V, O, That]): That = {
+    bf.mapActive(repr, f)
   }
 
   /** Creates a new map containing a transformed copy of this map. */
-  def mapValues[TT >: This, O, That](f: V => O)(implicit bf: CanMapValues[TT, V, O, That]): That = {
-    bf(repr.asInstanceOf[TT], f)
+  def mapValues[O, That](f: V => O)(implicit bf: CanMapValues[This @uncheckedVariance, V, O, That]): That = {
+    bf.map(repr, f)
   }
 
   /** Maps all non-zero values. */
-  def mapActiveValues[TT >: This, O, That](f: V => O)(implicit bf: CanMapActiveValues[TT, V, O, That]): That = {
-    bf(repr.asInstanceOf[TT], f)
+  def mapActiveValues[O, That](f: V => O)(implicit bf: CanMapValues[This @uncheckedVariance, V, O, That]): That = {
+    bf.mapActive(repr, f)
   }
 
   /** Applies the given function to each key in the tensor. */
@@ -176,7 +140,7 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
    * Applies the given function to each value in the map (one for
    * each element of the domain, including zeros).
    */
-  def foreachValue[U](fn: (V => U)) =
+  def foreachValue[U](fn: (V => U)): Unit =
     foreachKey[U](k => fn(apply(k)))
 
   /** Returns true if and only if the given predicate is true for all elements. */
@@ -185,11 +149,6 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
     true
   }
 
-  /** Returns true if and only if the given predicate is true for all elements. */
-  @deprecated(
-    "Please use 'forall' with the same arguments, which is more in accordance with scala.collections syntax",
-    "0.8")
-  def forallValues(fn: V => Boolean): Boolean = forall(fn)
 
   /** Returns true if and only if the given predicate is true for all elements. */
   def forall(fn: V => Boolean): Boolean = {
@@ -206,84 +165,9 @@ trait TensorLike[@spec(Int) K, @spec(Double, Int, Float, Long) V, +This <: Tenso
  */
 trait Tensor[@spec(Int) K, @spec(Double, Int, Float, Long) V] extends TensorLike[K, V, Tensor[K, V]]
 
-object Tensor extends TensorLowPrio {
+object Tensor {
 
-  implicit def liftTransposeOps[Op, K, V, T, R, RT](
-      implicit ev: T <:< Tensor[K, V],
-      op: UFunc.UImpl2[Op, T, V, R],
-      canTranspose: CanTranspose[R, RT]): UFunc.UImpl2[Op, Transpose[T], V, RT] = {
-    new UFunc.UImpl2[Op, Transpose[T], V, RT] {
-      def apply(a: Transpose[T], b: V) = {
-        canTranspose(op(a.inner, b))
-      }
-    }
 
-  }
-
-  implicit def liftTransposeInPlaceOps[Op, K, V, T](
-      implicit ev: T <:< Tensor[K, V],
-      op: UFunc.InPlaceImpl2[Op, T, V]): UFunc.InPlaceImpl2[Op, Transpose[T], V] = {
-    new UFunc.InPlaceImpl2[Op, Transpose[T], V] {
-      def apply(a: Transpose[T], b: V): Unit = {
-        op(a.inner, b)
-      }
-    }
-
-  }
-
-  implicit def transposeTensor[K, V, T](implicit ev: T <:< Tensor[K, V]): CanTranspose[T, Transpose[T]] = {
-    new CanTranspose[T, Transpose[T]] {
-      def apply(from: T): Transpose[T] = new Transpose(from)
-    }
-
-  }
-
-  implicit def canSliceTensor[K, V: ClassTag]: CanSlice[Tensor[K, V], Seq[K], SliceVector[K, V]] =
-    new CanSlice[Tensor[K, V], Seq[K], SliceVector[K, V]] {
-      def apply(from: Tensor[K, V], slice: Seq[K]): SliceVector[K, V] = new SliceVector(from, slice.toIndexedSeq)
-    }
-
-  implicit def canSliceTensorBoolean[K, V: ClassTag]: CanSlice[Tensor[K, V], Tensor[K, Boolean], SliceVector[K, V]] =
-    new CanSlice[Tensor[K, V], Tensor[K, Boolean], SliceVector[K, V]] {
-      override def apply(from: Tensor[K, V], slice: Tensor[K, Boolean]): SliceVector[K, V] = {
-        new SliceVector(from, slice.findAll(_ == true))
-      }
-    }
-
-  implicit def canSliceTensor2[K1, K2, V: Semiring: ClassTag]
-    : CanSlice2[Tensor[(K1, K2), V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] = {
-    new CanSlice2[Tensor[(K1, K2), V], Seq[K1], Seq[K2], SliceMatrix[K1, K2, V]] {
-      def apply(from: Tensor[(K1, K2), V], slice: Seq[K1], slice2: Seq[K2]): SliceMatrix[K1, K2, V] = {
-        new SliceMatrix(from, slice.toIndexedSeq, slice2.toIndexedSeq)
-      }
-    }
-  }
-
-  implicit def canSliceTensor2_CRs[K1, K2, V: Semiring: ClassTag]
-    : CanSlice2[Tensor[(K1, K2), V], Seq[K1], K2, SliceVector[(K1, K2), V]] = {
-    new CanSlice2[Tensor[(K1, K2), V], Seq[K1], K2, SliceVector[(K1, K2), V]] {
-      def apply(from: Tensor[(K1, K2), V], slice: Seq[K1], slice2: K2): SliceVector[(K1, K2), V] = {
-        new SliceVector(from, slice.map(k1 => (k1, slice2)).toIndexedSeq)
-      }
-    }
-  }
-
-  implicit def canSliceTensor2_CsR[K1, K2, V: Semiring: ClassTag]
-    : CanSlice2[Tensor[(K1, K2), V], K1, Seq[K2], Transpose[SliceVector[(K1, K2), V]]] = {
-    new CanSlice2[Tensor[(K1, K2), V], K1, Seq[K2], Transpose[SliceVector[(K1, K2), V]]] {
-      def apply(from: Tensor[(K1, K2), V], slice: K1, slice2: Seq[K2]): Transpose[SliceVector[(K1, K2), V]] = {
-        new SliceVector(from, slice2.map(k2 => (slice, k2)).toIndexedSeq).t
-      }
-    }
-  }
 }
 
-sealed trait TensorLowPrio {
-  implicit def canSliceTensor_Seq_to_2[K, V, Res](implicit seqSlice: CanSlice[Tensor[K, V], Seq[K], Res]): CanSlice2[Tensor[K, V], K, K, Res] = {
-    new CanSlice2[Tensor[K, V], K, K, Res] {
-      def apply(from: Tensor[K, V], slice: K, slice2: K): Res = {
-        seqSlice(from, Seq(slice, slice2))
-      }
-    }
-  }
-}
+

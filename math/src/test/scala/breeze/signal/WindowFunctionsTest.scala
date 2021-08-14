@@ -1,6 +1,7 @@
 package breeze.signal
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.linalg._
 import breeze.signal.support.WindowFunctions
 
@@ -14,7 +15,7 @@ import WindowFunctions.hammingWindow
  * To change this template use File | Settings | File Templates.
  */
 
-class WindowFunctionsTest extends FunSuite {
+class WindowFunctionsTest extends AnyFunSuite {
 
   val testThreshold = 1.0E-15
 

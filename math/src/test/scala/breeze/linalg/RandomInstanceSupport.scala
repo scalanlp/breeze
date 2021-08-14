@@ -39,9 +39,11 @@ object RandomInstanceSupport {
     else v
   }
 
-  val genReasonableDouble: Arbitrary[Double] = Arbitrary {
-    Arbitrary.arbitrary[Double].map(reasonableClamp(_))
+  def reasonableDouble(lower: Double, upper: Double): Arbitrary[Double] = {
+    Arbitrary(Arbitrary.arbitrary[Double].map(reasonableClamp(_, lower, upper)))
   }
+
+  val genReasonableDouble: Arbitrary[Double] = reasonableDouble(lower=1E-4, upper=1E3)
 
   val genReasonableFloat: Arbitrary[Float] = Arbitrary {
     Arbitrary.arbitrary[Double].map(reasonableClamp(_, 1E-4, 1E4).toFloat)

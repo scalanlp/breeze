@@ -37,7 +37,7 @@ object shuffle extends UFunc {
         // Shuffle tempret via Fisher-Yates method.
         var count = tempret.length - 1
         while (count > 0) {
-          swap(tempret, count, rb.randInt(count + 1).get())
+          swap(tempret, count, rb.randInt(count + 1).draw())
           count -= 1
         }
         tempret
@@ -123,13 +123,13 @@ object shuffle extends UFunc {
        */
       override def apply(v: Coll): CollRes = {
         // Make a copy of the input.
-        val builder = cbf(v)
+        val builder = cbf.newBuilder(v)
         val copy = v.to(ArrayBuffer)
 
         // Shuffle tempret via Fisher-Yates method.
         var count = copy.length - 1
         while (count > 0) {
-          swap(copy, count, rb.randInt(count + 1).get())
+          swap(copy, count, rb.randInt(count + 1).draw())
           count -= 1
         }
         builder ++= copy

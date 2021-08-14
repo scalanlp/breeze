@@ -9,6 +9,7 @@ import breeze.stats.variance.Impl
 import scala.reflect.ClassTag
 import util.Sorting
 import breeze.util.{quickSelect, quickSelectImpl}
+import scala.collection.compat._
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -33,7 +34,7 @@ import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.macros.expand
 import breeze.math.Complex
 import breeze.numerics.isOdd
-import spire.implicits.{cfor, cforRange}
+import breeze.macros.{cforRange}
 import scala.collection.mutable
 
 object accumulateAndCount extends UFunc {
@@ -43,7 +44,7 @@ object accumulateAndCount extends UFunc {
       @expand.sequence[Scalar](0.0, Complex.zero, 0.0f) _zero: Scalar): Impl[T, (Scalar, Int)] =
     new Impl[T, (Scalar, Int)] {
       def apply(v: T): (Scalar, Int) = {
-        val visit = new ValuesVisitor[Scalar] {
+        object visit extends ValuesVisitor[Scalar] {
           var sum = _zero
           var n = 0
           def visit(a: Scalar): Unit = {
@@ -52,7 +53,7 @@ object accumulateAndCount extends UFunc {
           }
 
           def zeros(numZero: Int, zeroValue: Scalar): Unit = {
-            sum += (numZero * zeroValue)
+            this.sum = this.sum + zeroValue * numZero
             n += numZero
           }
         }
@@ -72,7 +73,7 @@ object mean extends UFunc {
       implicit iter: CanTraverseValues[T, S],
       @expand.sequence[S](0f, 0d, Complex.zero) z: S): Impl[T, S] = new Impl[T, S] {
     def apply(v: T): S = {
-      val visit = new ValuesVisitor[S] {
+      object visit extends ValuesVisitor[S] {
         var mu: S = z
         var n: Long = 0
 
@@ -106,7 +107,7 @@ object meanAndVariance extends UFunc {
   implicit def reduce[@expand.args(Float, Double) S, T](
       implicit iter: CanTraverseValues[T, S]): Impl[T, MeanAndVariance] = new Impl[T, MeanAndVariance] {
     def apply(v: T): MeanAndVariance = {
-      val visit = new ValuesVisitor[S] {
+      object visit extends ValuesVisitor[S] {
         var mu: S = 0
         var s: S = 0
         var n: Long = 0
@@ -197,13 +198,13 @@ object stddev extends UFunc {
 object median extends UFunc {
 
   @expand
-  implicit def reduce[@expand.args(Int, Long, Double, Float) T]: Impl[DenseVector[T], T] =
-    new Impl[DenseVector[T], T] {
-      def apply(v: DenseVector[T]): T = {
+  implicit def reduceArray[@expand.args(Int, Long, Double, Float) T]: median.Impl[Array[T], T] =
+    new Impl[Array[T], T] {
+      def apply(v: Array[T]): T = {
         if (isOdd(v.length)) {
-          quickSelect(v.toArray, (v.length - 1) / 2)
+          quickSelect(v, (v.length - 1) / 2)
         } else {
-          val tempArray: Array[T] = v.toArray.clone()
+          val tempArray: Array[T] = v.clone()
           val secondMedianPosition = v.length / 2
           //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
           (quickSelectImpl(tempArray, secondMedianPosition) +
@@ -212,17 +213,51 @@ object median extends UFunc {
       }
     }
 
-  @expand
-  implicit def reduceSeq[@expand.args(Int, Long, Double, Float) T]: Impl[Seq[T], T] =
-    new Impl[Seq[T], T] {
-      def apply(v: Seq[T]): T = { median(DenseVector(v.toArray)) }
+
+  implicit def reduceArrayFromQuickselectAndMean[T](implicit qs: quickSelect.Impl2[Array[T], Int, T],
+                                             qsi: quickSelectImpl.Impl2[Array[T], Int, T],
+                                                    mn: mean.Impl2[T, T, T]): median.Impl[Array[T], T] =
+    new Impl[Array[T], T] {
+      def apply(v: Array[T]): T = {
+        if (isOdd(v.length)) {
+          quickSelect(v, (v.length - 1) / 2)
+        } else {
+          val tempArray: Array[T] = v.clone()
+          val secondMedianPosition = v.length / 2
+          //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
+          mean(quickSelectImpl(tempArray, secondMedianPosition), quickSelectImpl(tempArray, secondMedianPosition - 1))
+        }
+      }
     }
 
-  @expand
-  implicit def reduceM[@expand.args(Int, Long, Double) T]: Impl[DenseMatrix[T], Double] =
-    new Impl[DenseMatrix[T], Double] {
-      def apply(m: DenseMatrix[T]) = median(m.toDenseVector)
+  implicit def reduce[T: ClassTag](implicit arrImpl: median.Impl[Array[T], T]): median.Impl[DenseVector[T], T] = { dv =>
+    if (dv.data.length == dv.length) {
+      // avoid extra clone
+      arrImpl(dv.data)
+    } else {
+      arrImpl(dv.toArray)
     }
+  }
+
+//  implicit def reduce[T: ClassTag](implicit arrImpl: median.Impl[Array[T], T]): median.Impl[DenseVector[T], T] =
+//    new Impl[DenseVector[T], T] {
+//      def apply(v: DenseVector[T]): T = {
+//        if (isOdd(v.length)) {
+//          quickSelect(v.toArray, (v.length - 1) / 2)
+//        } else {
+//          val tempArray: Array[T] = v.toArray.clone()
+//          val secondMedianPosition = v.length / 2
+//          //quickSelectImpl does not clone the array, allowing us to access intermediate semi-sorted results for reuse in the second calculation
+//          (quickSelectImpl(tempArray, secondMedianPosition) +
+//            quickSelectImpl(tempArray, secondMedianPosition - 1)) / 2
+//        }
+//      }
+//    }
+
+  implicit def reduceSeq[T: ClassTag](implicit arrImpl: median.Impl[Array[T], T]): Impl[Seq[T], T] =
+    v => { median(v.toArray) }
+
+  implicit def reduceM[T](implicit arrImpl: median.Impl[Array[T], T]): Impl[DenseMatrix[T], T] = m => median(m.toArray)
 
 }
 
@@ -318,7 +353,7 @@ object mode extends UFunc {
 
 }
 
-private class ModeVisitor[@expand.args(Double, Complex, Float, Int) Scalar](initialValue: Scalar)
+private class ModeVisitor[Scalar](initialValue: Scalar)
     extends ValuesVisitor[Scalar] {
 
   val frequencyCounts = mutable.Map[Scalar, Int]()
@@ -439,7 +474,7 @@ object bincount extends UFunc {
         require(min(x) >= 0)
         require(x.length == weights.length)
         val result = new DenseVector[T](max(x) + 1)
-        cfor(0)(i => i < x.length, i => i + 1)(i => {
+        cforRange(0 until x.length)(i => {
           result(x(i)) = result(x(i)) + weights(i)
         })
         result
@@ -482,7 +517,7 @@ object bincount extends UFunc {
           require(min(x) >= 0)
           require(x.length == weights.length)
           val counter = Counter[Int, T]()
-          cfor(0)(i => i < x.length, i => i + 1)(i => {
+          cforRange(0 until x.length)(i => {
             counter.update(x(i), counter(x(i)) + weights(i))
           })
           val builder = new VectorBuilder[T](max(x) + 1)
@@ -520,7 +555,7 @@ object DescriptiveStats {
   /**
    * Returns the estimate of the data at p * it.size after copying and sorting, where p in [0,1].
    */
-  def percentile(it: TraversableOnce[Double], p: Double) = {
+  def percentile(it: TraversableOnce[Double], p: Double): Double = {
     if (p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     val arr = it.toArray
     Sorting.quickSort(arr)
@@ -534,7 +569,7 @@ object DescriptiveStats {
     * Result is invalid if the input array is not already sorted.
     * </p>
     */
-  def percentileInPlace(arr: Array[Double], p: Double) = {
+  def percentileInPlace(arr: Array[Double], p: Double): Double = {
     if (p > 1 || p < 0) throw new IllegalArgumentException("p must be in [0,1]")
     // +1 so that the .5 == mean for even number of elements.
     val f = (arr.length + 1) * p
@@ -555,10 +590,9 @@ object DescriptiveStats {
    * </p>
    */
   def meanAndCov[T](it1: TraversableOnce[T], it2: TraversableOnce[T])(implicit frac: Fractional[T]) = {
-    implicit def t(it: TraversableOnce[T]) = it.toIterable //convert to an iterable for zip operation
     import frac.mkNumericOps
     //mu1(n-1), mu2(n-1), Cov(n-1), n-1
-    val (mu1, mu2, c, n) = (it1, it2).zipped.foldLeft((frac.zero, frac.zero, frac.zero, frac.zero)) { (acc, y) =>
+    val (mu1, mu2, c, n) = (it1.iterator.to(Iterable), it2.iterator.to(Iterable)).zipped.foldLeft((frac.zero, frac.zero, frac.zero, frac.zero)) { (acc, y) =>
       val (oldMu1, oldMu2, oldC, oldN) = acc
       val newN = oldN + frac.fromInt(1)
       val newMu1 = oldMu1 + ((y._1 - oldMu1) / newN)

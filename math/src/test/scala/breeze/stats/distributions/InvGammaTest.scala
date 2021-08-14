@@ -1,8 +1,8 @@
 package breeze.stats.distributions
 
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers._
 
-class InvGammaTest extends org.scalatest.FunSpec with Matchers {
+class InvGammaTest extends org.scalatest.funspec.AnyFunSpec {
   private val eps = 1E-9
 
   describe("Inverse Gamma Distribution") {

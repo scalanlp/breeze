@@ -16,13 +16,13 @@ package breeze.numerics
  limitations under the License.
  */
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  *
  * @author dlwh
  */
-class BesselTest extends FunSuite {
+class BesselTest extends AnyFunSuite {
   import Bessel._
   test("i0") {
     assert((i0(1) - 1.2660658777520083).abs < 1E-8)

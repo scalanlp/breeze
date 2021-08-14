@@ -18,7 +18,7 @@ package breeze.stats.mcmc
 
 import breeze.stats.distributions._
 import breeze.math._
-import spire.implicits.cfor
+import breeze.macros.cforRange
 import scala.reflect.ClassTag
 
 trait MetropolisHastings[T] extends Rand[T] {
@@ -57,7 +57,7 @@ trait TracksStatistics { self: MetropolisHastings[_] =>
   def rejectionFrac: Double = rejectionCount.toDouble / total.toDouble
 }
 
-abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T, burnIn: Long = 0, dropCount: Int = 0)(
+abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T, burnIn: Int = 0, dropCount: Int = 0)(
     implicit val rand: RandBasis = Rand)
     extends MetropolisHastings[T]
     with Process[T]
@@ -95,7 +95,7 @@ abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T
   }
 
   // Burn in
-  cfor(0)(i => i < burnIn, i => i + 1)(i => {
+  cforRange(0 until burnIn)(i => {
     getNext()
   })
   // end burn in
@@ -104,7 +104,7 @@ abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T
     if (dropCount == 0) {
       getNext()
     } else {
-      cfor(0)(i => i < dropCount, i => i + 1)(i => {
+      cforRange(0 until dropCount)(i => {
         getNext()
       })
       getNext()
@@ -117,7 +117,7 @@ case class ArbitraryMetropolisHastings[T](
     val proposal: T => Rand[T],
     val logProposalDensity: (T, T) => Double,
     init: T,
-    burnIn: Long = 0,
+    burnIn: Int = 0,
     dropCount: Int = 0)(implicit rand: RandBasis = Rand)
     extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
   def proposalDraw(x: T) = proposal(x).draw()
@@ -130,7 +130,7 @@ case class AffineStepMetropolisHastings[T](
     logLikelihood: T => Double,
     val proposalStep: Rand[T],
     init: T,
-    burnIn: Long = 0,
+    burnIn: Int = 0,
     dropCount: Int = 0)(implicit rand: RandBasis = Rand, vectorSpace: VectorSpace[T, _])
     extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand)
     with SymmetricMetropolisHastings[T] {
@@ -162,7 +162,7 @@ case class ThreadedBufferedRand[T](wrapped: Rand[T], bufferSize: Int = 1024 * 8)
       while (!stopWorker) {
         val buff = usedArrayQueue.poll(1, java.util.concurrent.TimeUnit.SECONDS)
         if (buff != null) {
-          cfor(0)(i => i < bufferSize, i => i + 1)(i => {
+          cforRange(0 until bufferSize)(i => {
             buff(i) = wrapped.draw()
           })
           newArrayQueue.put(buff)

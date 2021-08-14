@@ -40,7 +40,7 @@ case class Poisson(mean: Double)(implicit rand: RandBasis = Rand)
     else if (mean < 10.0) { // small
       var t = ell
       var k = 0
-      val u = rand.uniform.get
+      val u = rand.uniform.draw()
       var s = t
       while (s < u) {
         k += 1
@@ -50,7 +50,7 @@ case class Poisson(mean: Double)(implicit rand: RandBasis = Rand)
       k
     } else {
       val k_start = mean.toInt
-      val u = rand.uniform.get
+      val u = rand.uniform.draw()
       var t1 = exp(k_start * log(mean) - mean - lgamma(k_start.toDouble + 1))
       if (t1 > u) k_start
       else {
@@ -75,30 +75,31 @@ case class Poisson(mean: Double)(implicit rand: RandBasis = Rand)
     }
   }
 
-  def probabilityOf(k: Int) = math.exp(logProbabilityOf(k))
-  override def logProbabilityOf(k: Int) = {
+  def probabilityOf(k: Int): Double = math.exp(logProbabilityOf(k))
+  override def logProbabilityOf(k: Int): Double = {
     -mean + k * log(mean) - lgamma(k + 1.0)
   }
 
-  def cdf(k: Int) = 1 - gammp(k + 1.0, mean)
+  def cdf(k: Int): Double = 1 - gammp(k + 1.0, mean)
 
-  def variance = mean
-  def mode = math.ceil(mean) - 1
+  def variance: Double = mean
+  def mode: Double = math.ceil(mean) - 1
 
   /** Approximate, slow to compute */
-  def entropy = {
+  def entropy: Double = {
     val entr = mean * (1 - log(mean))
     var extra = 0.0
-    var correction = 0.0
+    var correction = 10000.0
     var k = 0
     var meanmean = 1.0 / mean
-    do {
+
+    while (correction > 1E-6) {
       meanmean *= mean
       val ln_k_! = lgamma(k.toDouble + 1)
       correction = meanmean * ln_k_! / exp(ln_k_!)
       extra += correction
       k += 1
-    } while (correction > 1E-6)
+    }
 
     entr + exp(-mean) * extra
   }

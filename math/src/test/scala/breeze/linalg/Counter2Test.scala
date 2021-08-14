@@ -15,9 +15,10 @@ package breeze.linalg
  limitations under the License.
  */
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
-class Counter2Test extends FunSuite with Checkers {
+class Counter2Test extends AnyFunSuite with Checkers {
   test("Getting and setting") {
     val x = Counter2[String, Int, Double]()
     x("a", 1) = 3.0

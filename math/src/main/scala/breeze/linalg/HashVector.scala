@@ -6,8 +6,9 @@ import support.CanTraverseValues.ValuesVisitor
 import support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.collection.mutable.OpenAddressHashArray
 import breeze.storage.Zero
-import breeze.macros.expand
+import breeze.macros._
 import breeze.math._
+import breeze.util.ReflectionUtil
 
 import scala.{specialized => spec}
 import scala.reflect.ClassTag
@@ -60,6 +61,7 @@ class HashVector[@spec(Double, Int, Float, Long) E](val array: OpenAddressHashAr
 
   def allVisitableIndicesActive: Boolean = false
 
+  // TODO: needs to be consistent with Sparse/Dense (meaning it just has to be the slow dense thing)
   override def hashCode() = {
     var hash = 47
     // we make the hash code based on index * value, so that zeros don't affect the hashcode.
@@ -82,17 +84,12 @@ class HashVector[@spec(Double, Int, Float, Long) E](val array: OpenAddressHashAr
   }
 }
 
-object HashVector
-    extends HashVectorOps
-    with DenseVector_HashVector_Ops
-    with HashVector_DenseVector_Ops
-    with HashVector_SparseVector_Ops
-    with SparseVector_HashVector_Ops {
+object HashVector {
   def zeros[@spec(Double, Int, Float, Long) V: ClassTag: Zero](size: Int) = {
     new HashVector(new OpenAddressHashArray[V](size))
   }
   def apply[@spec(Double, Int, Float, Long) V: Zero](values: Array[V]) = {
-    implicit val man = ClassTag[V](values.getClass.getComponentType.asInstanceOf[Class[V]])
+    implicit val ctg: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(values)
     val oah = new OpenAddressHashArray[V](values.length)
     for ((v, i) <- values.zipWithIndex) oah(i) = v
     new HashVector(oah)
@@ -135,21 +132,19 @@ object HashVector
 
   implicit def canMapValues[V, V2: ClassTag: Zero]: CanMapValues[HashVector[V], V, V2, HashVector[V2]] = {
     new CanMapValues[HashVector[V], V, V2, HashVector[V2]] {
-      def apply(from: HashVector[V], fn: (V) => V2) = {
+      def map(from: HashVector[V], fn: (V) => V2) = {
         HashVector.tabulate(from.length)(i => fn(from(i)))
       }
-    }
-  }
 
-  implicit def canMapActiveValues[V, V2: ClassTag: Zero]: CanMapActiveValues[HashVector[V], V, V2, HashVector[V2]] = {
-    new CanMapActiveValues[HashVector[V], V, V2, HashVector[V2]] {
-      def apply(from: HashVector[V], fn: (V) => V2) = {
+      def mapActive(from: HashVector[V], fn: (V) => V2): HashVector[V2] = {
+        val z = implicitly[Zero[V2]].zero
         val out = new OpenAddressHashArray[V2](from.length)
-        var i = 0
-        while (i < from.iterableSize) {
-          if (from.isActive(i))
-            out(from.index(i)) = fn(from.data(i))
-          i += 1
+        cforRange (0 until from.iterableSize) { i =>
+          if (from.isActive(i)) {
+            val vv = fn(from.data(i))
+            if (vv != z)
+              out(from.index(i)) = fn(from.data(i))
+          }
         }
         new HashVector(out)
       }
@@ -163,14 +158,13 @@ object HashVector
 
       def isTraversableAgain(from: HashVector[V]): Boolean = true
 
-      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {
+      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): fn.type = {
         fn.zeros(from.size - from.activeSize, from.default)
-        var i = 0
-        while (i < from.iterableSize) {
+        cforRange (0 until from.iterableSize) { i =>
           if (from.isActive(i))
             fn.visit(from.data(i))
-          i += 1
         }
+        fn
       }
     }
   }
@@ -192,21 +186,17 @@ object HashVector
       }
 
       def isTraversableAgain(from: HashVector[V]): Boolean = true
-
-      def traverse(from: HashVector[V], fn: ValuesVisitor[V]): Unit = {}
     }
   }
 
   implicit def canMapPairs[V, V2: ClassTag: Zero]: CanMapKeyValuePairs[HashVector[V], Int, V, V2, HashVector[V2]] = {
     new CanMapKeyValuePairs[HashVector[V], Int, V, V2, HashVector[V2]] {
 
-      /**Maps all key-value pairs from the given collection. */
-      def map(from: HashVector[V], fn: (Int, V) => V2) = {
+      def map(from: HashVector[V], fn: (Int, V) => V2): HashVector[V2] = {
         HashVector.tabulate(from.length)(i => fn(i, from(i)))
       }
 
-      /**Maps all active key-value pairs from the given collection. */
-      def mapActive(from: HashVector[V], fn: (Int, V) => V2) = {
+      def mapActive(from: HashVector[V], fn: (Int, V) => V2): HashVector[V2] = {
         val out = new OpenAddressHashArray[V2](from.length)
         var i = 0
         while (i < from.iterableSize) {
@@ -220,7 +210,9 @@ object HashVector
   }
 
   implicit def space[E: Field: ClassTag: Zero]: MutableFiniteCoordinateField[HashVector[E], Int, E] = {
-    implicit val _dim = dim.implVDim[E, HashVector[E]]
+    implicit val _dim: dim.Impl[HashVector[E], Int] = dim.implVDim[E, HashVector[E]]
+    implicit val n: norm.Impl2[HashVector[E], Double, Double] = norm.canNorm(HasOps.impl_CanTraverseValues_HV_Generic, implicitly[Field[E]].normImpl)
+    implicit val add: OpAdd.InPlaceImpl2[breeze.linalg.HashVector[E],E] = HasOps.castUpdateOps_V_S
     MutableFiniteCoordinateField.make[HashVector[E], Int, E]
   }
 

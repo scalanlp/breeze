@@ -18,11 +18,12 @@ import operators._
 import support._
 import support.CanTraverseValues.ValuesVisitor
 import breeze.generic.UFunc
-import breeze.generic.UFunc.{UImpl2, UImpl, InPlaceImpl2}
+import breeze.generic.UFunc.{InPlaceImpl2, UImpl, UImpl2}
 import breeze.macros.expand
 import breeze.math._
 import breeze.stats.distributions.Rand
-import breeze.storage.{Zero, Storage}
+import breeze.storage.{Storage, Zero}
+import breeze.util.ReflectionUtil
 
 import scala.{specialized => spec}
 import scala.annotation.unchecked.uncheckedVariance
@@ -79,6 +80,10 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
   def toDenseVector(implicit cm: ClassTag[V]) = {
     DenseVector(toArray)
   }
+
+
+  /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Vector]]*/
+  def toScalaVector: scala.Vector[V] = scala.Vector.empty ++ valuesIterator
 
   /**Returns copy of this [[breeze.linalg.Vector]] as a [[scala.Array]]*/
   def toArray(implicit cm: ClassTag[V]) = {
@@ -148,13 +153,13 @@ trait Vector[@spec(Int, Double, Float) V] extends VectorLike[V, Vector[V]] {
   /** See [[scala.collection.mutable.ArrayOps.scanRight]].
    */
   def scanRight[B](z: B)(op: (V, B) => B)(implicit cm1: ClassTag[B]): Vector[B] =
-    Vector[B](valuesIterator.scanRight(z)(op).toArray)
+    Vector[B](toScalaVector.scanRight(z)(op).toArray)
 
   // </editor-fold>
 
 }
 
-object Vector extends VectorConstructors[Vector] with VectorOps {
+object Vector extends VectorConstructors[Vector] {
 
   /**
    * Creates a Vector of size size.
@@ -173,152 +178,17 @@ object Vector extends VectorConstructors[Vector] with VectorOps {
   def apply[@spec(Double, Int, Float, Long) V](values: Array[V]): Vector[V] = DenseVector(values)
 
   implicit def canCopy[E]: CanCopy[Vector[E]] = new CanCopy[Vector[E]] {
-    // Should not inherit from T=>T because those get  used by the compiler.
     def apply(t: Vector[E]): Vector[E] = t.copy
   }
-
-  // There's a bizarre error specializing float's here.
-  class CanZipMapValuesVector[@spec(Int, Double) V, @spec(Int, Double) RV: ClassTag]
-      extends CanZipMapValues[Vector[V], V, RV, Vector[RV]] {
-    def create(length: Int) = DenseVector(new Array[RV](length))
-
-    /**Maps all corresponding values from the two collection. */
-    def map(from: Vector[V], from2: Vector[V], fn: (V, V) => RV) = {
-      require(from.length == from2.length, "Vector lengths must match!")
-      val result = create(from.length)
-      var i = 0
-      while (i < from.length) {
-        result.data(i) = fn(from(i), from2(i))
-        i += 1
-      }
-      result
-    }
-  }
-
-  implicit def canMapValues[V, V2: Zero](implicit man: ClassTag[V2]): CanMapValues[Vector[V], V, V2, Vector[V2]] = {
-    new CanMapValues[Vector[V], V, V2, Vector[V2]] {
-
-      /**Maps all key-value pairs from the given collection. */
-      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
-        case sv: SparseVector[V] => sv.mapValues(fn)
-        case hv: HashVector[V] => hv.mapValues(fn)
-        case dv: DenseVector[V] => dv.mapValues(fn)
-        case _ => DenseVector.tabulate(from.length)(i => fn(from(i)))
-      }
-    }
-  }
-
-  // TODO: probably should have just made this virtual and not ufunced
-  implicit def canMapActiveValues[V, V2: Zero](
-      implicit man: ClassTag[V2]): CanMapActiveValues[Vector[V], V, V2, Vector[V2]] = {
-    new CanMapActiveValues[Vector[V], V, V2, Vector[V2]] {
-
-      /**Maps all key-value pairs from the given collection. */
-      def apply(from: Vector[V], fn: (V) => V2): Vector[V2] = from match {
-        case sv: SparseVector[V] => sv.mapActiveValues(fn)
-        case hv: HashVector[V] => hv.mapActiveValues(fn)
-        case dv: DenseVector[V] => dv.mapActiveValues(fn)
-        case _ => DenseVector.tabulate(from.length)(i => fn(from(i)))
-      }
-    }
-  }
-
-  implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
-
-  implicit def negFromScale[@spec(Double, Int, Float, Long) V, Double](
-      implicit scale: OpMulScalar.Impl2[Vector[V], V, Vector[V]],
-      ring: Ring[V]) = {
-    new OpNeg.Impl[Vector[V], Vector[V]] {
-      override def apply(a: Vector[V]) = {
-        scale(a, ring.negate(ring.one))
-      }
-    }
-  }
-
-  implicit def zipMap[V, R: ClassTag] = new CanZipMapValuesVector[V, R]
-  implicit val zipMap_d = new CanZipMapValuesVector[Double, Double]
-  implicit val zipMap_f = new CanZipMapValuesVector[Float, Float]
-  implicit val zipMap_i = new CanZipMapValuesVector[Int, Int]
-
-  class CanZipMapKeyValuesVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV: ClassTag]
-      extends CanZipMapKeyValues[Vector[V], Int, V, RV, Vector[RV]] {
-    def create(length: Int) = DenseVector(new Array[RV](length))
-
-    /**Maps all corresponding values from the two collection. */
-    def map(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
-      require(from.length == from2.length, "Vector lengths must match!")
-      val result = create(from.length)
-      var i = 0
-      while (i < from.length) {
-        result.data(i) = fn(i, from(i), from2(i))
-        i += 1
-      }
-      result
-    }
-
-    override def mapActive(from: Vector[V], from2: Vector[V], fn: (Int, V, V) => RV): Vector[RV] = {
-      map(from, from2, fn)
-    }
-  }
-
-  implicit def zipMapKV[V, R: ClassTag]: CanZipMapKeyValuesVector[V, R] = new CanZipMapKeyValuesVector[V, R]
-
-  /**Returns the k-norm of this Vector. */
-  implicit def canNorm[T](implicit canNormS: norm.Impl[T, Double]): norm.Impl2[Vector[T], Double, Double] = {
-
-    new norm.Impl2[Vector[T], Double, Double] {
-      def apply(v: Vector[T], n: Double): Double = {
-        import v._
-        if (n == 1) {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => sum += canNormS(v))
-          sum
-        } else if (n == 2) {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += nn * nn })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
-          var max = 0.0
-          activeValuesIterator.foreach(v => { val nn = canNormS(v); if (nn > max) max = nn })
-          max
-        } else {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => { val nn = canNormS(v); sum += math.pow(nn, n) })
-          math.pow(sum, 1.0 / n)
-        }
-      }
-    }
-  }
-
-  implicit def canIterateValues[V]: CanTraverseValues[Vector[V], V] = new CanTraverseValues[Vector[V], V] {
-
-    def isTraversableAgain(from: Vector[V]): Boolean = true
-
-    def traverse(from: Vector[V], fn: ValuesVisitor[V]): Unit = {
-      for (v <- from.valuesIterator) {
-        fn.visit(v)
-      }
-    }
-
-  }
-
-  implicit def canTraverseKeyValuePairs[V]: CanTraverseKeyValuePairs[Vector[V], Int, V] =
-    new CanTraverseKeyValuePairs[Vector[V], Int, V] {
-      def isTraversableAgain(from: Vector[V]): Boolean = true
-
-      def traverse(from: Vector[V], fn: CanTraverseKeyValuePairs.KeyValuePairsVisitor[Int, V]): Unit = {
-        for (i <- 0 until from.length)
-          fn.visit(i, from(i))
-      }
-
-    }
 
   implicit def space[V: Field: Zero: ClassTag]: MutableFiniteCoordinateField[Vector[V], Int, V] = {
     val f = implicitly[Field[V]]
     import f.normImpl
-    implicit val _dim = dim.implVDim[V, Vector[V]]
+    implicit val _dim: dim.Impl[Vector[V], Int] = dim.implVDim[V, Vector[V]]
     MutableFiniteCoordinateField.make[Vector[V], Int, V]
   }
+
+  implicit def scalarOf[T]: ScalarOf[Vector[T], T] = ScalarOf.dummy
 }
 
 
@@ -354,14 +224,13 @@ trait VectorConstructors[Vec[T] <: Vector[T]] {
   def apply[V: ClassTag](values: V*): Vec[V] = {
     // manual specialization so that we create the right DenseVector specialization... @specialized doesn't work here
     val man = implicitly[ClassTag[V]]
-    if (man == manifest[Double]) apply(values.toArray.asInstanceOf[Array[Double]]).asInstanceOf[Vec[V]]
-    else if (man == manifest[Float]) apply(values.toArray.asInstanceOf[Array[Float]]).asInstanceOf[Vec[V]]
-    else if (man == manifest[Int]) apply(values.toArray.asInstanceOf[Array[Int]]).asInstanceOf[Vec[V]]
+    if (man == implicitly[ClassTag[Double]]) apply(values.toArray.asInstanceOf[Array[Double]]).asInstanceOf[Vec[V]]
+    else if (man == implicitly[ClassTag[Float]]) apply(values.toArray.asInstanceOf[Array[Float]]).asInstanceOf[Vec[V]]
+    else if (man == implicitly[ClassTag[Int]]) apply(values.toArray.asInstanceOf[Array[Int]]).asInstanceOf[Vec[V]]
     else apply(values.toArray)
 //     apply(values.toArray)
   }
 
-  //ToDo 2: I'm not sure fill/tabulate are really useful outside of the context of a DenseVector?
   implicit def canCreateZeros[V: ClassTag: Zero]: CanCreateZeros[Vec[V], Int] =
     new CanCreateZeros[Vec[V], Int] {
       def apply(d: Int): Vec[V] = {
@@ -391,7 +260,7 @@ trait VectorConstructors[Vec[T] <: Vector[T]] {
   def range(start: Int, end: Int, step: Int): Vec[Int] = apply[Int](Array.range(start, end, step))
 
   def rangeF(start: Float, end: Float, step: Float = 1.0f): Vec[Float] = {
-    import spire.implicits.cforRange
+    import breeze.macros.cforRange
     require(end > start)
     require(end - start > step)
     var size: Int = math.ceil((end - start) / step).toInt
@@ -407,7 +276,7 @@ trait VectorConstructors[Vec[T] <: Vector[T]] {
   }
 
   def rangeD(start: Double, end: Double, step: Double = 1.0): Vec[Double] = {
-    import spire.implicits.cforRange
+    import breeze.macros.cforRange
     require(end > start)
     require(end - start > step)
     var size: Int = math.ceil((end - start) / step).toInt

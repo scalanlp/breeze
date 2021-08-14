@@ -7,7 +7,7 @@ import breeze.linalg.Vector
 
 package object interpolation {
 
-  object UnivariateInterpolatorImpl extends UFunc with MappingUFunc {
+  object UnivariateInterpolatorImpl extends MappingUFunc {
     implicit def impl[T]: Impl2[UnivariateInterpolator[T], T, T] = new Impl2[UnivariateInterpolator[T], T, T] {
       def apply(k: UnivariateInterpolator[T], v: T): T = k(v)
     }

@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import breeze.storage.Zero
 import breeze.math.{Field, Ring, Semiring}
-import breeze.linalg.support.{CanZipMapKeyValues, CanTransformValues, CanZipMapValues, CanCopy}
+import breeze.linalg.support.{CanCopy, CanTransformValues, CanTraverseValues, CanZipMapKeyValues, CanZipMapValues}
 import breeze.generic.UFunc
 import breeze.linalg._
 import breeze.util.ScalaVersion
@@ -280,7 +280,7 @@ trait CounterOps {
       }
     }
 
-  implicit def canSetIntoVV[K1, K2 <: K1, V]: OpSet.InPlaceImpl2[Counter[K1, V], Counter[K2, V]] =
+  implicit def impl_OpSet_InPlace_C_C[K1, K2 <: K1, V]: OpSet.InPlaceImpl2[Counter[K1, V], Counter[K2, V]] =
     new OpSet.InPlaceImpl2[Counter[K1, V], Counter[K2, V]] {
       def apply(a: Counter[K1, V], b: Counter[K2, V]): Unit = {
         a.data.clear()
@@ -340,31 +340,8 @@ trait CounterOps {
     }
   }
 
-  /** Returns the k-norm of this Vector. */
-  implicit def canNorm[K, V](implicit normImpl: norm.Impl[V, Double]): norm.Impl2[Counter[K, V], Double, Double] =
-    new norm.Impl2[Counter[K, V], Double, Double] {
-      def apply(c: Counter[K, V], n: Double): Double = {
-        import c._
-
-        if (n == 1) {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => sum += norm(v))
-          sum
-        } else if (n == 2) {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => { val nn = norm(v); sum += nn * nn })
-          math.sqrt(sum)
-        } else if (n == Double.PositiveInfinity) {
-          var max = 0.0
-          activeValuesIterator.foreach(v => { val nn = norm(v); if (nn > max) max = nn })
-          max
-        } else {
-          var sum = 0.0
-          activeValuesIterator.foreach(v => { val nn = norm(v); sum += math.pow(nn, n) })
-          math.pow(sum, 1.0 / n)
-        }
-      }
-    }
+   implicit def canNorm[K, V](implicit normImpl: norm.Impl[V, Double]): norm.Impl2[Counter[K, V], Double, Double] =
+     norm.fromTraverseValues
 
   class CanZipMapValuesCounter[K, V, RV: Zero: Semiring] extends CanZipMapValues[Counter[K, V], V, RV, Counter[K, RV]] {
 
@@ -379,7 +356,7 @@ trait CounterOps {
 
   }
 
-  implicit def zipMap[K, V, R: Zero: Semiring] = new CanZipMapValuesCounter[K, V, R]
+  implicit def zipMap[K, V, R: Zero: Semiring]: CanZipMapValuesCounter[K, V, R] = new CanZipMapValuesCounter[K, V, R]
 
   class CanZipMapKeyValuesCounter[K, V, RV: Zero: Semiring]
       extends CanZipMapKeyValues[Counter[K, V], K, V, RV, Counter[K, RV]] {
@@ -398,7 +375,7 @@ trait CounterOps {
     }
   }
 
-  implicit def zipMapKeyValues[K, V, R: Zero: Semiring] = new CanZipMapKeyValuesCounter[K, V, R]
+  implicit def zipMapKeyValues[K, V, R: Zero: Semiring]: CanZipMapKeyValuesCounter[K, V, R] = new CanZipMapKeyValuesCounter[K, V, R]
 
   implicit def canTransformValues[L, V]: CanTransformValues[Counter[L, V], V] = {
     new CanTransformValues[Counter[L, V], V] {
@@ -411,6 +388,18 @@ trait CounterOps {
       def transformActive(from: Counter[L, V], fn: (V) => V): Unit = {
         transform(from, fn)
       }
+    }
+  }
+
+
+  implicit def canTraverseValues[L, V]: CanTraverseValues[Counter[L, V], V] = {
+    new CanTraverseValues[Counter[L, V], V] {
+      override def traverse(from: Counter[L, V], fn: CanTraverseValues.ValuesVisitor[V]): fn.type = {
+        from.activeValuesIterator.foreach(fn.visit)
+        fn
+      }
+
+      override def isTraversableAgain(from: Counter[L, V]): Boolean = true
     }
   }
 }

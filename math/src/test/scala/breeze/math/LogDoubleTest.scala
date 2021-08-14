@@ -17,12 +17,13 @@ package breeze.math
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 import LogDouble._
 import breeze.linalg.RandomInstanceSupport
 
-class LogDoubleTest extends FunSuite with Checkers {
+class LogDoubleTest extends AnyFunSuite with Checkers {
 
   implicit val ad: Arbitrary[Double] = Arbitrary(
     RandomInstanceSupport.genReasonableDouble.arbitrary.map(_.abs)
@@ -59,7 +60,7 @@ class LogDoubleTest extends FunSuite with Checkers {
   test("division") {
     check {
       Prop.forAll { (d: Double, e: Double) =>
-        (d.toLogDouble / e.toLogDouble).value =~= d / e
+        e != 0.0 || (d.toLogDouble / e.toLogDouble).value =~= d / e
       }
     }
     check {

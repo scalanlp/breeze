@@ -62,8 +62,7 @@ object CanTraverseKeyValuePairs {
     def isTraversableAgain(from: Array[A]): Boolean = true
   }
 
-  implicit def opArray[@specialized A] =
-    new OpArray[A]
+  implicit def opArray[@specialized A]: OpArray[A] = new OpArray[A]
 
   implicit object OpArrayII extends OpArray[Int]
 

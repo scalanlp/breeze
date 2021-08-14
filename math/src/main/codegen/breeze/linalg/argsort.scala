@@ -1,7 +1,7 @@
 package breeze.linalg
 
+import breeze.collection.mutable.Beam
 import breeze.generic.UFunc
-import breeze.linalg.support.{LowPriorityArgSort, LowPriorityArgTopK}
 import breeze.macros.expand
 import breeze.util.{ArrayUtil, Sorting, quickSelect}
 
@@ -48,4 +48,32 @@ object argtopk extends UFunc with LowPriorityArgTopK {
     }
   }
 
+}
+
+private[linalg] trait LowPriorityArgTopK {
+  implicit def argtopkWithQT[Q, I, V](
+                                       implicit qt: Q <:< QuasiTensor[I, V],
+                                       ord: Ordering[V]): argtopk.Impl2[Q, Int, IndexedSeq[I]] = {
+    new argtopk.Impl2[Q, Int, IndexedSeq[I]] {
+
+      def apply(q: Q, k: Int): IndexedSeq[I] = {
+        implicit val ordK: Ordering[I] = ord.on(q.apply)
+        val queue = new Beam[I](k)
+        queue ++= q.keysIterator
+        queue.toIndexedSeq.sorted(ordK.reverse)
+      }
+    }
+  }
+}
+
+private[linalg] trait LowPriorityArgSort {
+  implicit def argsortQuasiTensorWithOrdering[Q, I, V](
+                                                        implicit qt: Q <:< QuasiTensor[I, V],
+                                                        ord: Ordering[V]): argsort.Impl[Q, IndexedSeq[I]] = {
+    new argsort.Impl[Q, IndexedSeq[I]] {
+      def apply(q: Q): IndexedSeq[I] = {
+        q.keysIterator.toIndexedSeq.sorted(ord.on[I](q(_)))
+      }
+    }
+  }
 }

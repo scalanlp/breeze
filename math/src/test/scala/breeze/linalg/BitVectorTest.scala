@@ -1,13 +1,8 @@
 package breeze.linalg
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-/**
- * TODO
- *
- * @author dlwh
- **/
-class BitVectorTest extends FunSuite {
+class BitVectorTest extends AnyFunSuite {
   test("Ones") {
     val as = BitVector.ones(5)
     val expected = BitVector(5)(0, 1, 2, 3, 4)
@@ -83,7 +78,7 @@ class BitVectorTest extends FunSuite {
 
   test("mapActivePairs doesn't touch false entries") {
     val a = BitVector(10)(1, 3, 5, 7)
-    a.mapActivePairs((k, v) => assert(v))
+    a.mapActivePairs((k, v) => if (!v) throw new IllegalArgumentException else v)
   }
 
 }

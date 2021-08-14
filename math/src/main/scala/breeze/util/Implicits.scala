@@ -35,7 +35,7 @@ object Implicits extends DoubleImplicits with IteratorImplicits {
         result(a) += b
       }
 
-      result.mapValues(_.result()).toMap
+      Map.empty ++ result.mapValues(_.result())
     }
 
   }
@@ -43,45 +43,50 @@ object Implicits extends DoubleImplicits with IteratorImplicits {
 }
 
 trait DoubleImplicits {
-  class RichDouble(x: Double) {
+  implicit class RichDouble(x: Double) {
     def closeTo(y: Double, tol: Double = 1E-5) = {
       (math.abs(x - y) / (math.abs(x) + math.abs(y) + 1e-10) < tol);
     }
     def isDangerous = x.isNaN || x.isInfinite
   }
 
-  implicit def scEnrichDouble(x: Double) = new RichDouble(x);
+  implicit class RichFloat(x: Float) {
+    def closeTo(y: Float, tol: Double = 1E-5) = {
+      (math.abs(x - y) / (math.abs(x) + math.abs(y) + 1e-10) < tol);
+    }
+    def isDangerous: Boolean = x.isNaN || x.isInfinite
+  }
 }
 
 trait IteratorImplicits {
   class RichIterator[T](iter: Iterator[T]) {
     def tee(f: T => Unit): Iterator[T] = new Iterator[T] {
-      def next = {
+      def next(): T = {
         val n = iter.next;
         f(n);
         n
       }
 
-      def hasNext = {
+      def hasNext: Boolean = {
         iter.hasNext;
       }
     }
 
     def takeUpToWhere(f: T => Boolean): Iterator[T] = new Iterator[T] {
       var done = false
-      def next = {
+      def next(): T = {
         if (done) throw new NoSuchElementException()
         val n = iter.next;
         done = f(n)
         n
       }
 
-      def hasNext = {
+      def hasNext: Boolean = {
         !done && iter.hasNext;
       }
     }
 
-    def last = {
+    def last: T = {
       var x = iter.next()
       while (iter.hasNext) {
         x = iter.next()
@@ -90,5 +95,5 @@ trait IteratorImplicits {
     }
   }
 
-  implicit def scEnrichIterator[T](iter: Iterator[T]) = new RichIterator[T](iter);
+  implicit def scEnrichIterator[T](iter: Iterator[T]): RichIterator[T] = new RichIterator[T](iter)
 }

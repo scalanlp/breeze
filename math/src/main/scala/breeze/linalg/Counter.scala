@@ -15,7 +15,9 @@ package breeze.linalg
  limitations under the License.
  */
 
+import breeze.linalg
 import breeze.linalg.operators._
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 import breeze.linalg.support.CanTraverseKeyValuePairs.KeyValuePairsVisitor
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
@@ -23,6 +25,7 @@ import breeze.math._
 import breeze.storage.Zero
 
 import scala.collection.Set
+import scala.collection.compat._
 
 /**
  * A map-like tensor that acts like a collection of key-value pairs where
@@ -30,7 +33,6 @@ import scala.collection.Set
  *
  * @author dramage, dlwh
  */
-@SerialVersionUID(1)
 trait CounterLike[K, V, +M <: scala.collection.mutable.Map[K, V], +This <: Counter[K, V]]
     extends TensorLike[K, V, This]
     with Serializable {
@@ -71,7 +73,7 @@ trait CounterLike[K, V, +M <: scala.collection.mutable.Map[K, V], +This <: Count
   override def toString: String = data.mkString("Counter(", ", ", ")")
 
   override def equals(p1: Any): Boolean = p1 match {
-    case x: Counter[K, V] => x.data == this.data
+    case x: Counter[K, V] @unchecked => x.data == this.data
     case _ => false
   }
 
@@ -96,14 +98,14 @@ object Counter extends CounterOps {
   def apply[K, V: Zero: Semiring](values: TraversableOnce[(K, V)]): Counter[K, V] = {
     val rv = apply[K, V]()
     val field = implicitly[Semiring[V]]
-    values.foreach({ case (k, v) => rv(k) = field.+(v, rv(k)) })
+    values.iterator.foreach({ case (k, v) => rv(k) = field.+(v, rv(k)) })
     rv
   }
 
   /** Counts each of the given items. */
   def countTraversable[K](items: TraversableOnce[K]): Counter[K, Int] = {
     val rv = apply[K, Int]()
-    items.foreach(rv(_) += 1)
+    items.iterator.foreach(rv(_) += 1)
     rv
   }
 
@@ -116,23 +118,11 @@ object Counter extends CounterOps {
   }
 
   implicit def canMapValues[K, V, RV: Zero]: CanMapValues[Counter[K, V], V, RV, Counter[K, RV]] = {
-    new CanMapValues[Counter[K, V], V, RV, Counter[K, RV]] {
-      override def apply(from: Counter[K, V], fn: (V => RV)) = {
+    new DenseCanMapValues[Counter[K, V], V, RV, Counter[K, RV]] {
+      override def map(from: Counter[K, V], fn: (V => RV)): Counter[K, RV] = {
         val rv = Counter[K, RV]()
         for ((k, v) <- from.iterator) {
-          rv(k) = fn(from.data(k))
-        }
-        rv
-      }
-    }
-  }
-
-  implicit def canMapActiveValues[K, V, RV: Zero]: CanMapActiveValues[Counter[K, V], V, RV, Counter[K, RV]] = {
-    new CanMapActiveValues[Counter[K, V], V, RV, Counter[K, RV]] {
-      override def apply(from: Counter[K, V], fn: (V => RV)) = {
-        val rv = Counter[K, RV]()
-        for ((k, v) <- from.activeIterator) {
-          rv(k) = fn(from.data(k))
+          rv(k) = fn(v)
         }
         rv
       }
@@ -144,10 +134,11 @@ object Counter extends CounterOps {
     def isTraversableAgain(from: Counter[K, V]): Boolean = true
 
     /** Iterates all values from the given collection. */
-    def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): Unit = {
+    def traverse(from: Counter[K, V], fn: ValuesVisitor[V]): fn.type = {
       for (v <- from.valuesIterator) {
         fn.visit(v)
       }
+      fn
     }
 
   }
@@ -206,7 +197,7 @@ object Counter extends CounterOps {
   }
 
   implicit def space[K, V](implicit field: Field[V]): MutableEnumeratedCoordinateField[Counter[K, V], K, V] = {
-    implicit def zipMap = Counter.zipMap[K, V, V]
+    implicit def zipMap: Counter.CanZipMapValuesCounter[K, V, V] = Counter.zipMap[K, V, V]
     MutableEnumeratedCoordinateField.make[Counter[K, V], K, V]
   }
 }

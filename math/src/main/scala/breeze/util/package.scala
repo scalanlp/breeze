@@ -125,17 +125,7 @@ package object util {
   }
 
   /**
-   * You can write TODO in your code, and get an exception at runtime for any expression.
-   */
-  def TODO = sys.error("TODO (Not implemented)")
-
-  /**
-   * You can write XXX in your code and get an exception at runtime for any expression.
-   */
-  def XXX = sys.error("XXX Not Implemented")
-
-  /**
-   * Similar to the TODO expression, except this one is for types.
+   * Similar to ???, but for types
    */
   type TODO = Nothing
 
@@ -172,7 +162,7 @@ package object util {
   def trace[T](a: T) = { println(a); a }
 
   // this should be a separate trait but Scala is freaking out
-  class SeqExtras[T](s: Seq[T]) {
+  implicit class SeqExtras[T](s: Seq[T]) {
     def argmax(implicit ordering: Ordering[T]) = {
       s.zipWithIndex.reduceLeft((a, b) => if (ordering.gt(a._1, b._1)) a else b)._2
     }
@@ -193,9 +183,7 @@ package object util {
     }
   }
 
-  implicit def seqExtras[T](s: Seq[T]) = new SeqExtras(s)
-
-  implicit def arraySeqExtras[T](s: Array[T]) = new SeqExtras(ArraySeq.unsafeWrapArray(s))
+  implicit def arraySeqExtras[T](s: Array[T]): SeqExtras[T] = new SeqExtras(ArraySeq.unsafeWrapArray(s))
 
   implicit class AwesomeBitSet(val bs: java.util.BitSet) extends AnyVal {
     def apply(r: Int) = bs.get(r)

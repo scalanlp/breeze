@@ -1,8 +1,10 @@
 package breeze.stats.hypothesis
 
 import org.scalatest._
+import org.scalatest.funsuite._
+import matchers.should.Matchers._
 
-class TTestTest extends FunSuite with Matchers {
+class TTestTest extends AnyFunSuite {
   val threshold = 0.01
   test("T Test two sample") {
     tTest(List(1.0, 1, 2, 3), List(9.0, 9, 8, 9)) should be(4.29E-5 +- threshold)

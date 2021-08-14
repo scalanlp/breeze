@@ -1,6 +1,6 @@
 package breeze.io
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import java.io.{File}
 import spire.math.ULong
 
@@ -11,7 +11,7 @@ import spire.math.ULong
  * Time: 6:22 PM
  * To change this template use File | Settings | File Templates.
  */
-sealed trait RandomAccessFileTest extends FunSuite {
+sealed trait RandomAccessFileTest extends AnyFunSuite {
 
   implicit def bc: ByteConverter
   def fileNameAppend: String
@@ -74,8 +74,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0.toByte)
     assert(result2(1) === 1.toByte)
     assert(result2(2) === (-1).toByte)
-    assert(stream2.readInt8 === (-128).toByte)
-    assert(stream2.readInt8 === 127.toByte)
+    assert(stream2.readInt8() === (-128).toByte)
+    assert(stream2.readInt8() === 127.toByte)
     stream2.close
   }
 
@@ -92,8 +92,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0.toShort)
     assert(result2(1) === 1.toShort)
     assert(result2(2) === 127.toShort)
-    assert(stream2.readUInt8 === 128.toShort)
-    assert(stream2.readUInt8 === 255.toShort)
+    assert(stream2.readUInt8() === 128.toShort)
+    assert(stream2.readUInt8() === 255.toShort)
     stream2.close
   }
 
@@ -111,8 +111,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0.toShort)
     assert(result2(1) === 1.toShort)
     assert(result2(2) === (-1).toShort)
-    assert(stream2.readShort === (-32768).toShort)
-    assert(stream2.readInt16 === 32767.toShort)
+    assert(stream2.readShort() === (-32768).toShort)
+    assert(stream2.readInt16() === 32767.toShort)
     stream2.close
   }
 
@@ -131,8 +131,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0)
     assert(result2(1) === 1)
     assert(result2(2) === 32767)
-    assert(stream2.readUInt16 === 65535)
-    assert(stream2.readUInt16 === 65535)
+    assert(stream2.readUInt16() === 65535)
+    assert(stream2.readUInt16() === 65535)
     assert(stream2.readUInt8(2).forall(_ == 0xFF))
     stream2.close
   }
@@ -154,8 +154,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0)
     assert(result2(1) === 1)
     assert(result2(2) === -1)
-    assert(stream2.readInt === 2147483647)
-    assert(stream2.readInt32 === -2147483648)
+    assert(stream2.readInt() === 2147483647)
+    assert(stream2.readInt32() === -2147483648)
 
     //Tests for maximum and minimum value byte codes
     val tempMaxRead = stream2.readUInt8(4)
@@ -184,8 +184,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0L)
     assert(result2(1) === 1L)
     assert(result2(2) === 32767L)
-    assert(stream2.readUInt32 === 4294967295L)
-    assert(stream2.readUInt32 === 4294967295L)
+    assert(stream2.readUInt32() === 4294967295L)
+    assert(stream2.readUInt32() === 4294967295L)
     assert(stream2.readUInt8(4).forall(_ == 0xFF))
     stream2.close
   }
@@ -208,8 +208,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0L)
     assert(result2(1) === 1L)
     assert(result2(2) === -1L)
-    assert(stream2.readLong === 9223372036854775807L)
-    assert(stream2.readInt64 === -9223372036854775808L)
+    assert(stream2.readLong() === 9223372036854775807L)
+    assert(stream2.readInt64() === -9223372036854775808L)
 
     //Tests for maximum and minimum value byte codes
     val tempMaxRead = stream2.readUInt8(8)
@@ -243,11 +243,11 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0).toLong === 0L)
     assert(result2(1).toLong === 1L)
     assert(result2(2).toLong === 32767L)
-    assert(stream2.readUInt64.toLong === 9223372036854775807L)
-    assert(stream2.readUInt64.toLong === 9223372036854775807L)
+    assert(stream2.readUInt64().toLong === 9223372036854775807L)
+    assert(stream2.readUInt64().toLong === 9223372036854775807L)
     //println( stream2.readUInt8(8).toList )
     assert(stream2.readUInt8(8).forall(_ == 0xFF))
-    assert(stream2.readUInt64 == UInt64Max)
+    assert(stream2.readUInt64() == UInt64Max)
     stream2.close
   }
 
@@ -265,8 +265,8 @@ sealed trait RandomAccessFileTest extends FunSuite {
     assert(result2(0) === 0L)
     assert(result2(1) === 1L)
     assert(result2(2) === -32767L)
-    assert(stream2.readUInt64Shifted === -9223372036854775808L)
-    assert(stream2.readUInt64Shifted === 9223372036854775807L)
+    assert(stream2.readUInt64Shifted() === -9223372036854775808L)
+    assert(stream2.readUInt64Shifted() === 9223372036854775807L)
     stream2.close
   }
 

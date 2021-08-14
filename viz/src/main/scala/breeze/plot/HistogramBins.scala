@@ -1,5 +1,7 @@
 package breeze.plot
 
+import scala.language.implicitConversions
+
 /**
  * Bins for a histogram.  These can be implicitly constructed from:
  * <pre>

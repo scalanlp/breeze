@@ -6,7 +6,7 @@ import breeze.linalg.eig.Eig
 import breeze.linalg.eigSym.{DenseEigSym, EigSym}
 import breeze.numerics._
 import breeze.stats.distributions.Rand
-import spire.implicits.cforRange
+import breeze.macros.cforRange
 
 /**
  * Approximate truncated randomized EVD
@@ -98,7 +98,7 @@ object evdr extends UFunc {
    * @return eigenvectors with resolved sign ambiguity
    */
   private def flipSigns(u: DenseMatrix[Double]): DenseMatrix[Double] = {
-    import DenseMatrix.canMapValues
+//    import DenseMatrix.canMapValues
     val abs_u = abs(u)
     val max_abs_cols = (0 until u.cols).map(c => argmax(abs_u(::, c)))
     val signs = max_abs_cols.zipWithIndex.map(e => signum(u(e._1, e._2)))

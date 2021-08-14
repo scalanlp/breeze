@@ -2,9 +2,10 @@ package breeze
 
 import breeze.generic.{UFunc, VariableUFunc}
 import breeze.linalg.{DenseMatrix, DenseVector}
-import spire.implicits.cfor
+import breeze.macros.cforRange
 import spire.math.poly.PolyDense
-import spire.implicits._
+import breeze.macros._
+import spire.implicits.DoubleAlgebra
 
 package object polynomial {
   object densePolyval extends UFunc {
@@ -26,7 +27,7 @@ package object polynomial {
         while (i > 0) {
           i -= 1
           val c = coeffs(i)
-          cfor(0)(j => j < result.size, j => j + 1)(j => {
+          cforRange(0 until result.size)(j => {
             result(j) = result(j) * v(j) + c
           })
         }
@@ -53,7 +54,7 @@ package object polynomial {
           i -= 1
           result = result * v //WILDLY INEFFICIENT, FIGURE OUT IN PLACE MULTIPLY
           val c = coeffs(i)
-          cfor(0)(i => i < n, i => i + 1)(i => {
+          cforRange(0 until n)(i => {
             result.update(i, i, result(i, i) + c)
           })
         }

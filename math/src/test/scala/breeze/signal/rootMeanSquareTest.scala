@@ -1,13 +1,13 @@
 package breeze.signal
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg.DenseVector
 
 /**
  * @author ktakagaki
  * @date 2/18/14.
  */
-class rootMeanSquareTest extends FunSuite {
+class rootMeanSquareTest extends AnyFunSuite {
 
   test("rootMeanSquare Double") {
     val temp = DenseVector[Double](3.0, 5.0, 1.0, 1.0)

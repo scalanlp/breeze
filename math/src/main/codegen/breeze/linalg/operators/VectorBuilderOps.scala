@@ -2,16 +2,14 @@ package breeze.linalg.operators
 
 import breeze.generic.UFunc.{InPlaceImpl2, UImpl2}
 import breeze.linalg.{DenseMatrix, DenseVector, HashVector, StorageVector, Vector, VectorBuilder, axpy, norm, scaleAdd}
-import breeze.macros.expand
+import breeze.macros._
 import breeze.math.{Field, MutableModule, MutableVectorField, Ring, Semiring}
 import breeze.storage.Zero
-import spire.syntax.cfor.cforRange
 import breeze.math.PowImplicits._
 
 import scala.reflect.ClassTag
 
-trait VectorBuilderOps {
-  this: VectorBuilder.type =>
+trait VectorBuilderOps { self: VectorBuilder.type =>
   @expand
   @expand.valify
   implicit def canOpInto_V_S[@expand.args(OpMulScalar, OpDiv) Op, @expand.args(Double, Long, Float, Int) T](
@@ -147,13 +145,13 @@ trait VectorBuilderOps {
     }
   }
 
-  implicit def opFromCopyAndUpdate[Op, V, Other](
-                                                  implicit op: InPlaceImpl2[Op, VectorBuilder[V], Other],
-                                                  semi: Semiring[V],
-                                                  dev: Zero[V],
-                                                  classTag: ClassTag[V]): UImpl2[Op, VectorBuilder[V], Other, VectorBuilder[V]] = {
-    BinaryOp.fromCopyAndUpdate[VectorBuilder[V], Other, Op](op, canCopyBuilder[V])
-  }
+//  implicit def opFromCopyAndUpdate[Op, V, Other](
+//                                                  implicit op: InPlaceImpl2[Op, VectorBuilder[V], Other],
+//                                                  semi: Semiring[V],
+//                                                  dev: Zero[V],
+//                                                  classTag: ClassTag[V]): UImpl2[Op, VectorBuilder[V], Other, VectorBuilder[V]] = {
+//    BinaryOp.fromCopyAndUpdate[VectorBuilder[V], Other, Op](op, canCopyBuilder[V])
+//  }
 
   @expand
   @expand.valify

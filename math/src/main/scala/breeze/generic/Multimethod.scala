@@ -19,7 +19,9 @@ package breeze.generic
 import collection.mutable.{ArrayBuffer, HashMap}
 import java.util.concurrent.ConcurrentHashMap
 import breeze.util.ReflectionUtil
+
 import collection.mutable
+import scala.collection.compat._
 
 /**
  * A Multimethod is basically a glorified registry that uses dynamic reflection (and subtyping) to determine which
@@ -27,7 +29,7 @@ import collection.mutable
  *
  * @author dlwh
  */
-trait Multimethod[Method, A <: AnyRef, R] extends MMRegistry1[Method] { this: Method =>
+trait Multimethod[Method, A <: AnyRef, R] extends MMRegistry1[Method] {  self: Method =>
 
   protected def bindingMissing(a: A): R = throw new UnsupportedOperationException("Types not found!")
   protected def multipleOptions(a: A, m: Map[Class[_], Method]) = {
@@ -75,107 +77,6 @@ trait Multimethod[Method, A <: AnyRef, R] extends MMRegistry1[Method] { this: Me
  */
 trait MethodImpl[A, +R] {
   def apply(a: A): R
-}
-
-trait Multimethod2[Method[AA, BB, RR] <: Function2[AA, BB, RR], A, B, R]
-    extends ((A, B) => R)
-    with MMRegistry2[Method[_ <: A, _ <: B, _ <: R]] { this: Method[A, B, R] =>
-  protected def bindingMissing(a: A, b: B): R =
-    throw new UnsupportedOperationException("Types not found!" + a + b + " " + ops)
-  protected def multipleOptions(a: A, b: B, m: Map[(Class[_], Class[_]), Method[_ <: A, _ <: B, _ <: R]]) = {
-    throw new RuntimeException("Multiple bindings for method: " + m)
-  }
-
-  def apply(a: A, b: B): R = {
-    val ac = a.asInstanceOf[AnyRef].getClass
-    val bc = b.asInstanceOf[AnyRef].getClass
-
-    val cached = cache.get(ac -> bc)
-    if (cached != null) {
-      cached match {
-        case None => bindingMissing(a, b)
-        case Some(m) =>
-          m.asInstanceOf[Method[A, B, R]].apply(a, b)
-      }
-    } else {
-      val options = resolve(ac, bc.asInstanceOf[Class[_ <: B]])
-      options.size match {
-        case 0 =>
-          cache.put(ac -> bc, None)
-          bindingMissing(a, b)
-        case 1 =>
-          val method = options.values.head
-          cache.put(ac -> bc, Some(method))
-          method.asInstanceOf[Method[A, B, R]].apply(a, b)
-        case _ =>
-          val selected = selectBestOption(options)
-          if (selected.size != 1)
-            multipleOptions(a, b, options)
-          else {
-            val method = selected.values.head
-            cache.put(ac -> bc, Some(method))
-            method.asInstanceOf[Method[A, B, R]].apply(a, b)
-          }
-      }
-    }
-  }
-
-  def register[AA <: A, BB <: B](op: Method[AA, BB, _ <: R])(implicit manA: Manifest[AA], manB: Manifest[BB]): Unit = {
-    super.register(manA.runtimeClass.asInstanceOf[Class[_]], manB.runtimeClass.asInstanceOf[Class[_]], op)
-  }
-
-}
-
-/**
- * A Multiproc2 is a Multimethod that is guaranteed to return Unit
- * @author dlwh
- */
-trait Multiproc2[Method[AA, BB] <: (AA, BB) => Unit, A <: AnyRef, B]
-    extends ((A, B) => Unit)
-    with MMRegistry2[Method[_ <: A, _ <: B]] { this: Method[A, B] =>
-  protected def bindingMissing(a: A, b: B): Unit = throw new UnsupportedOperationException("Types not found!")
-  protected def multipleOptions(a: A, b: B, m: Map[(Class[_], Class[_]), Method[_ <: A, _ <: B]]) = {
-    throw new RuntimeException("Multiple bindings for method: " + m)
-  }
-
-  def apply(a: A, b: B): Unit = {
-    val ac = a.asInstanceOf[AnyRef].getClass
-    val bc = b.asInstanceOf[AnyRef].getClass
-
-    val cached = cache.get(ac -> bc)
-    if (cached != null) {
-      cached match {
-        case None => bindingMissing(a, b)
-        case Some(m) =>
-          m.asInstanceOf[Method[A, B]].apply(a, b)
-      }
-    } else {
-      val m = resolve(a.getClass, b.asInstanceOf[AnyRef].getClass.asInstanceOf[Class[_ <: B]])
-      m.size match {
-        case 0 =>
-          cache.put(ac -> bc, None)
-          bindingMissing(a, b)
-        case 1 =>
-          val method = m.values.head
-          cache.put(ac -> bc, Some(method))
-          method.asInstanceOf[Method[A, B]].apply(a, b)
-        case _ =>
-          val selected = selectBestOption(m)
-          if (selected.size != 1)
-            multipleOptions(a, b, m)
-          else {
-            val method = selected.values.head
-            cache.put(ac -> bc, Some(method))
-            selected.values.head.asInstanceOf[Method[A, B]].apply(a, b)
-          }
-      }
-    }
-  }
-
-  def register[AA <: A, BB <: B](op: Method[AA, BB])(implicit manA: Manifest[AA], manB: Manifest[BB]): Unit = {
-    super.register(manA.runtimeClass.asInstanceOf[Class[AA]], manB.runtimeClass.asInstanceOf[Class[BB]], op)
-  }
-
 }
 
 // TODO: switch to identity hashing!
@@ -318,7 +219,7 @@ trait MMRegistry3[R] {
       }
     }
 
-    options.filterKeys(bestCandidates)
+    options.view.filterKeys(bestCandidates).toMap
   }
 }
 
@@ -351,7 +252,7 @@ trait MMRegistry1[M] {
   /** This selects based on the partial order induced by the inheritance hierarchy.
    *  If there is ambiguity, all are returned.
    **/
-  protected def selectBestOption(options: Map[Class[_], M]) = {
+  protected def selectBestOption(options: Map[Class[_], M]): Map[Class[_], M] = {
     var bestCandidates = Set[Class[_]]()
     for (aa <- options.keys) {
       // if there is no option (aaa,bbb) s.t. aaa <: aa && bbb <: bb, then add it to the list
@@ -361,6 +262,6 @@ trait MMRegistry1[M] {
       }
     }
 
-    options.filterKeys(bestCandidates)
+    options.view.filterKeys(bestCandidates).toMap
   }
 }

@@ -1,8 +1,8 @@
 package breeze.util
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class SortingTest extends FunSuite {
+class SortingTest extends AnyFunSuite {
   test("indirectSort") {
     val keys = Array(5, 4, 3, 2, 1)
     val elems = Array(1.0, 2.0, 3.0, 4.0, 5.0)

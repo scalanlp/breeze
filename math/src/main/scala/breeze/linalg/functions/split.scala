@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.generic.UFunc
 
 import scala.reflect.ClassTag
-import spire.implicits._
+import breeze.macros._
 import breeze.storage.Zero
 
 import scala.collection.compat.immutable.ArraySeq

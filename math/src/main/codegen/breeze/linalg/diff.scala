@@ -36,7 +36,7 @@ object diff extends UFunc with diffLowPrio {
 
 }
 
-sealed trait diffLowPrio { this: diff.type =>
+sealed trait diffLowPrio {  self: diff.type =>
   implicit def implVec[T, Vec](
       implicit vec: Vec <:< Vector[T],
       ct: ClassTag[T],

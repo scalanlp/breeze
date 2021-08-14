@@ -14,10 +14,12 @@ package breeze.generic
  See the License for the specific language governing permissions and
  limitations under the License.
  */
+import breeze.linalg.operators.BinaryRegistry
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
-class MultimethodTest extends FunSuite with Checkers {
+class MultimethodTest extends AnyFunSuite with Checkers {
   trait T
   trait V extends T
   trait DV extends V
@@ -25,9 +27,10 @@ class MultimethodTest extends FunSuite with Checkers {
   trait M extends T
   trait DM extends M
 
-  class MM extends Multimethod2[Function2, T, T, String] with ((T, T) => String)
-  class MMPrim extends Multimethod2[Function2, T, Double, String] with ((T, Double) => String)
-  class MMDouble extends Multimethod2[Function2, Double, Double, String] with ((Double, Double) => String)
+  trait Tag
+  class MM extends BinaryRegistry[T, T, Tag, String]
+  class MMPrim extends BinaryRegistry[T, Double, Tag, String]
+  class MMDouble extends BinaryRegistry[Double, Double, Tag, String]
 
   val t = new T {}
   val v = new V {}
@@ -38,6 +41,8 @@ class MultimethodTest extends FunSuite with Checkers {
 
   val all = Set(t, v, dv, sv, m, dm)
 
+  private def ufunc[T1, T2, R](f: (T1, T2)=>R):UFunc.UImpl2[Tag, T1, T2, R] = (t1, t2) => f(t1, t2)
+
   test("exceptions for things not present") {
     val mm = new MM
     for (a <- all; b <- all) {
@@ -47,7 +52,7 @@ class MultimethodTest extends FunSuite with Checkers {
       }
     }
 
-    mm.register({ (a: DV, b: DV) =>
+    mm.register(ufunc { (a: DV, b: DV) =>
       "Woo"
     })
     for (a <- all; b <- all if a != dv && b != dv) {
@@ -61,17 +66,17 @@ class MultimethodTest extends FunSuite with Checkers {
   test("basics") {
     val mm = new MM
 
-    mm.register({ (a: DV, b: DV) =>
+    mm.register(ufunc { (a: DV, b: DV) =>
       "Woo"
     })
     assert(mm(dv, dv) === "Woo")
 
-    mm.register({ (a: DV, b: SV) =>
+    mm.register(ufunc { (a: DV, b: SV) =>
       "Yay"
     })
     assert(mm(dv, sv) === "Yay")
 
-    mm.register({ (a: DV, b: M) =>
+    mm.register(ufunc { (a: DV, b: M) =>
       "Ok"
     })
     assert(mm(dv, m) === "Ok")
@@ -80,18 +85,18 @@ class MultimethodTest extends FunSuite with Checkers {
   test("inheritance") {
     val mm = new MM
 
-    mm.register({ (a: V, b: V) =>
+    mm.register(ufunc { (a: V, b: V) =>
       "Woo"
     })
     assert(mm(dv, dv) === "Woo")
 
-    mm.register({ (a: DV, b: SV) =>
+    mm.register(ufunc { (a: DV, b: SV) =>
       "Yay"
     })
     assert(mm(dv, sv) === "Yay")
     assert(mm(dv, dv) === "Woo")
 
-    mm.register({ (a: V, b: M) =>
+    mm.register(ufunc{ (a: V, b: M) =>
       "Ok"
     })
     assert(mm(dv, m) === "Ok")
@@ -100,12 +105,12 @@ class MultimethodTest extends FunSuite with Checkers {
   test("primitives on second type") {
     val mm = new MMPrim
 
-    mm.register({ (a: V, b: Double) =>
+    mm.register(ufunc { (a: V, b: Double) =>
       "Woo"
     })
     assert(mm(dv, 4.0) === "Woo")
 
-    mm.register({ (a: DV, b: Double) =>
+    mm.register(ufunc { (a: DV, b: Double) =>
       "Yay"
     })
     assert(mm(dv, 4.0) === "Yay")
@@ -114,7 +119,7 @@ class MultimethodTest extends FunSuite with Checkers {
 
   test("double primitives") {
     val mm = new MMDouble()
-    mm.register((a: Double, b: Double) => "Woo")
+    mm.register(ufunc {(a: Double, b: Double) => "Woo"})
     assert(mm(5.0, 4.0) === "Woo")
   }
 }

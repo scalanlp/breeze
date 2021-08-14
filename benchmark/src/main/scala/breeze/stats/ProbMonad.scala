@@ -4,7 +4,7 @@ import breeze.benchmark._
 
 import breeze.linalg._
 import breeze.stats.distributions._
-import spire.implicits.cfor
+import breeze.macros.cforRange
 
 object ProbMonadRunner extends MyRunner(classOf[ProbMonadBenchmark])
 
@@ -70,7 +70,7 @@ class ProbMonadBenchmark extends BreezeBenchmark {
   def timeDrawOpt(reps: Int) = run(reps): Unit = {
     val mg = gaussian.condition(x => x > 0)
     val result = new Array[Option[Double]](size)
-    cfor(0)(i => i < size, i => i + 1)(i => {
+    cforRange(0 until size)(i => {
       result(i) = mg.drawOpt()
     })
     result
@@ -78,7 +78,7 @@ class ProbMonadBenchmark extends BreezeBenchmark {
   def timeDrawOptMultipleCondition(reps: Int) = run(reps): Unit = {
     val mg = gaussian.condition(x => x > 0).condition(x => x < 1).condition(x => x > -1)
     val result = new Array[Option[Double]](size)
-    cfor(0)(i => i < size, i => i + 1)(i => {
+    cforRange(0 until size)(i => {
       result(i) = mg.drawOpt()
     })
     result

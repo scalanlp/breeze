@@ -6,7 +6,7 @@ import breeze.stats.distributions._
 
 import spire.math._
 import spire.math.poly._
-import spire.implicits._
+import breeze.macros._
 
 object DensePolynomialBenchmark extends MyRunner(classOf[DensePolynomialBenchmark])
 

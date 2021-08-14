@@ -1,8 +1,8 @@
 package breeze.optimize
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class DiffFunctionTest extends FunSuite {
+class DiffFunctionTest extends AnyFunSuite {
 
   object f1 extends DiffFunction[Double] {
     override def calculate(x: Double): (Double, Double) = {

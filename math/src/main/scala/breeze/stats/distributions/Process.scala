@@ -28,7 +28,7 @@ trait Process[T] extends Rand[T] { process =>
 
   /** Draw a sample and the next step of the process along with it.*/
   def step(): (T, Process[T]) = {
-    val x = get;
+    val x = draw();
     (x, observe(x));
   }
 

@@ -1,14 +1,15 @@
 package breeze.linalg
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
-import spire.implicits._
+import breeze.macros._
 
 /**
  *
  * @author stucchio
  */
-class splitTest extends FunSuite {
+class splitTest extends AnyFunSuite {
   test("split works on arrays with even multiple") {
     val start = DenseVector[Double](1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
     val expectedResult =

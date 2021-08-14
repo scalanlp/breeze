@@ -1,13 +1,14 @@
 package breeze.linalg
 
 import org.scalatest._
+import org.scalatest.funsuite._
 
 /**
  *
  *
  * @author dlwh
  */
-class rot90Test extends FunSuite {
+class rot90Test extends AnyFunSuite {
   test("rot90 numpy docs test") {
     val m = DenseMatrix((1, 2), (3, 4))
     val r90 = DenseMatrix((2, 4), (1, 3))

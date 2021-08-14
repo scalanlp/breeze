@@ -16,13 +16,13 @@ package breeze.numerics
  limitations under the License.
  */
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  *
  * @author dlwh
  */
-class IntMathTest extends FunSuite {
+class IntMathTest extends AnyFunSuite {
   test("ipow") {
     import IntMath._
     assert(ipow(3, 4) === 81)

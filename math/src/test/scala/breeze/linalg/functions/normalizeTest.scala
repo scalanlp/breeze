@@ -19,14 +19,14 @@
 package breeze.linalg.functions
 
 import breeze.linalg.{DenseVector, normalize}
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 /**
  * TODO
  *
  * @author dlwh
   **/
-class normalizeTest extends FunSuite {
+class normalizeTest extends AnyFunSuite {
 
   test("#667 normalize float") {
     assert(normalize(DenseVector(3.0f, 4.0f)) == DenseVector(3.0f / 5.0f, 4.0f / 5.0f))

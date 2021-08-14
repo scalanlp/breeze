@@ -1,6 +1,6 @@
 package breeze.signal.support
 
-import spire.syntax.cfor._
+import breeze.macros._
 import breeze.linalg.{DenseMatrix, DenseVector}
 import breeze.math.Complex
 import org.jtransforms.fft.{DoubleFFT_1D, DoubleFFT_2D}

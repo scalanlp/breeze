@@ -1,8 +1,9 @@
 package breeze.linalg
 
 import org.scalatest._
+import org.scalatest.funsuite._
 
-class flipudTest extends FunSuite {
+class flipudTest extends AnyFunSuite {
   test("flipud is its own inverse") {
     val m = DenseMatrix.rand(10, 8)
     assert(flipud(m) != m)

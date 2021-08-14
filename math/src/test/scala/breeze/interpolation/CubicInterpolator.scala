@@ -1,6 +1,6 @@
 package breeze.interpolation
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 import breeze.linalg._
 import breeze.interpolation._
@@ -10,7 +10,7 @@ import breeze.numerics._
  *
  * @author chrismedrela
  **/
-class CubicInterpolatorTest extends FunSuite {
+class CubicInterpolatorTest extends AnyFunSuite {
   val x = DenseVector(1.0, 2.0, 3.0, 5.0)
   val y = DenseVector(1.0, 5.0, 3.0, 7.0)
   val f = CubicInterpolator(x, y)

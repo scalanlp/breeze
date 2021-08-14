@@ -1,14 +1,14 @@
 package breeze.stats
 package distributions
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 
 /**
  * @author dlwh
  */
-trait MomentsTestBase[T] extends FunSuite with Checkers {
+trait MomentsTestBase[T] extends AnyFunSuite with Checkers {
   type Distr <: Density[T] with Rand[T] with Moments[Double, Double]
   implicit def arbDistr: Arbitrary[Distr]
 

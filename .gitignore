@@ -7,3 +7,4 @@ project
 .*.swp
 .idea*
 .idea
+.bsp/

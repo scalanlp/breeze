@@ -1,10 +1,11 @@
 package breeze.linalg
 
-import breeze.generic.UFunc
+import breeze.generic.{ElementwiseUFunc, UFunc}
+import breeze.linalg.operators.GenericOpsLowPrio
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support.{CanMapValues, CanTransformValues, CanTraverseValues, ScalarOf}
 import breeze.macros.expand
-import spire.syntax.cfor._
+import breeze.macros._
 
 object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
   type Op = this.type
@@ -111,14 +112,14 @@ object max extends UFunc with maxLowPrio with VectorizedReduceUFunc {
 
 }
 
-sealed trait maxLowPrio { this: max.type =>
+sealed trait maxLowPrio {  self: max.type =>
 
   implicit def maxVS[T, U, LHS, RHS, RV](
       implicit cmvH: ScalarOf[T, LHS],
       maxImpl: max.Impl2[LHS, RHS, LHS],
       cmv: CanMapValues[T, LHS, LHS, U]): max.Impl2[T, RHS, U] = {
     new max.Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv(v, maxImpl(_, v2))
+      override def apply(v: T, v2: RHS): U = cmv.map(v, maxImpl(_, v2))
     }
   }
 
@@ -204,14 +205,14 @@ object min extends UFunc with minLowPrio with VectorizedReduceUFunc {
   }
 }
 
-sealed trait minLowPrio { this: min.type =>
+sealed trait minLowPrio {  self: min.type =>
 
   implicit def minVS[T, U, LHS, RHS, RV](
       implicit cmvH: ScalarOf[T, LHS],
       minImpl: min.Impl2[LHS, RHS, LHS],
       cmv: CanMapValues[T, LHS, LHS, U]): min.Impl2[T, RHS, U] = {
     new min.Impl2[T, RHS, U] {
-      override def apply(v: T, v2: RHS): U = cmv(v, minImpl(_, v2))
+      override def apply(v: T, v2: RHS): U = cmv.map(v, minImpl(_, v2))
     }
   }
 
@@ -220,12 +221,12 @@ sealed trait minLowPrio { this: min.type =>
 /**
  * clip(a, lower, upper) returns an array such that all elements are "clipped" at the range (lower, upper)
  */
-object clip extends UFunc {
+object clip extends ElementwiseUFunc {
   implicit def clipOrdering[T, V](implicit ordering: Ordering[V], cmv: CanMapValues[T, V, V, T]): Impl3[T, V, V, T] = {
     new Impl3[T, V, V, T] {
       import ordering.mkOrderingOps
       def apply(v: T, v2: V, v3: V): T = {
-        cmv(v, x => if (x < v2) v2 else if (x > v3) v3 else x)
+        cmv.map(v, x => if (x < v2) v2 else if (x > v3) v3 else x)
       }
     }
   }

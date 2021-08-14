@@ -17,15 +17,19 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
+import matchers.should.Matchers._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.linalg.DenseVector
+import breeze.compat.Scala3Compat.given_Conversion_T_U
 
-class MultinomialTest extends FunSuite with Checkers with Matchers {
+class MultinomialTest extends AnyFunSuite with Checkers {
   // can't use the standard moment tester tools for a categorial distribution, so let's just roll our ownkj
 
   def TestDist = DenseVector[Double](0.2, 0.5, 0.3)
   def TestParams = TestDist * 2.0
   def NSamples = 1e7.toInt
+  implicit val randBasis: RandBasis = RandBasis.mt0
 
   test("multinomial with naive sampling") {
     val mult = new Multinomial[DenseVector[Double], Int](TestParams)

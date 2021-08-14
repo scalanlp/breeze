@@ -58,9 +58,11 @@ object KuhnMunkres extends BipartiteMatching {
     val marked = Array.fill(n, n)(0);
 
     def findSmallestNotCovered() = {
-      val mins = for (i <- 0 until n iterator;
-        j <- 0 until n iterator;
-        if !rowCovered(i) && !colCovered(j)) yield C(i)(j);
+      val mins = for {
+        i <- Iterator.range(0, n)
+        j <- Iterator.range(0, n)
+        if !rowCovered(i) && !colCovered(j)
+      } yield C(i)(j);
       mins.reduceLeft(_.min(_))
     }
 

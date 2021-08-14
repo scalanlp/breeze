@@ -1,7 +1,8 @@
 package breeze.util
 
-import org.scalatest.FunSuite
-import breeze.linalg.{min, max, shuffle, DenseVector}
+import org.scalatest.funsuite.AnyFunSuite
+import breeze.linalg.{DenseVector, max, min, shuffle}
+import breeze.stats.distributions.RandBasis
 
 import scala.collection.mutable.ArrayBuffer
 
@@ -9,7 +10,7 @@ import scala.collection.mutable.ArrayBuffer
  * @author ktakagaki
  * @date 05/10/2014.
  */
-class SelectTest extends FunSuite {
+class SelectTest extends AnyFunSuite {
 
   test("quickSelect") {
     var testArray = Array(7, 3, 2, 5, 1, 4, 2, -1)
@@ -24,8 +25,9 @@ class SelectTest extends FunSuite {
   }
 
   test("quickSelect, collection") {
+    implicit val basis: RandBasis = RandBasis.mt0
     var testArray = ArrayBuffer(7, 3, 2, 5, 1, 4, 2, -1)
-    val impl =quickSelect.implFromQSInPlaceColl[ArrayBuffer[Int], Int]
+    val impl = quickSelect.implFromQSInPlaceColl[ArrayBuffer[Int], Int]
     assert(DenseVector(Range(0, 6).map(quickSelect(testArray, _)(impl)).toArray) == DenseVector(-1, 1, 2, 2, 3, 4))
 
     testArray = shuffle(testArray)

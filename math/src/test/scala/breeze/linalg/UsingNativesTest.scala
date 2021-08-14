@@ -1,5 +1,5 @@
 package breeze.linalg
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers
 
 /**
@@ -17,7 +17,7 @@ import org.scalatestplus.scalacheck.Checkers
  *
  * @author Amit Kumar kumaramit01@gmail.com
  */
-class UsingNativesTest extends FunSuite with Checkers {
+class UsingNativesTest extends AnyFunSuite with Checkers {
 
   test("Using natives") {
     if (!usingNatives) {

@@ -2,9 +2,9 @@ package breeze.util
 
 import java.io.File
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-class FileUtilTest extends FunSuite {
+class FileUtilTest extends AnyFunSuite {
 
   val testPath = System.getProperty("java.io.tmpdir")
 

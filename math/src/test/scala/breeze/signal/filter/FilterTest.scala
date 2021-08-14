@@ -1,13 +1,13 @@
 package breeze.signal
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.linalg.{norm, DenseVector}
 
 /**
  * @author ktakagaki
  * @date 2/11/14.
  */
-class FilterTest extends FunSuite {
+class FilterTest extends AnyFunSuite {
 
   test("BP filtering tested against output from scipy.signal.firwin/ifilter (0.13.2-1)") {
 

@@ -1,13 +1,14 @@
 package breeze.signal
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.linalg.{DenseVector, norm}
 
 /**
  * Test for correctness of the haar transform
  */
 
-class HaarTrTest extends FunSuite {
+class HaarTrTest extends AnyFunSuite {
 
   test("haarTr 1d of DenseVector[Double]") {
     assert(norm(haarTr(test16) - test16haarTransformed) < testNormThreshold)

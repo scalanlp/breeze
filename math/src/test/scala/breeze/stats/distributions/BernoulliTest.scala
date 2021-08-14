@@ -17,16 +17,20 @@ package breeze.stats.distributions
  */
 
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 
 import breeze.numerics._
 
-class BernoulliTest extends FunSuite with Checkers with MomentsTestBase[Boolean] with ExpFamTest[Bernoulli, Boolean] {
+class BernoulliTest extends AnyFunSuite with Checkers with MomentsTestBase[Boolean] with ExpFamTest[Bernoulli, Boolean] {
   type Distr = Bernoulli
-  val expFam = Bernoulli
+  val expFam: Bernoulli.type = Bernoulli
 
   import Arbitrary.arbitrary
+
+
+  override val numSamples: Int = 30000
 
   def arbParameter = Arbitrary(arbitrary[Double].map(x => math.max(math.abs(x) % 1.0, 1E-1)))
 

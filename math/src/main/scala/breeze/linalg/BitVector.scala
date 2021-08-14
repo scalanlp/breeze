@@ -1,8 +1,8 @@
 package breeze.linalg
 
 import java.util
-
 import breeze.linalg.operators.BitVectorOps
+import breeze.linalg.support.CanMapValues.DenseCanMapValues
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.storage.Zero
@@ -10,7 +10,8 @@ import breeze.storage.Zero
 import scala.reflect.ClassTag
 
 /**
- * TODO
+ * A BitVector is a Vector of Booleans backed by a [[java.util.Bitset]]. Much better memory usage
+ * and sometimes faster.
  *
  * @param enforceLength if false, then the BitVector won't throw exceptions if it's used in
  *                      operations with vectors longer than it.
@@ -85,7 +86,7 @@ class BitVector(val data: java.util.BitSet, val length: Int, val enforceLength: 
 
 }
 
-object BitVector extends BitVectorOps {
+object BitVector {
 
   def apply(bools: Boolean*) = {
     val bs = new util.BitSet
@@ -115,21 +116,11 @@ object BitVector extends BitVectorOps {
     new BitVector(bs, length, enforceLength)
   }
 
-  implicit object traverseBitVector extends CanTraverseValues[BitVector, Boolean] {
-
-    /** Traverses all values from the given collection. */
-    def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): Unit = {
-      for (i <- from.valuesIterator) fn.visit(i)
-    }
-
-    def isTraversableAgain(from: BitVector): Boolean = true
-  }
-
   implicit def canMapValues[V2](implicit man: ClassTag[V2]): CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] = {
-    new CanMapValues[BitVector, Boolean, V2, DenseVector[V2]] {
+    new DenseCanMapValues[BitVector, Boolean, V2, DenseVector[V2]] {
 
       /**Maps all key-value pairs from the given collection. */
-      def apply(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
+      def map(from: BitVector, fn: (Boolean) => V2): DenseVector[V2] = {
         DenseVector.tabulate(from.length)(i => fn(from(i)))
       }
     }
@@ -143,10 +134,11 @@ object BitVector extends BitVectorOps {
       def isTraversableAgain(from: BitVector): Boolean = true
 
       /** Iterates all key-value pairs from the given collection. */
-      def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): Unit = {
+      def traverse(from: BitVector, fn: ValuesVisitor[Boolean]): fn.type = {
         for (i <- 0 until from.length) {
           fn.visit(from(i))
         }
+        fn
       }
 
     }

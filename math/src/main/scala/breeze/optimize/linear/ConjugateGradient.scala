@@ -75,7 +75,7 @@ class ConjugateGradient[T, M](
             (radius - xtd) / dtd
           }
 
-          assert(!alphaNext.isNaN, xtd + " " + normSquare + " " + xtx + "  " + xtd + " " + radius + " " + dtd)
+          assert(!alphaNext.isNaN, s"$xtd $normSquare $xtx  $xtd $radius $dtd")
           axpy(alphaNext, d, x)
           axpy(-alphaNext, Bd + (d *:* normSquaredPenalty), r)
 

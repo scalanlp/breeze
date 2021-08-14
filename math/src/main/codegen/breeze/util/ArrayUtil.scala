@@ -1,7 +1,6 @@
 package breeze.util
 
-import breeze.macros.expand
-import spire.syntax.cfor.cforRange
+import breeze.macros._
 
 import java.util.Arrays
 import scala.reflect.ClassTag
@@ -25,7 +24,7 @@ object ArrayUtil {
       case x: Array[Byte] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Byte])
       case x: Array[Boolean] => Arrays.fill(x, offset, offset + length, v.asInstanceOf[Boolean])
       case x: Array[_] => Arrays.fill(x.asInstanceOf[Array[AnyRef]], offset, offset + length, v.asInstanceOf[AnyRef])
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -40,7 +39,7 @@ object ArrayUtil {
       case x: Array[Byte] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[Boolean] => Arrays.copyOf(x, length).asInstanceOf[Array[V]]
       case x: Array[_] => Arrays.copyOf(x.asInstanceOf[Array[AnyRef]], length).asInstanceOf[Array[V]]
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -55,7 +54,7 @@ object ArrayUtil {
       case x: Array[Byte] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[Boolean] => Arrays.copyOfRange(x, from, to).asInstanceOf[Array[V]]
       case x: Array[_] => Arrays.copyOfRange(x.asInstanceOf[Array[AnyRef]], from, to).asInstanceOf[Array[V]]
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
@@ -70,10 +69,17 @@ object ArrayUtil {
       case x: Array[Byte] => new Array[Byte](length).asInstanceOf[Array[V]]
       case x: Array[Boolean] => new Array[Boolean](length).asInstanceOf[Array[V]]
       case x: Array[_] =>
-        implicit val man = ClassTag[V](x.getClass.getComponentType.asInstanceOf[Class[V]])
+        implicit val man: ClassTag[V] = ReflectionUtil.elemClassTagFromArray(a)
         new Array[V](length)
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
+  }
+
+
+  def fillNewArrayLike[V](a: Array[V], length: Int, fill: V): Array[V] = {
+    val arr = newArrayLike(a, length)
+    ArrayUtil.fill(a, 0, length, fill)
+    arr
   }
 
   def sort[V](a: Array[V]): Unit = {
@@ -86,12 +92,12 @@ object ArrayUtil {
       case x: Array[Char] => Arrays.sort(x)
       case x: Array[Byte] => Arrays.sort(x)
       case x: Array[_] => Arrays.sort(x.asInstanceOf[Array[AnyRef]])
-      case _ => throw new RuntimeException("shouldn't be here!")
+//      case _ => throw new RuntimeException("shouldn't be here!")
     }
   }
 
   /**
-   * For reasons that I cannot explain java.util.Arrays.equals(Array(0.0), Array(-0.0)) == false
+   * For dumb reasons java.util.Arrays.equals(Array(0.0), Array(-0.0)) == false
    * This method fixes that for floats and doubles
    */
   def nonstupidEquals(
@@ -110,33 +116,36 @@ object ArrayUtil {
     } else {
       a match {
         case x: Array[Double] =>
-          val y = b.asInstanceOf[Array[Double]]
-          var ai = aoffset
-          var bi = boffset
-          var i = 0
-          while (i < alength) {
-            if (x(ai) != y(bi)) return false
-            ai += astride
-            bi += bstride
-            i += 1
-          }
-          true
+          nonstupidEquals_Double(x, aoffset, astride, alength, b.asInstanceOf[Array[Double]], boffset, bstride)
         case x: Array[Float] =>
-          val y = b.asInstanceOf[Array[Float]]
-          var ai = aoffset
-          var bi = boffset
-          var i = 0
-          while (i < alength) {
-            if (x(ai) != y(bi)) return false
-            ai += astride
-            bi += bstride
-            i += 1
-          }
-          true
+          nonstupidEquals_Float(x, aoffset, astride, alength, b.asInstanceOf[Array[Float]], boffset, bstride)
         case _ => equals(a, aoffset, astride, alength, b, boffset, bstride, blength)
       }
     }
   }
+
+  private def nonstupidEquals_Double(a: Array[Double], aoffset: Int, astride: Int, alength: Int, b: Array[Double], boffset: Int, bstride: Int): Boolean = {
+    var ai = aoffset
+    var bi = boffset
+    cforRange(0 until alength) { i =>
+      if (a(ai) != b(bi)) return false
+      ai += astride
+      bi += bstride
+    }
+    true
+  }
+
+  private def nonstupidEquals_Float(a: Array[Float], aoffset: Int, astride: Int, alength: Int, b: Array[Float], boffset: Int, bstride: Int): Boolean = {
+    var ai = aoffset
+    var bi = boffset
+    cforRange(0 until alength) { i =>
+      if (a(ai) != b(bi)) return false
+      ai += astride
+      bi += bstride
+    }
+    true
+  }
+
 
   def equals(a: Array[_], b: Array[_]): Boolean = {
     val ac = a.getClass
@@ -153,7 +162,7 @@ object ArrayUtil {
         case x: Array[Char] => Arrays.equals(a.asInstanceOf[Array[Char]], b.asInstanceOf[Array[Char]])
         case x: Array[Byte] => Arrays.equals(a.asInstanceOf[Array[Byte]], b.asInstanceOf[Array[Byte]])
         case x: Array[_] => Arrays.equals(a.asInstanceOf[Array[AnyRef]], b.asInstanceOf[Array[AnyRef]])
-        case _ => throw new RuntimeException("shouldn't be here!")
+//        case _ => throw new RuntimeException("shouldn't be here!")
       }
     }
 
@@ -283,7 +292,7 @@ object ArrayUtil {
             i += 1
           }
           true
-        case _ => throw new RuntimeException("shouldn't be here!")
+//        case _ => throw new RuntimeException("shouldn't be here!")
       }
     }
 

@@ -1,14 +1,15 @@
 package breeze.linalg
 
-import breeze.numerics.isNonfinite
+import breeze.numerics.{isNonfinite, sin}
 import org.netlib.blas.Ddot
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.math._
 import breeze.stats.mean
-import java.util
 
+import java.util
 import breeze.stats.distributions.RandBasis
 
 import scala.reflect.ClassTag
@@ -17,7 +18,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-class DenseVectorTest extends FunSuite with Checkers {
+class DenseVectorTest extends AnyFunSuite with Checkers {
 
   val TOLERANCE = 1e-4
 
@@ -588,6 +589,15 @@ class DenseVectorTest extends FunSuite with Checkers {
       val slice = dv.slice(i, dv.length, 4)
       assert(fromNew === slice)
     }
+  }
+
+  test("mapping ufunc, strides") {
+    val r = DenseVector.rand(100).apply(10 until 27)
+    var explicit = new DenseVector(r.data.map(math.sin))
+    explicit = explicit(10 until 27)
+    assert(sin(r) == explicit)
+    sin.inPlace(r)
+    assert(explicit == r)
   }
 }
 

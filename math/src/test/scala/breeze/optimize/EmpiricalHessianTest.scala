@@ -3,9 +3,9 @@ package breeze.optimize
 import breeze.linalg.{DenseMatrix, DenseVector, sum}
 import breeze.numerics.exp
 import breeze.util.DoubleImplicits
-import org.scalatest.Matchers
+import org.scalatest.matchers.should.Matchers._
 
-class EmpiricalHessianTest extends OptimizeTestBase with Matchers with DoubleImplicits {
+class EmpiricalHessianTest extends OptimizeTestBase with DoubleImplicits {
 
   test("hessian matrix of rosenbrook function") {
     val x = DenseVector(1d, 1d)

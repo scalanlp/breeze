@@ -25,12 +25,12 @@ object pinv extends UFunc with pinvLowPrio {
       override def apply(v: DenseMatrix[T]): DenseMatrix[T] = {
         val svd.SVD(s, svs, d) = svd(v)
         val vi = svs.map { v =>
-          if (v == 0.0) 0.0f else 1 / v
+          if (v == 0.0) 0 else 1 / v
         }
 
         val svDiag = DenseMatrix.tabulate[T](s.cols, d.rows) { (i, j) =>
           if (i == j && i < math.min(s.cols, d.rows)) vi(i)
-          else 0.0f
+          else 0
         }
         val res = s * svDiag * d
         res.t
@@ -40,7 +40,7 @@ object pinv extends UFunc with pinvLowPrio {
 
 }
 
-trait pinvLowPrio { this: pinv.type =>
+trait pinvLowPrio { self: pinv.type =>
 
   /**
    * pinv for anything that can be transposed, multiplied with that transposed, and then solved.

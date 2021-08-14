@@ -1,6 +1,8 @@
 package breeze.linalg.functions
 
 import org.scalatest._
+import org.scalatest.funsuite._
+import matchers.should.Matchers._
 import breeze.linalg._
 import breeze.stats.distributions.RandBasis
 import breeze.stats.hist
@@ -10,9 +12,9 @@ import scala.util.Random
 /**
  * Created by huaminli on 7/25/16.
  */
-class shuffleTest extends FunSuite with Matchers {
+class shuffleTest extends AnyFunSuite {
   test("The shuffle is uniformly random") {
-    implicit val rb = RandBasis.mt0
+    implicit val rb: RandBasis = RandBasis.mt0
     // Create a histogram to record the first entry of array that has been
     // shuffled many times.
     val n = 10
@@ -32,7 +34,7 @@ class shuffleTest extends FunSuite with Matchers {
     }
   }
   test("Shuffle and shuffle back") {
-    implicit val rb = RandBasis.mt0
+    implicit val rb: RandBasis = RandBasis.mt0
     // Shuffle array testArr at random,
     // and should be able to shuffle it back to its original state.
     val n = 10

@@ -3,7 +3,11 @@ package breeze.linalg
 import breeze.linalg.support._
 
 /**
- * TODO
+ * A Broadcasted is a type that represents "broadcasting" (a la numpy).
+ *
+ * Unlike Numpy, broadcasting in Breeze is explicit:
+ *   matrix(*, ::) lifts UFuncs and operators so that they apply over each row
+ *   matrix(::, *) is the same, but for columns
  *
  * @author dlwh
  **/
@@ -13,7 +17,7 @@ trait Broadcasted[+T, B] extends NumericOps[Broadcasted[T, B]] {
 
 trait BroadcastedLike[T, B, Self <: Broadcasted[T, B]] extends Broadcasted[T, B] with NumericOps[Self] {
   def map[U, Res](f: B => U)(implicit cmv: CanMapValues[Self, B, U, Res]): Res = {
-    cmv(repr, f)
+    cmv.map(repr, f)
   }
 
   def foreach[U](f: B => U)(implicit cmv: CanForeachValues[Self, B]): Unit = {

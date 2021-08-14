@@ -18,10 +18,11 @@ package breeze.stats.distributions;
 
 import org.scalacheck._
 import org.scalatest._
+import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 
 class GammaTest
-    extends FunSuite
+    extends AnyFunSuite
     with Checkers
     with UnivariateContinuousDistrTestBase
     with MomentsTestBase[Double]
@@ -30,11 +31,11 @@ class GammaTest
   type Distr = Gamma
   import org.scalacheck.Arbitrary.arbitrary
 
-  val expFam = Gamma
+  val expFam: Gamma.type = Gamma
 
   override val numSamples = 40000
 
-  implicit def arbParameter = Arbitrary {
+  def arbParameter: Arbitrary[(Double, Double)] = Arbitrary {
     for (shape <- arbitrary[Double].map { _.abs % 200.0 + 0.2 }; // Gamma pdf at 0 not defined when shape == 1
       scale <- arbitrary[Double].map { _.abs % 8.0 + 1.0 }) yield (shape, scale);
   }

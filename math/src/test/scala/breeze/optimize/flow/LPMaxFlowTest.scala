@@ -1,8 +1,9 @@
 package breeze.optimize.flow
 
 import org.scalatest._
+import org.scalatest.funsuite._
 
-class LPMaxFlowTest extends FunSuite {
+class LPMaxFlowTest extends AnyFunSuite {
 
   test("LPMaxFlowTest") {
     val g = new FlowGraph[Int] {

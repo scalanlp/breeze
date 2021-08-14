@@ -2,7 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.linalg.operators.{OpMulInner, OpSub}
-import spire.syntax.cfor._
+import breeze.macros._
 
 /**
  * Computes the squared distance between two vectors.
@@ -26,7 +26,7 @@ object squaredDistance extends UFunc with squaredDistanceLowPrio {
   }
 }
 
-sealed trait squaredDistanceLowPrio extends UFunc { this: squaredDistance.type =>
+sealed trait squaredDistanceLowPrio extends UFunc {  self: squaredDistance.type =>
 
   implicit def distanceFromDotAndSub[T, U, V](
       implicit subImpl: OpSub.Impl2[T, U, V],

@@ -24,28 +24,14 @@ trait MatrixNorms[M, S] {
 trait MatrixInnerProduct[M, S] extends MatrixNorms[M, S] {
   def innerProduct(m1: M, m2: M): S
 
-  implicit val canInnerProduct = new OpMulInner.Impl2[M, M, S] {
+  implicit val canInnerProduct: OpMulInner.Impl2[M, M, S] = new OpMulInner.Impl2[M, M, S] {
     override def apply(v: M, v2: M): S = innerProduct(v, v2)
   }
 
-  implicit def canInnerProductNorm_Ring(implicit ring: Ring[S]) = new norm.Impl[M, Double] {
+  implicit def canInnerProductNorm_Ring(implicit ring: Ring[S]): norm.Impl[M, Double] = new norm.Impl[M, Double] {
     override def apply(v: M): Double = sqrt(implicitly[Ring[S]].sNorm(canInnerProduct(v, v)))
   }
 }
-
-//object OperatorNorms {
-//  def make[M,S](implicit field: Field[S]) = new MatrixNorms[M,S] {
-//    override implicit def canNorm_Float(implicit iter: CanTraverseValues[M, Float]): norm.Impl2[M, Float, Double] = ???
-//
-//    override implicit def canNorm_Double(implicit iter: CanTraverseValues[M, Double]): norm.Impl2[M, Double, Double] = ???
-//
-//    override implicit def canNorm_Field(implicit iter: CanTraverseValues[M, S], field: Field[S]): norm.Impl2[M, Double, Double] = {
-//
-//    }
-//
-//    override implicit def canNorm_Int(implicit iter: CanTraverseValues[M, Int]): norm.Impl2[M, Int, Double] = ???
-//  }
-//}
 
 object EntrywiseMatrixNorms {
   def make[M, S](implicit field: Field[S], hadamard: OpMulScalar.Impl2[M, M, M], iter: CanTraverseValues[M, S]) =

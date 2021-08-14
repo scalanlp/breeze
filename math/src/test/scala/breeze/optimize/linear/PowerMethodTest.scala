@@ -2,9 +2,10 @@ package breeze.optimize.linear
 
 import breeze.numerics.abs
 import org.scalatest._
+import org.scalatest.funsuite._
 import breeze.linalg._
 
-class PowerMethodTest extends FunSuite {
+class PowerMethodTest extends AnyFunSuite {
   val n = 5
   val gram = new DenseMatrix[Double](
     n,

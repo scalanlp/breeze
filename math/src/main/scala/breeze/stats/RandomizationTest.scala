@@ -27,7 +27,6 @@ import distributions._
  *
  * @author dlwh
  */
-// TODO: use quasi-random bit sequence.
 class RandomizationTest[L](val numSamples: Int, val errorMeasure: Seq[L] => Double)
     extends ((Seq[L], Seq[L]) => Double) {
   def this(errorMeasure: Seq[L] => Double) = this(5000, errorMeasure)
@@ -43,7 +42,7 @@ class RandomizationTest[L](val numSamples: Int, val errorMeasure: Seq[L] => Doub
       val l1 = new ArrayBuffer[L]()
       val l2 = new ArrayBuffer[L]()
       for ((a, b) <- lpairs) {
-        if (Rand.uniform.get < .5) {
+        if (Rand.uniform.draw() < .5) {
           l1 += a
           l2 += b
         } else {

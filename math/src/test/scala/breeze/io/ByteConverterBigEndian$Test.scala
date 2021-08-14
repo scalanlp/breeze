@@ -1,13 +1,13 @@
 package breeze.io
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 import breeze.io.ByteConverterBigEndian._
 import spire.math.ULong
 
 /**
  * Created by Kenta on 12/10/13.
  */
-class ByteConverterBigEndian$Test extends FunSuite {
+class ByteConverterBigEndian$Test extends AnyFunSuite {
 
   test("UInt8") {
     var valueS: Short = 1

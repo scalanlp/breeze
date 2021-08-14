@@ -18,14 +18,9 @@
 
 package breeze.util
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
-/**
- * TODO
- *
- * @author dlwh
- **/
-class partitionTest extends FunSuite {
+class partitionTest extends AnyFunSuite {
 
   test("partition array in place") {
     val a = Array(3, 4, 2, 1)

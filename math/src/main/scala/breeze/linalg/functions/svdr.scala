@@ -5,7 +5,7 @@ import breeze.linalg._
 import breeze.linalg.svd.{DenseSVD, SVD}
 import breeze.numerics.{abs, signum}
 import breeze.stats.distributions.Rand
-import spire.implicits.cforRange
+import breeze.macros._
 
 /**
  * Approximate truncated randomized SVD
@@ -99,7 +99,7 @@ object svdr extends UFunc {
   private def flipSVDSigns(
       u: DenseMatrix[Double],
       v: DenseMatrix[Double]): (DenseMatrix[Double], DenseMatrix[Double]) = {
-    import DenseMatrix.canMapValues
+//    import DenseMatrix.canMapValues
     val abs_u = abs(u)
     val max_abs_cols = (0 until u.cols).map(c => argmax(abs_u(::, c)))
     val signs = max_abs_cols.zipWithIndex.map(e => signum(u(e._1, e._2)))
