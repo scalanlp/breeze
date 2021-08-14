@@ -22,3 +22,5 @@ addSbtPlugin("org.scalanlp" % "sbt-breeze-expand-codegen" % "0.2")
 	
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "2.3")
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.1")
+
+addDependencyTreePlugin
