@@ -1,4 +1,5 @@
 git.baseVersion := "2.0-RC1"
+
 // append -SNAPSHOT unless we're on a branch
 //git.gitUncommittedChanges := git.gitCurrentTags.value.isEmpty
 // git.useGitDescribe := true
