@@ -91,14 +91,14 @@ object Common {
         )
         case _ => ???
       }
-    },
-    // TODO: remove when possible
-    publishArtifact in (Compile, packageDoc) := {
-      CrossVersion.partialVersion(scalaVersion.value) match {
-        case Some( (3, _)) => false
-        case _ => true
-
-      }
-    }
+    }, 
+    // TODO: remove when possibl`e
+   // publishArtifact in (Compile, packageDoc) := {
+    //  CrossVersion.partialVersion(scalaVersion.value) match {
+     //   case Some( (3, _)) => false
+    //    case _ => true
+//      
+     // }
+   // }
   ) ++ breezeCodegenSettings
 }
