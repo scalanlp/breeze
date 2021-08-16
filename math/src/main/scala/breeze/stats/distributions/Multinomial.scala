@@ -25,6 +25,7 @@ import breeze.optimize.DiffFunction
 import scala.collection.mutable
 import scala.collection.compat._
 import breeze.compat.Scala3Compat._
+import breeze.compat._
 
 /**
  * Represents a Multinomial distribution over elements.
@@ -37,9 +38,9 @@ import breeze.compat.Scala3Compat._
  * @author dlwh
  */
 case class Multinomial[T, I](params: T)(
-    implicit ev: Conversion[T, QuasiTensor[I, Double]],
-    sumImpl: breeze.linalg.sum.Impl[T, Double],
-    rand: RandBasis = Rand)
+  implicit ev: ConversionOrSubtype[T, QuasiTensor[I, Double]],
+  sumImpl: breeze.linalg.sum.Impl[T, Double],
+  rand: RandBasis = Rand)
     extends DiscreteDistr[I] {
   val sum = breeze.linalg.sum(params)
   require(sum != 0.0, "There's no mass!")

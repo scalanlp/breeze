@@ -7,6 +7,7 @@ import breeze.linalg.operators._
 import breeze.linalg.support.CanTraverseValues.ValuesVisitor
 import breeze.linalg.support._
 import breeze.util.Isomorphism
+import breeze.compat._
 import breeze.compat.Scala3Compat._
 
 import scala.language.{higherKinds, implicitConversions}
@@ -95,7 +96,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
+      override val hasOps: ConversionOrSubtype[Wrapper, NumericOps[Wrapper]] = identity
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         def apply(from: Wrapper): Wrapper = from.map(underlying.zeroLike.apply)
@@ -180,7 +181,7 @@ object MutablizingAdaptor {
         val u = underlying
         def scalars: Field[S] = underlying.scalars
 
-        val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
+        val hasOps: ConversionOrSubtype[Wrapper, NumericOps[Wrapper]] = identity
 
         implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
           // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -317,7 +318,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Field[S] = underlying.scalars
 
-      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
+      val hasOps: ConversionOrSubtype[Wrapper, NumericOps[Wrapper]] = identity
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -475,7 +476,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars: Ring[S] = underlying.scalars
 
-      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
+      val hasOps: ConversionOrSubtype[Wrapper, NumericOps[Wrapper]] = identity
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.
@@ -621,7 +622,7 @@ object MutablizingAdaptor {
       val u = underlying
       def scalars = underlying.scalars
 
-      val hasOps: Conversion[Wrapper, NumericOps[Wrapper]] = Conversion(identity)
+      val hasOps: ConversionOrSubtype[Wrapper, NumericOps[Wrapper]] = identity
 
       implicit def zeroLike: CanCreateZerosLike[Wrapper, Wrapper] = new CanCreateZerosLike[Wrapper, Wrapper] {
         // Should not inherit from Form=>To because the compiler will try to use it to coerce types.

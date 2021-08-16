@@ -1,5 +1,6 @@
 package breeze.plot
 
+import breeze.compat._
 import breeze.compat.Scala3Compat._
 
 import java.awt.Color
@@ -19,7 +20,7 @@ trait PaintScaleFactory[T] extends (Traversable[T] => PaintScale[T])
  *
  * @author dramage
  */
-case class GradientPaintScaleFactory[T](gradient: Array[Color] = PaintScale.WhiteToBlack)(implicit view: Conversion[T, Double])
+case class GradientPaintScaleFactory[T](gradient: Array[Color] = PaintScale.WhiteToBlack)(implicit view: ConversionOrSubtype[T, Double])
     extends PaintScaleFactory[T] {
   override def apply(items: Traversable[T]): PaintScale[T] = {
     var min = items.head

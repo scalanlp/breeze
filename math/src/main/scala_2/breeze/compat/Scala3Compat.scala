@@ -1,6 +1,7 @@
 package breeze.compat
 
 object Scala3Compat {
+  type ConversionOrSubtype[T, U] = T => U
   type Conversion[T, +U] = T => U
 
   def Conversion[T, U](f: T => U): Conversion[T, U] = f

@@ -21,7 +21,6 @@ import matchers.should.Matchers._
 import org.scalatest.funsuite._
 import org.scalatestplus.scalacheck._
 import breeze.linalg.DenseVector
-import breeze.compat.Scala3Compat.given_Conversion_T_U
 
 class MultinomialTest extends AnyFunSuite with Checkers {
   // can't use the standard moment tester tools for a categorial distribution, so let's just roll our ownkj
@@ -32,7 +31,7 @@ class MultinomialTest extends AnyFunSuite with Checkers {
   implicit val randBasis: RandBasis = RandBasis.mt0
 
   test("multinomial with naive sampling") {
-    val mult = new Multinomial[DenseVector[Double], Int](TestParams)
+    val mult = new Multinomial(TestParams)
     val accumNaive = DenseVector.zeros[Double](3)
     (0 until NSamples).foreach { i =>
       accumNaive(mult.drawNaive()) += 1
@@ -42,7 +41,7 @@ class MultinomialTest extends AnyFunSuite with Checkers {
   }
 
   test("multinomial with alias sampling") {
-    val mult = new Multinomial[DenseVector[Double], Int](TestParams)
+    val mult = new Multinomial(TestParams)
     val accumAlias = DenseVector.zeros[Double](3)
     (0 until NSamples).foreach { i =>
       accumAlias(mult.draw()) += 1
@@ -52,7 +51,7 @@ class MultinomialTest extends AnyFunSuite with Checkers {
   }
 
   test("multinomial negative indexes") {
-    val mult = new Multinomial[DenseVector[Double], Int](TestParams)
+    val mult = new Multinomial(TestParams)
     assert(mult.probabilityOf(-1) == 0.0)
   }
 }
