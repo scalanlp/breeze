@@ -32,7 +32,7 @@ testOptions in Test += Tests.Setup(classLoader =>
 
 fork in Test := true
 
-javaOptions := Seq("-Xmx4g")
+javaOptions := Seq("-Xmx4g", "-Xss10m")
 
 
 
