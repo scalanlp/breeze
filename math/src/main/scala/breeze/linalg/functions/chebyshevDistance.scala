@@ -1,4 +1,4 @@
-package breeze.linalg.functions
+package breeze.linalg
 
 /**
  * A Chebyshev distance metric implementation between two points

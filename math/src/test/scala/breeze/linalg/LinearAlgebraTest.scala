@@ -17,7 +17,6 @@ package breeze.linalg
 
 import breeze.linalg.eig.Eig
 import breeze.linalg.eigSym.EigSym
-import breeze.linalg.functions.{evdr, svdr}
 import breeze.linalg.qr.QR
 import breeze.linalg.qrp.QRP
 import breeze.linalg.support.CanTraverseValues

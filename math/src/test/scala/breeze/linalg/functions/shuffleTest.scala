@@ -1,4 +1,4 @@
-package breeze.linalg.functions
+package breeze.linalg
 
 import org.scalatest._
 import org.scalatest.funsuite._

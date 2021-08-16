@@ -16,7 +16,7 @@
  * /
  */
 
-package breeze.linalg.functions
+package breeze.linalg
 
 import breeze.linalg.{DenseVector, normalize}
 import org.scalatest.funsuite.AnyFunSuite

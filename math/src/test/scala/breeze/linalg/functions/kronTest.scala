@@ -1,5 +1,4 @@
 package breeze.linalg
-package functions
 
 import breeze.math.Complex
 import org.scalatest.funsuite.AnyFunSuite

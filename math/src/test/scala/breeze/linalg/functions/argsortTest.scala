@@ -1,4 +1,4 @@
-package breeze.linalg.functions
+package breeze.linalg
 
 import breeze.linalg.{DenseMatrix, DenseVector, SparseVector, argsort, argtopk}
 import org.scalacheck.Prop

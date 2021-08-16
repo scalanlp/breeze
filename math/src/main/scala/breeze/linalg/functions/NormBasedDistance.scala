@@ -16,7 +16,7 @@
  * /
  */
 
-package breeze.linalg.functions
+package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.linalg.norm

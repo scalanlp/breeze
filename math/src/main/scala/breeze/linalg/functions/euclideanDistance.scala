@@ -1,4 +1,4 @@
-package breeze.linalg.functions
+package breeze.linalg
 
 /**
  * A Euclidean distance metric implementation between two points

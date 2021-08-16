@@ -1,4 +1,4 @@
-package breeze.linalg.functions
+package breeze.linalg
 
 /**
  * A Manhattan distance measure implementation between two points
