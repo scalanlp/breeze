@@ -145,9 +145,6 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
     data(linearIndex(trueRow, trueCol)) = v
   }
 
-  @deprecated("This isn't actually any faster according to benchmarks", "0.12-SNAPSHOT")
-  def unsafeUpdate(row: Int, col: Int, v: V): Unit = { data(linearIndex(row, col)) = v }
-
   // <editor-fold defaultstate="collapsed" desc=" conversions (toArray, toDenseVector) ">
 
   /** Converts this matrix to a flat Array (column-major) */

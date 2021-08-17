@@ -162,11 +162,6 @@ class SparseVector[@spec(Double, Int, Float, Long) V](val array: SparseArray[V])
    */
   def allVisitableIndicesActive: Boolean = true
 
-  @deprecated("Used asCSCRow instead", "0.12")
-  def asCSCMatrix(implicit man: ClassTag[V]): CSCMatrix[V] = {
-    asCscRow
-  }
-
   def asCscRow(implicit man: ClassTag[V]): CSCMatrix[V] = {
     // zero SV
     if (index.length == 0)

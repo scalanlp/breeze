@@ -94,8 +94,6 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
   }
 
   private[linalg] val noOffsetOrStride = offset == 0 && stride == 1
-  @deprecated("This isn't actually any faster any more", "0.12-SNAPSHOT")
-  def unsafeUpdate(i: Int, v: V): Unit = if (noOffsetOrStride) data(i) = v else data(offset + i * stride) = v
 
   private def checkIfSpecialized(): Unit = {
     if (data.isInstanceOf[Array[Double]] && getClass.getName() == "breeze.linalg.DenseVector")
@@ -148,12 +146,6 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
    * @return apply(i)
    */
   def valueAt(i: Int): V = apply(i)
-
-  /**
-   * Unsafe version of above, a way to skip the checks.
-   */
-  @deprecated("This isn't actually any faster any more", "0.12-SNAPSHOT")
-  def unsafeValueAt(i: Int): V = data(offset + i * stride)
 
   /**
    * Gives the logical index from the physical index.

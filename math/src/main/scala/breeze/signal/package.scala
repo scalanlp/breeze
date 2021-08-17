@@ -26,13 +26,7 @@ import scalaxy.debug._
  */
 package object signal {
 
-  @deprecated("use fourierTr", "v.0.6")
-  val fft: fourierTr.type = fourierTr
-  @deprecated("use iFourierTr", "v.0.6")
-  val ifft: iFourierTr.type = iFourierTr
-  @deprecated("use fourierTr", "v.0.6")
   val fourierTransform: fourierTr.type = fourierTr
-  @deprecated("use iFourierTr", "v.0.6")
   val inverseFourierTransform: iFourierTr.type = iFourierTr
 
   // <editor-fold desc="fourierFreq">
@@ -317,7 +311,6 @@ package object signal {
   def haarTr[Input, Output](v: Input)(implicit canHaarTransform: CanHaarTr[Input, Output]): Output =
     canHaarTransform(v)
 
-  @deprecated("use haarTr", "v.0.6")
   def haarTransform[Input, Output](v: Input)(implicit canHaarTransform: CanHaarTr[Input, Output]): Output =
     canHaarTransform(v)
 
@@ -327,7 +320,6 @@ package object signal {
   def iHaarTr[Input, Output](v: Input)(implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
     canInverseHaarTransform(v)
 
-  @deprecated("use iHaarTr", "v.0.6")
   def inverseHaarTransform[Input, Output](v: Input)(
       implicit canInverseHaarTransform: CanIHaarTr[Input, Output]): Output =
     canInverseHaarTransform(v)

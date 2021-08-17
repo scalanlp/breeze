@@ -362,17 +362,14 @@ object FirstOrderMinimizer {
       randomSeed: Int = 0) {
     private implicit val random: RandBasis = RandBasis.withSeed(randomSeed)
 
-    @deprecated("Use breeze.optimize.minimize(f, init, params) instead.", "0.10")
     def minimize[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    @deprecated("Use breeze.optimize.minimize(f, init, params) instead.", "0.10")
     def minimize[T](f: DiffFunction[T], init: T)(implicit space: MutableEnumeratedCoordinateField[T, _, Double]): T = {
       this.iterations(f, init).last.x
     }
 
-    @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")
     def iterations[T](f: BatchDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double])
       : Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State] = {
       val it = if (useStochastic) {
@@ -384,7 +381,6 @@ object FirstOrderMinimizer {
       it.asInstanceOf[Iterator[FirstOrderMinimizer[T, BatchDiffFunction[T]]#State]]
     }
 
-    @deprecated("Use breeze.optimize.iterations(f, init, params) instead.", "0.10")
     def iterations[T](f: StochasticDiffFunction[T], init: T)(implicit space: MutableFiniteCoordinateField[T, _, Double])
       : Iterator[FirstOrderMinimizer.State[T, _, _]] = {
       val r: StochasticGradientDescent[T] = if (useL1) {
