@@ -340,11 +340,30 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
 }
 
 /**
- * Provides a number of random generators.
+ * Provides a number of random generators, with random seed set to some function of system time and
+ * identity hashcode of some object
  */
-object Rand extends RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister()))
+object Rand extends RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister())) {
+  /** Import the contents of this to make Rands/Distributions that use the "default" generator */
+  object variableSeed {
+    implicit val randBasis: RandBasis = Rand
+  }
+
+  /** Import the contents of this to use a generator seeded with a consistent seed.*/
+  object fixedSeed {
+    implicit val randBasis: RandBasis = RandBasis.mt0
+  }
+}
+
 
 object RandBasis {
+  /**
+   * Returns a new MersenneTwister-backed rand basis with "no seed" (i.e. it uses the time plus
+   * other metadata to set the seed
+   * if multiple threads use this, each thread gets a new generator also initialized with "no seed"
+   * @return
+   */
+  def systemSeed: RandBasis = new RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister()))
 
   /**
    * Returns a new MersenneTwister-backed rand basis with seed set to 0. Note that
