@@ -10,7 +10,7 @@ import breeze.numerics.log
  *
  * @author dlwh
  **/
-case class Wald(mean: Double, shape: Double)(implicit rand: RandBasis = Rand)
+case class Wald(mean: Double, shape: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double] {
   lazy val mode: Double = {
