@@ -7,7 +7,7 @@ import breeze.macros.{cforRange, expand}
 import breeze.math.{Field, Ring, Semiring}
 import breeze.storage.Zero
 import breeze.util.{ArrayUtil, ReflectionUtil}
-import scalaxy.debug.{assert, require}
+import breeze.macros.{assert, require}
 
 import java.util
 import scala.reflect.ClassTag

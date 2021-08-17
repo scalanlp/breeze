@@ -1,3 +1,5 @@
+package breeze.macros
+
 // Originally part of Scalaxy. Modifications (c) 2015 David Hall, also under BSD
 /*
  * SCALAXY LICENSE
@@ -17,14 +19,12 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
 
  */
 
-package scalaxy.debug
-
 import scala.language.dynamics
 import scala.language.experimental.macros
 import scala.reflect.NameTransformer.encode
 import scala.reflect.macros.Context
 
-object impl {
+object AssertImpl {
   def assertImpl(c: Context)(condition: c.Expr[Boolean]): c.Expr[Unit] = {
     import c.universe._
 
@@ -83,8 +83,8 @@ object impl {
   }
 
   def assertLikeImpl(c: Context)(
-      condition: c.Expr[Boolean],
-      callBuilder: (c.Expr[Boolean], c.Expr[String]) => c.Expr[Unit]
+    condition: c.Expr[Boolean],
+    callBuilder: (c.Expr[Boolean], c.Expr[String]) => c.Expr[Unit]
   ): c.Expr[Unit] = {
     import c.universe._
 

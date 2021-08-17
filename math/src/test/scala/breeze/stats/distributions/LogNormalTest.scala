@@ -49,6 +49,8 @@ class LogNormalTest
   type Distr = LogNormal
 
   implicit def arbDistr = Arbitrary {
+    // make scala 2 happy
+    implicit val basis: RandBasis = RandBasis.mt0
     for (mean <- arbitrary[Double].map { x =>
         math.abs(x) % 10.0
       };

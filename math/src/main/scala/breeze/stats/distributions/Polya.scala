@@ -2,7 +2,7 @@ package breeze.stats.distributions
 
 import breeze.linalg.{Counter, DenseVector, sum}
 import breeze.math.MutableEnumeratedCoordinateField
-import breeze.numerics.*
+import breeze.numerics._
 import breeze.util.ArrayUtil
 
 /*

@@ -23,12 +23,11 @@ import org.scalacheck._
 
 import breeze.numerics._
 
-class BernoulliTest extends AnyFunSuite with Checkers with MomentsTestBase[Boolean] with ExpFamTest[Bernoulli, Boolean] {
+class BernoulliTest extends RandTestBase with MomentsTestBase[Boolean] with ExpFamTest[Bernoulli, Boolean] {
   type Distr = Bernoulli
   val expFam: Bernoulli.type = Bernoulli
 
   import Arbitrary.arbitrary
-
 
   override val numSamples: Int = 30000
 
@@ -37,6 +36,8 @@ class BernoulliTest extends AnyFunSuite with Checkers with MomentsTestBase[Boole
   def paramsClose(p: Double, b: Double) = if (b == 0.0) p < 1E-4 else (p - b).abs / b.abs.max(1E-4) < 1E-1
 
   implicit def arbDistr = Arbitrary {
+    // make scala 2 happy
+    implicit val basis: RandBasis = RandBasis.mt0
     for (p <- arbitrary[Double].map { x =>
         math.max(math.abs(x) % 1.0, 1E-1)
       }) yield new Bernoulli(p)

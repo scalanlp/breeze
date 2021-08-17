@@ -3,7 +3,7 @@ package breeze.linalg
 import breeze.generic.UFunc
 import org.netlib.util.intW
 import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
-import scalaxy.debug._
+import breeze.macros._
 
 /**
  * Eigenvalue decomposition (right eigenvectors)

@@ -18,7 +18,7 @@ limitations under the License.
 import breeze.signal.support._
 import breeze.linalg.DenseVector
 import breeze.numerics.isEven
-import scalaxy.debug._
+import breeze.macros._
 
 /**This package provides digital signal processing functions.
  *

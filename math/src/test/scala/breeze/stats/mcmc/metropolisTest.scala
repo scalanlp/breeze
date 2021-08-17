@@ -2,6 +2,8 @@ package breeze.stats.mcmc
 
 import breeze.stats.distributions._
 import breeze.macros._
+import breeze.numerics._
+import breeze.linalg._
 import org.scalatest.funsuite.AnyFunSuite
 
 /**Tests for breeze.stats.mcmc.MetropolisHastings
@@ -90,8 +92,6 @@ class metropolisTest extends AnyFunSuite {
   }
 
   test("ArbitraryMetropolisHastings for a Gamma with a symmetric proposal") {
-    import breeze.numerics._
-    import breeze.linalg._
     val mh = ArbitraryMetropolisHastings(
       Gamma(2.0, 1.0 / 3).logPdf,
       (x: Double) => Gaussian(x, 1.0),
@@ -106,8 +106,6 @@ class metropolisTest extends AnyFunSuite {
   }
 
   test("ArbitraryMetropolisHastings for a Gamma with a non-symmetric proposal") {
-    import breeze.numerics._
-    import breeze.linalg._
     val mh = ArbitraryMetropolisHastings(
       Gamma(2.0, 1.0 / 3).logPdf,
       (x: Double) => Gaussian(x, 1.0 + x),

@@ -20,7 +20,7 @@ import breeze.storage.{ConfigurableDefault, Storage, Zero}
 import breeze.util.ArrayUtil
 import java.util
 
-import scalaxy.debug._
+import breeze.macros._
 
 import scala.reflect.ClassTag
 import breeze.macros.cforRange

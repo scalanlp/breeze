@@ -1,6 +1,6 @@
 package breeze.linalg
 
-import breeze.linalg.{ DenseMatrix, LU, norm, sum }
+
 import breeze.numerics.abs
 import breeze.stats.distributions.RandBasis
 import org.scalatest.funsuite.AnyFunSuite

@@ -29,7 +29,7 @@ import breeze.macros._
 import scala.collection.mutable.ArrayBuffer
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
-import scalaxy.debug._
+import breeze.macros._
 
 /**
  * A DenseMatrix is a matrix with all elements found in an array. It is column major unless isTranspose is true,

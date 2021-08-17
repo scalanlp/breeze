@@ -48,19 +48,21 @@ class BetaTest
     y1 && y2
   }
 
-  import org.scalacheck.Arbitrary.arbitrary;
+  import org.scalacheck.Arbitrary.arbitrary
 
   def asDouble(x: Double) = x
 
   def fromDouble(x: Double) = x
 
-  implicit def arbDistr = Arbitrary {
-    for (a <- arbitrary[Double].map { x =>
-        math.abs(x) % 10000.0 + 1.1
-      };
-      b <- arbitrary[Double].map { x =>
-        math.abs(x) % 8.0 + 1.1
-      }) yield new Beta(a, b);
+  implicit def arbDistr = {
+    // make scala 2 happy
+    implicit val basis: RandBasis = RandBasis.mt0
+    Arbitrary {
+      for {
+        a <- arbitrary[Double].map { x => math.abs(x) % 10000.0 + 1.1 }
+        b <- arbitrary[Double].map { x => math.abs(x) % 8.0 + 1.1 }
+      } yield new Beta(a, b)
+    }
   }
 
   test("#15 test 1: Small a and b") {

@@ -4,7 +4,7 @@ import breeze.generic.UFunc
 import breeze.stats.distributions.{RandBasis, Rand}
 import scala.reflect.ClassTag
 import breeze.storage.Zero
-import scalaxy.debug._
+import breeze.macros._
 
 /**Gives a random Double.
  * +  randomDouble()... returns a random double, in [0, 1]

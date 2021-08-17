@@ -57,7 +57,7 @@ trait ProvidesTransformedQuasiMonteCarlo {
     def compute(x: Array[Double], position: Int): Double
   }
 
-  class DistributionRandomVariableSpec(icdfProvider: breeze.stats.distributions.HasInverseCdf)
+  case class DistributionRandomVariableSpec(icdfProvider: breeze.stats.distributions.HasInverseCdf)
       extends TransformingQuasiRandomVariableSpec {
     val numInputs = 1
     def transform(x: Array[Double], position: Int): Double = icdfProvider.inverseCdf(x(position))

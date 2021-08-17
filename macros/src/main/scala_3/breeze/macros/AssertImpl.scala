@@ -1,8 +1,8 @@
-package scalaxy.debug
+package breeze.macros
 
 import scala.quoted._
 
-object impl {
+object AssertImpl {
   // Null to deal with macro limitations
   def assertImpl(condition: Expr[Boolean], message: Expr[Any]|Null)(using Quotes) = {
     assertLikeImpl(condition, message, assertBody)

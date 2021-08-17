@@ -5,7 +5,7 @@ import breeze.macros.{cforRange, cforRange2}
 import breeze.math.Semiring
 import breeze.storage.Zero
 import breeze.util.ReflectionUtil
-import scalaxy.debug.require
+import breeze.macros.require
 
 import scala.reflect.ClassTag
 

@@ -1,6 +1,5 @@
 package breeze.linalg
 
-import breeze.linalg.{DenseMatrix, DenseVector, SparseVector, argsort, argtopk}
 import org.scalacheck.Prop
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck.Checkers

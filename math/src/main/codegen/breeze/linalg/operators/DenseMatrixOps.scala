@@ -12,7 +12,7 @@ import breeze.util.{ArrayUtil, ReflectionUtil}
 import dev.ludovic.netlib.BLAS.{getInstance => blas}
 import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
 import org.netlib.util.intW
-import scalaxy.debug._
+import breeze.macros._
 import breeze.macros._
 import breeze.math.PowImplicits._
 

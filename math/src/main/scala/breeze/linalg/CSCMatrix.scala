@@ -23,7 +23,7 @@ import breeze.util.{ArrayUtil, ReflectionUtil, Sorting, Terminal}
 import scala.collection.mutable
 import scala.reflect.ClassTag
 import scala.{specialized => spec}
-import scalaxy.debug._
+import breeze.macros._
 import breeze.macros._
 
 /**

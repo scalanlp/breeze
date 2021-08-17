@@ -4,7 +4,7 @@ import breeze.linalg._
 import breeze.linalg.support.{CanCopy, CanSlice, CanSlice2, CanTranspose}
 import breeze.math.{Complex, EntrywiseMatrixNorms, Field, MutableFiniteCoordinateField, Semiring}
 import breeze.storage.Zero
-import scalaxy.debug.require
+import breeze.macros.require
 
 import scala.reflect.ClassTag
 

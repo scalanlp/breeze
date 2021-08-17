@@ -1,6 +1,5 @@
 package breeze.linalg
 
-import breeze.linalg.{DenseVector, tile, DenseMatrix}
 import org.scalatest.funsuite.AnyFunSuite
 
 /**

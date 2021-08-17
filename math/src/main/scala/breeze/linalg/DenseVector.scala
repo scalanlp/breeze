@@ -36,7 +36,7 @@ import breeze.linalg.support.CanMapValues.DenseCanMapValues
 
 import java.io.ObjectStreamException
 import scala.collection.mutable.ArrayBuilder
-import scalaxy.debug._
+import breeze.macros._
 
 /**
  * A DenseVector is the "obvious" implementation of a Vector, with one twist.

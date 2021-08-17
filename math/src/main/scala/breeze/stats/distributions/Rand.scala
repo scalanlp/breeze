@@ -345,12 +345,12 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
  */
 object Rand extends RandBasis(new ThreadLocalRandomGenerator(new MersenneTwister())) {
   /** Import the contents of this to make Rands/Distributions that use the "default" generator */
-  object variableSeed {
+  object VariableSeed {
     implicit val randBasis: RandBasis = Rand
   }
 
   /** Import the contents of this to use a generator seeded with a consistent seed.*/
-  object fixedSeed {
+  object FixedSeed {
     implicit val randBasis: RandBasis = RandBasis.mt0
   }
 }

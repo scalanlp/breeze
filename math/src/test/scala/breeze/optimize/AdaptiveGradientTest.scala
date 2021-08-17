@@ -16,8 +16,8 @@ package breeze.optimize
  limitations under the License.
  */
 
-import org.scalacheck.*
-import breeze.linalg.*
+import org.scalacheck._
+import breeze.linalg._
 import breeze.stats.distributions.RandBasis
 
 class AdaptiveGradientTest extends OptimizeTestBase {

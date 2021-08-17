@@ -8,7 +8,7 @@ import breeze.linalg._
 import breeze.macros.expand
 import breeze.math.{Field, Ring, Semiring}
 import breeze.storage.Zero
-import scalaxy.debug._
+import breeze.macros._
 import breeze.macros._
 import breeze.math.PowImplicits._
 

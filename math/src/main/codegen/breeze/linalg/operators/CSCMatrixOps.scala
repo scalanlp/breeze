@@ -10,7 +10,7 @@ import breeze.macros.expand
 import breeze.math._
 import breeze.storage.Zero
 import breeze.util.{ArrayUtil, SerializableLogging}
-import scalaxy.debug._
+import breeze.macros._
 import breeze.macros._
 import breeze.math.PowImplicits._
 

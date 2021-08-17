@@ -2,7 +2,7 @@ package breeze.linalg.operators
 
 import breeze.linalg._
 import breeze.macros.cforRange
-import scalaxy.debug.require
+import breeze.macros.require
 import dev.ludovic.netlib.BLAS.{getInstance => blas}
 
 trait DenseVector_DoubleOps extends DenseVectorExpandOps {

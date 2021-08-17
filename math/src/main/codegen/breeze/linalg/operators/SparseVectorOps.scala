@@ -7,7 +7,7 @@ import breeze.macros.expand
 import breeze.math._
 import breeze.storage.Zero
 import breeze.util.{ArrayUtil, ReflectionUtil}
-import scalaxy.debug._
+import breeze.macros._
 import breeze.macros._
 
 import java.util
