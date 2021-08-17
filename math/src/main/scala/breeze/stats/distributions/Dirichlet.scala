@@ -22,13 +22,15 @@ import breeze.numerics._
 import breeze.math._
 import breeze.numerics
 
+import scala.reflect.ClassTag
+
 /**
  * Represents a Dirichlet distribution, the conjugate prior to the multinomial.
  * @author dlwh
  */
 case class Dirichlet[T, @specialized(Int) I](params: T)(
     implicit space: EnumeratedCoordinateField[T, I, Double],
-    rand: RandBasis = Rand)
+    rand: RandBasis)
     extends ContinuousDistr[T] {
   import space._
 
@@ -89,17 +91,15 @@ object Dirichlet {
   /**
    * Creates a new Dirichlet with pseudocounts equal to the observed counts.
    */
-  def apply[T](c: Counter[T, Double]) = new Dirichlet(c)
+  def apply[T](c: Counter[T, Double])(implicit rand: RandBasis) = new Dirichlet(c)
 
   /**
    * Creates a new symmetric Dirichlet of dimension k
    */
-  def sym(alpha: Double, k: Int) =
-    this(Array.tabulate(k) { x =>
-      alpha
-    })
+  def sym(alpha: Double, k: Int)(implicit rand: RandBasis): Dirichlet[DenseVector[Double], Int] =
+    this(breeze.util.ArrayUtil.fillNewArray(k, alpha))
 
-  def apply(arr: Array[Double]): Dirichlet[DenseVector[Double], Int] = Dirichlet(new DenseVector[Double](arr))
+  def apply(arr: Array[Double])(implicit rand: RandBasis): Dirichlet[DenseVector[Double], Int] = Dirichlet(new DenseVector[Double](arr))
 
   class ExpFam[T, I](exemplar: T)(implicit space: MutableFiniteCoordinateField[T, I, Double])
       extends ExponentialFamily[Dirichlet[T, I], T] {
@@ -134,7 +134,7 @@ object Dirichlet {
       }
     }
 
-    def distribution(p: Parameter) = {
+    override def distribution(p: Parameter)(implicit rand: RandBasis) = {
       new Dirichlet(p)
     }
   }

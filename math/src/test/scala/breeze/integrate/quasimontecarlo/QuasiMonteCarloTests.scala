@@ -25,6 +25,7 @@ class QuasiMonteCarloTest extends AnyWordSpec {
   def identityFunc(x: Array[Double]): Double = x(0)
 
   def productFunc(x: Array[Double]): Double = x(0) * x(1)
+  implicit val basis: RandBasis = RandBasis.mt0
 
   "quasiMonteCarloIntegrate" should {
     "approximate the mean of a normal distribution" in {
@@ -58,7 +59,7 @@ class QuasiMonteCarloTest extends AnyWordSpec {
       val integrationResult = quasiMonteCarloIntegrate(productFunc _)(
         Gaussian(mu, sigma).toQuasi,
         RejectionSampledGammaQuasiRandomVariable(alpha, beta))(16 * 1024 * 1024)
-      println("Integration result: " + integrationResult + " should be " + alpha * beta * mu)
+//      println("Integration result: " + integrationResult + " should be " + alpha * beta * mu)
       math.abs(integrationResult - alpha * beta * mu) should be < 0.001
     }
   }

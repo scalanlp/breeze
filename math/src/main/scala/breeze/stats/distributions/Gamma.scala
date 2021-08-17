@@ -30,7 +30,7 @@ import scala.math.pow
  *
  * @author dlwh
  */
-case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis = Rand)
+case class Gamma(shape: Double, scale: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf
@@ -227,7 +227,7 @@ object Gamma extends ExponentialFamily[Gamma, Double] with ContinuousDistributio
       Nwt_Rph_iter_for_k(k_new, s, iter + 1)
   }
 
-  def distribution(p: Parameter) = new Gamma(p._1, p._2)
+  override def distribution(p: Parameter)(implicit rand: RandBasis) = new Gamma(p._1, p._2)
 
   def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[(Double, Double)] {
     val SufficientStatistic(n, meanOfLogs, mean) = stats

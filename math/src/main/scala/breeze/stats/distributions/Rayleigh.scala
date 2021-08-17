@@ -3,7 +3,7 @@ package breeze.stats.distributions
 import breeze.numerics.constants.{Pi, γ}
 import breeze.numerics.{expm1, log, sqrt}
 
-case class Rayleigh(scale: Double)(implicit rand: RandBasis = Rand)
+case class Rayleigh(scale: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf {

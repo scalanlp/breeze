@@ -5,14 +5,18 @@ import org.scalatest.funsuite.AnyFunSuite
 import org.scalatestplus.scalacheck._
 import org.scalacheck._
 
+trait RandTestBase extends AnyFunSuite with Checkers {
+  implicit val basis: RandBasis = RandBasis.mt0
+  val numSamples = 10000
+
+}
+
 /**
  * @author dlwh
  */
-trait MomentsTestBase[T] extends AnyFunSuite with Checkers {
+trait MomentsTestBase[T] extends RandTestBase {
   type Distr <: Density[T] with Rand[T] with Moments[Double, Double]
   implicit def arbDistr: Arbitrary[Distr]
-
-  val numSamples = 10000
 
   def asDouble(x: T): Double
   def fromDouble(x: Double): T

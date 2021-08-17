@@ -82,7 +82,8 @@ object evdr extends UFunc {
    * Halko, et al., 2009 (arXiv:909) [[http://arxiv.org/pdf/0909.4061]]
    */
   private def randomizedStateFinder(M: DenseMatrix[Double], size: Int, nIter: Int): DenseMatrix[Double] = {
-    val R = DenseMatrix.rand(M.cols, size, rand = Rand.gaussian)
+    // TODO: I don't like that there's no way to seed this.
+    val R = DenseMatrix.rand(M.cols, size, Rand.gaussian)
     val Y = M * R
     cforRange(0 until nIter) { _ =>
       Y := M * (M.t * Y)
@@ -98,7 +99,6 @@ object evdr extends UFunc {
    * @return eigenvectors with resolved sign ambiguity
    */
   private def flipSigns(u: DenseMatrix[Double]): DenseMatrix[Double] = {
-//    import DenseMatrix.canMapValues
     val abs_u = abs(u)
     val max_abs_cols = (0 until u.cols).map(c => argmax(abs_u(::, c)))
     val signs = max_abs_cols.zipWithIndex.map(e => signum(u(e._1, e._2)))

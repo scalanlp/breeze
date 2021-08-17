@@ -24,7 +24,7 @@ import breeze.optimize.DiffFunction
  * Represents a Poisson random variable.
  * @author dlwh
  */
-case class Poisson(mean: Double)(implicit rand: RandBasis = Rand)
+case class Poisson(mean: Double)(implicit rand: RandBasis)
     extends DiscreteDistr[Int]
     with Moments[Double, Double] {
   require(mean >= 0, "Poisson mean must be non-negative, but got " + mean)
@@ -129,5 +129,5 @@ object Poisson extends ExponentialFamily[Poisson, Int] {
     }
   }
 
-  def distribution(p: Poisson.Parameter) = new Poisson(p)
+  override def distribution(p: Poisson.Parameter)(implicit rand: RandBasis) = new Poisson(p)
 }

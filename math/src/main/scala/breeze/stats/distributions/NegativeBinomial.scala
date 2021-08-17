@@ -8,7 +8,7 @@ import breeze.numerics._
  * @param p prob of success
  * @author dlwh
  */
-case class NegativeBinomial(r: Double, p: Double)(implicit rand: RandBasis = Rand) extends DiscreteDistr[Int] {
+case class NegativeBinomial(r: Double, p: Double)(implicit rand: RandBasis) extends DiscreteDistr[Int] {
   private val gen = for {
     lambda <- Gamma(r, p / (1 - p))
     i <- Poisson(lambda)

@@ -9,7 +9,7 @@ import scala.runtime.ScalaRunTime
  *
  * @author dlwh
  **/
-case class ChiSquared(k: Double)(implicit rand: RandBasis = Rand)
+case class ChiSquared(k: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf
@@ -81,5 +81,5 @@ object ChiSquared
     ss.mean
   }
 
-  def distribution(p: ChiSquared.Parameter): ChiSquared = ChiSquared(p)
+  override def distribution(p: ChiSquared.Parameter)(implicit rand: RandBasis): ChiSquared = ChiSquared(p)
 }

@@ -78,7 +78,13 @@ object ArrayUtil {
 
   def fillNewArrayLike[V](a: Array[V], length: Int, fill: V): Array[V] = {
     val arr = newArrayLike(a, length)
-    ArrayUtil.fill(a, 0, length, fill)
+    ArrayUtil.fill(arr, 0, length, fill)
+    arr
+  }
+
+  def fillNewArray[V: ClassTag](length: Int, fill: V): Array[V] = {
+    val arr = new Array[V](length)
+    ArrayUtil.fill(arr, 0, length, fill)
     arr
   }
 

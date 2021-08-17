@@ -59,7 +59,7 @@ package object hypothesis {
       + chiSquaredTerm(meanP * trialsVariant, successVariant) + chiSquaredTerm(
       (1 - meanP) * trialsVariant,
       trialsVariant - successVariant))
-    val pVal = 1.0 - Gamma(0.5, 2.0).cdf(chi2)
+    val pVal = 1.0 - Gamma(0.5, 2.0)(RandBasis.mt0).cdf(chi2)
     Chi2Result(chi2, pVal)
   }
 

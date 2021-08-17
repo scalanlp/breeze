@@ -3,7 +3,7 @@ package breeze.stats.distributions
 import breeze.numerics.constants.{γ, Pi}
 import breeze.numerics.{exp, log}
 
-case class Gumbel(location: Double, scale: Double)(implicit rand: RandBasis = Rand)
+case class Gumbel(location: Double, scale: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf {

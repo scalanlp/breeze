@@ -33,7 +33,7 @@ object AdaptiveGradientDescent {
       tolerance: Double = 1E-8,
       minImprovementWindow: Int = 50)(
       implicit vspace: MutableFiniteCoordinateField[T, _, Double],
-      rand: RandBasis = Rand)
+      rand: RandBasis)
       extends StochasticGradientDescent[T](stepSize, maxIter, tolerance, minImprovementWindow) {
 
     val delta = 1E-4
@@ -88,7 +88,7 @@ object AdaptiveGradientDescent {
    */
   class L1Regularization[T](val lambda: Double = 1.0, delta: Double = 1E-5, eta: Double = 4, maxIter: Int = 100)(
       implicit space: MutableFiniteCoordinateField[T, _, Double],
-      rand: RandBasis = Rand)
+      rand: RandBasis)
       extends StochasticGradientDescent[T](eta, maxIter) {
 
     import space._

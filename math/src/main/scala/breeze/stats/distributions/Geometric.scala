@@ -9,7 +9,7 @@ import breeze.util._
  * happens with probability p.
  * @author dlwh
  */
-case class Geometric(p: Double)(implicit rand: RandBasis = Rand)
+case class Geometric(p: Double)(implicit rand: RandBasis)
     extends DiscreteDistr[Int]
     with Moments[Double, Double] {
   require(p >= 0)
@@ -64,7 +64,7 @@ object Geometric extends ExponentialFamily[Geometric, Int] with HasConjugatePrio
     }
   }
 
-  def distribution(p: Geometric.Parameter) = new Geometric(p)
+  override def distribution(p: Geometric.Parameter)(implicit rand: RandBasis) = new Geometric(p)
 
   type ConjugatePrior = Beta
   val conjugateFamily: Beta.type = Beta

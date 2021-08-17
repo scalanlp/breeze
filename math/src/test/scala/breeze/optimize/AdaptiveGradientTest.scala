@@ -16,11 +16,12 @@ package breeze.optimize
  limitations under the License.
  */
 
-import org.scalacheck._
-
-import breeze.linalg._
+import org.scalacheck.*
+import breeze.linalg.*
+import breeze.stats.distributions.RandBasis
 
 class AdaptiveGradientTest extends OptimizeTestBase {
+  implicit val rand: RandBasis = RandBasis.mt0
 
   test("optimize a simple multivariate gaussian, l2") {
 

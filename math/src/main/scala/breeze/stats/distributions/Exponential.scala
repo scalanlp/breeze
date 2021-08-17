@@ -10,7 +10,7 @@ import scala.runtime.ScalaRunTime
  *
  * @author dlwh
  */
-case class Exponential(rate: Double)(implicit basis: RandBasis = Rand)
+case class Exponential(rate: Double)(implicit basis: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf
@@ -73,5 +73,5 @@ object Exponential
     }
   }
 
-  def distribution(p: Double) = new Exponential(p)
+  override def distribution(p: Double)(implicit rand: RandBasis): Exponential = new Exponential(p)
 }

@@ -4,7 +4,7 @@ package distributions
 import breeze.linalg._
 import breeze.numerics.{log, multidigammalog}
 
-case class InvWishart(df: Int, scale: DenseMatrix[Double])
+case class InvWishart(df: Int, scale: DenseMatrix[Double])(implicit rand: RandBasis)
   extends ContinuousDistr[DenseMatrix[Double]]
     with Moments[DenseMatrix[Double], DenseMatrix[Double]]
 {

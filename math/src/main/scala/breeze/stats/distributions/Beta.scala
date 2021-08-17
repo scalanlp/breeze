@@ -30,7 +30,7 @@ import scala.math._
  * @param a the number of pseudo-observations for true
  * @param b the number of pseudo-observations for false
  */
-case class Beta(a: Double, b: Double)(implicit rand: RandBasis = Rand)
+case class Beta(a: Double, b: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf
@@ -153,7 +153,7 @@ object Beta extends ExponentialFamily[Beta, Double] with ContinuousDistributionU
     res
   }
 
-  def distribution(ab: Parameter) = new Beta(ab._1, ab._2)
+  override def distribution(ab: Parameter)(implicit rand: RandBasis) = new Beta(ab._1, ab._2)
 
   def likelihoodFunction(stats: SufficientStatistic): DiffFunction[(Double, Double)] =
     new DiffFunction[(Double, Double)] {

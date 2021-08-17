@@ -18,6 +18,9 @@ package breeze.integrate.quasimontecarlo
 
 import breeze.macros._
 import breeze.linalg._
+import breeze.stats.distributions.RandBasis
+
+import scala.reflect.ClassTag
 
 object Halton {
   val HALTON_MAX_DIMENSION = 1229
@@ -63,17 +66,20 @@ class BaseUniformHaltonGenerator(val dimension: Int) extends QuasiMonteCarloGene
 
   private var count: Long = 0
   private val counters: Array[UnboxedIntVector] = List.fill(dimension)({ new UnboxedIntVector(16) }).toArray
-  val permutations: Array[Array[Long]] =
+  val permutations: Array[Array[Long]] = {
+    implicit val rand: RandBasis = RandBasis.mt0
     (0 to dimension)
       .map(i => {
         val vv = new Array[Long](Halton.PRIMES(i))
-        cforRange(0 until Halton.PRIMES(i)) {j =>
+        cforRange(0 until Halton.PRIMES(i)) { j =>
           vv(j) = j
         }
         shuffle(vv)
         vv
       })
       .toArray
+  }
+
 
   private val currentValue = new Array[Double](dimension)
 

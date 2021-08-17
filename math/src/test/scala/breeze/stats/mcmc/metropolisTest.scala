@@ -11,7 +11,7 @@ import org.scalatest.funsuite.AnyFunSuite
  */
 class metropolisTest extends AnyFunSuite {
 
-  val rand: RandBasis = RandBasis.mt0
+  implicit val rand: RandBasis = RandBasis.mt0
 
   sealed trait State
   case object A extends State

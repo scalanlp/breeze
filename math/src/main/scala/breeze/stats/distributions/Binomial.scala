@@ -26,7 +26,7 @@ import math._
  * @param n is the number of coin flips
  * @param p the probability of any one being true
  */
-case class Binomial(n: Int, p: Double)(implicit rand: RandBasis = Rand)
+case class Binomial(n: Int, p: Double)(implicit rand: RandBasis)
     extends DiscreteDistr[Int]
     with Moments[Double, Double] {
   type Distr = Gamma

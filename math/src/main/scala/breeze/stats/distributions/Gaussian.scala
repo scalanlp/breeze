@@ -26,7 +26,7 @@ import math.{Pi, log1p}
  *
  * @author dlwh
  */
-case class Gaussian(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
+case class Gaussian(mu: Double, sigma: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf
@@ -114,7 +114,7 @@ object Gaussian extends ExponentialFamily[Gaussian, Double] with ContinuousDistr
 
   def mle(stats: SufficientStatistic) = (stats.mean, stats.variance)
 
-  def distribution(p: (Double, Double)) = new Gaussian(p._1, math.sqrt(p._2))
+  override def distribution(p: (Double, Double))(implicit rand: RandBasis) = new Gaussian(p._1, math.sqrt(p._2))
 
   def likelihoodFunction(stats: SufficientStatistic): DiffFunction[(Double, Double)] = new DiffFunction[Parameter] {
     val normPiece = math.log(2 * Pi)

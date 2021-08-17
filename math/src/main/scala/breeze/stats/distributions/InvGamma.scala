@@ -3,7 +3,7 @@ package distributions
 
 import breeze.numerics.{digamma, lgamma}
 
-case class InvGamma(shape: Double, scale: Double) extends ContinuousDistr[Double]
+case class InvGamma(shape: Double, scale: Double)(implicit val basis: RandBasis) extends ContinuousDistr[Double]
   with Moments[Double, Double]
   with HasCdf {
 
@@ -11,7 +11,7 @@ case class InvGamma(shape: Double, scale: Double) extends ContinuousDistr[Double
     math.log(x) * (-shape - 1) - scale / x
   }
 
-  def logNormalizer: Double = {
+  lazy val logNormalizer: Double = {
     shape * math.log(scale) - lgamma(shape)
   }
 
@@ -37,7 +37,7 @@ case class InvGamma(shape: Double, scale: Double) extends ContinuousDistr[Double
     1 - math.exp(lgamma(shape, scale / x) - lgamma(shape))
   }
 
-  private val innerGamma = Gamma(shape, scale)
+  private val innerGamma = Gamma(shape, 1/scale)
   def draw(): Double = {
     1.0 / innerGamma.draw()
   }

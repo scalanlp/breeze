@@ -56,7 +56,7 @@ class GammaTest
       }; // Gamma pdf at 0 not defined when shape == 1
       scale <- arbitrary[Double].map { x =>
         math.abs(x) % 8.0 + 1.0
-      }) yield new Gamma(shape, scale)(RandBasis.mt0)
+      }) yield new Gamma(shape, scale)
   }
 
   test("Issue #11 on github") {

@@ -22,7 +22,7 @@ import breeze.stats.distributions.{Rand, RandBasis}
  */
 object shuffle extends UFunc {
 
-  implicit def implShuffle_Arr_eq_Arr[T](implicit ct: ClassTag[T], rb: RandBasis = Rand): Impl[Array[T], Array[T]] = {
+  implicit def implShuffle_Arr_eq_Arr[T](implicit ct: ClassTag[T], rb: RandBasis): Impl[Array[T], Array[T]] = {
     new Impl[Array[T], Array[T]] {
 
       /**
@@ -113,7 +113,7 @@ object shuffle extends UFunc {
   implicit def implShuffle_Coll_eq_Coll[Coll, T, CollRes](
       implicit view: Coll <:< scala.collection.IndexedSeq[T],
       cbf: BuildFrom[Coll, T, CollRes],
-      rb: RandBasis = Rand): Impl[Coll, CollRes] = {
+      rb: RandBasis): Impl[Coll, CollRes] = {
     new Impl[Coll, CollRes] {
 
       /**
@@ -154,7 +154,7 @@ object shuffle extends UFunc {
   implicit def implShuffle_DV_eq_DV[T](
       implicit arrImpl: Impl[Array[T], Array[T]],
       ct: ClassTag[T],
-      rb: RandBasis = Rand): Impl[DenseVector[T], DenseVector[T]] = {
+      rb: RandBasis): Impl[DenseVector[T], DenseVector[T]] = {
     new Impl[DenseVector[T], DenseVector[T]] {
 
       /**
@@ -171,7 +171,7 @@ object shuffle extends UFunc {
   implicit def implShuffle_DM_eq_DM[T](
       implicit arrImpl: Impl[Array[T], Array[T]],
       ct: ClassTag[T],
-      rb: RandBasis = Rand): Impl[DenseMatrix[T], DenseMatrix[T]] = {
+      rb: RandBasis): Impl[DenseMatrix[T], DenseMatrix[T]] = {
     new Impl[DenseMatrix[T], DenseMatrix[T]] {
 
       /**

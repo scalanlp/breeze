@@ -1,8 +1,9 @@
 package breeze.stats.distributions
 
-import breeze.linalg.{Counter, sum}
+import breeze.linalg.{Counter, DenseVector, sum}
 import breeze.math.MutableEnumeratedCoordinateField
-import breeze.numerics._
+import breeze.numerics.*
+import breeze.util.ArrayUtil
 
 /*
  Copyright 2009 David Hall, Daniel Ramage
@@ -29,7 +30,7 @@ import breeze.numerics._
  */
 class Polya[T, @specialized(Int) I](params: T)(
     implicit space: MutableEnumeratedCoordinateField[T, I, Double],
-    rand: RandBasis = Rand)
+    rand: RandBasis)
     extends DiscreteDistr[I] {
   import space._
   private val innerDirichlet = new Dirichlet(params)
@@ -40,6 +41,7 @@ class Polya[T, @specialized(Int) I](params: T)(
   lazy val logNormalizer = -lbeta(params)
 
   def probabilityOf(x: I) = math.exp(lbeta(sum(params), 1.0) - lbeta(params(x), 1.0))
+
 //  def probabilityOf(x: T) = math.exp(logProbabilityOf(x))
 //  def logProbabilityOf(x: T) = {
 //    math.exp(unnormalizedLogProbabilityOf(x) + logNormalizer)
@@ -57,16 +59,12 @@ object Polya {
   /**
    * Creates a new symmetric Polya of dimension k
    */
-  def sym(alpha: Double, k: Int) =
-    this(Array.tabulate(k) { x =>
-      alpha
-    })
+  def sym(alpha: Double, k: Int)(implicit rand: RandBasis) = this(ArrayUtil.fillNewArray(k, alpha))
 
   /**
    * Creates a new Polya of dimension k with the given parameters
    */
-  def apply(arr: Array[Double]) = {
-    val swapped: Array[(Int, Double)] = arr.zipWithIndex.map(_.swap)
-    new Polya(Counter(swapped.toIndexedSeq: _*))
+  def apply(arr: Array[Double])(implicit rand: RandBasis): Polya[DenseVector[Double], Int] = {
+    new Polya(new DenseVector(arr))
   }
 }

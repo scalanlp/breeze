@@ -15,5 +15,5 @@ trait ExponentialFamily[D, T] {
   def sufficientStatisticFor(t: T): SufficientStatistic;
   def mle(stats: SufficientStatistic): Parameter
   def likelihoodFunction(stats: SufficientStatistic): DiffFunction[Parameter]
-  def distribution(p: Parameter): D;
+  def distribution(p: Parameter)(implicit rand: RandBasis): D;
 }

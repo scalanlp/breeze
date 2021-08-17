@@ -30,7 +30,7 @@ import breeze.linalg.DenseVector
  *
  * @author dlwh
  */
-case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis = Rand)
+case class VonMises(mu: Double, k: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double] {
   require(k >= 0, "K must be positive")
@@ -80,7 +80,7 @@ object VonMises extends ExponentialFamily[VonMises, Double] {
   def emptySufficientStatistic = SufficientStatistic(0, 0, 0)
 
   def sufficientStatisticFor(t: Double) = SufficientStatistic(1, sin(t), cos(t))
-  def distribution(p: Parameter) = new VonMises(p._1, p._2)
+  override def distribution(p: Parameter)(implicit rand: RandBasis) = new VonMises(p._1, p._2)
 
   def mle(stats: SufficientStatistic): (Double, Double) = {
     import breeze.linalg.DenseVector.TupleIsomorphisms._

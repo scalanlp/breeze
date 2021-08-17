@@ -58,7 +58,7 @@ trait TracksStatistics { self: MetropolisHastings[_] =>
 }
 
 abstract class BaseMetropolisHastings[T](logLikelihoodFunc: T => Double, init: T, burnIn: Int = 0, dropCount: Int = 0)(
-    implicit val rand: RandBasis = Rand)
+    implicit val rand: RandBasis)
     extends MetropolisHastings[T]
     with Process[T]
     with TracksStatistics {
@@ -118,7 +118,7 @@ case class ArbitraryMetropolisHastings[T](
     val logProposalDensity: (T, T) => Double,
     init: T,
     burnIn: Int = 0,
-    dropCount: Int = 0)(implicit rand: RandBasis = Rand)
+    dropCount: Int = 0)(implicit rand: RandBasis)
     extends BaseMetropolisHastings[T](logLikelihood, init, burnIn, dropCount)(rand) {
   def proposalDraw(x: T) = proposal(x).draw()
   def logTransitionProbability(start: T, end: T): Double = logProposalDensity(start, end)

@@ -9,7 +9,7 @@ import scala.reflect.ClassTag
  *
  * @author dlwh
  */
-trait ExpFamTest[D <: Density[T] with Rand[T], T] extends AnyFunSuite with Checkers {
+trait ExpFamTest[D <: Density[T] with Rand[T], T] extends RandTestBase {
   val expFam: ExponentialFamily[D, T]
   import expFam._
 
@@ -21,7 +21,7 @@ trait ExpFamTest[D <: Density[T] with Rand[T], T] extends AnyFunSuite with Check
     check(Prop.forAll { (p: expFam.Parameter) =>
       try {
         val dist = expFam.distribution(p)
-        val suffstat = dist.sample(10000).map(sufficientStatisticFor).reduce(_ + _)
+        val suffstat = dist.sample(numSamples).map(sufficientStatisticFor).reduce(_ + _)
         val mle = expFam.mle(suffstat)
         if (!paramsClose(mle, p)) {
           println("Got " + mle + " expected " + p)

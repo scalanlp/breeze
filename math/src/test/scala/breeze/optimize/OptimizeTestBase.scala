@@ -44,7 +44,7 @@ trait OptimizeTestBaseTrait {
   } yield {
     val c = Counter[String, Double]()
     for (i <- 0 until v.size) {
-      c(i + "") = v(i)
+      c(i.toString) = v(i)
     }
     c
   })

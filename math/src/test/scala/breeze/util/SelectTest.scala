@@ -12,6 +12,8 @@ import scala.collection.mutable.ArrayBuffer
  */
 class SelectTest extends AnyFunSuite {
 
+  implicit val rand: RandBasis = RandBasis.mt0
+
   test("quickSelect") {
     var testArray = Array(7, 3, 2, 5, 1, 4, 2, -1)
     assert(DenseVector(Range(0, 6).map(quickSelect(testArray, _)).toArray) == DenseVector(-1, 1, 2, 2, 3, 4))

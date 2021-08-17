@@ -13,7 +13,7 @@ import scala.math.sqrt
  *
  * @author dlwh
  **/
-case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis = Rand)
+case class LogNormal(mu: Double, sigma: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf
@@ -82,7 +82,7 @@ object LogNormal
 
   def mle(stats: SufficientStatistic): (Double, Double) = Gaussian.mle(stats)
 
-  def distribution(p: (Double, Double)) = new LogNormal(p._1, math.sqrt(p._2))
+  override def distribution(p: (Double, Double))(implicit rand: RandBasis) = new LogNormal(p._1, math.sqrt(p._2))
 
   def likelihoodFunction(stats: SufficientStatistic): DiffFunction[(Double, Double)] =
     Gaussian.likelihoodFunction(stats)

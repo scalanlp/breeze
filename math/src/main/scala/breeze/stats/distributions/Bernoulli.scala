@@ -29,7 +29,7 @@ import breeze.optimize.DiffFunction
  * @author dlwh
  * @param p the probability of true
  */
-case class Bernoulli(p: Double)(implicit rand: RandBasis = Rand)
+case class Bernoulli(p: Double)(implicit rand: RandBasis)
     extends DiscreteDistr[Boolean]
     with Moments[Double, Double] {
   require(p >= 0.0)
@@ -74,7 +74,7 @@ object Bernoulli extends ExponentialFamily[Bernoulli, Boolean] with HasConjugate
 
   def mle(stats: SufficientStatistic) = stats.numYes / stats.n
 
-  def distribution(p: Double) = new Bernoulli(p)
+  override def distribution(p: Double)(implicit rand: RandBasis) = new Bernoulli(p)
 
   def likelihoodFunction(stats: SufficientStatistic) = new DiffFunction[Double] {
     val SufficientStatistic(yes, num) = stats

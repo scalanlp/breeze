@@ -25,6 +25,7 @@ import breeze.linalg._
 import breeze.stats._
 
 class MultivariateGaussianTest extends AnyFunSuite with Checkers {
+  implicit val basis: RandBasis = RandBasis.mt0
 
   val N = 5
 

@@ -7,7 +7,7 @@ import breeze.numerics.{pow, exp, log}
  *
  * @author dlwh
  **/
-case class Pareto(scale: Double, shape: Double)(implicit rand: RandBasis = Rand)
+case class Pareto(scale: Double, shape: Double)(implicit rand: RandBasis)
     extends ContinuousDistr[Double]
     with Moments[Double, Double]
     with HasCdf {

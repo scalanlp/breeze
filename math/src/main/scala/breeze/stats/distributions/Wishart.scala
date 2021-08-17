@@ -4,7 +4,7 @@ package distributions
 import breeze.linalg._
 import breeze.numerics._
 
-case class Wishart(df: Int, scale: DenseMatrix[Double])(implicit randBasis: RandBasis = Rand)
+case class Wishart(df: Int, scale: DenseMatrix[Double])(implicit randBasis: RandBasis)
   extends ContinuousDistr[DenseMatrix[Double]]
   with Moments[DenseMatrix[Double], DenseMatrix[Double]]
 {

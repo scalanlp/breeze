@@ -951,8 +951,9 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
   }
 
   test("#356 symmetric matrix sensitivity") {
+    implicit val basis: RandBasis = RandBasis.mt0
     val n = 20
-    val q = DenseVector.rand[Double](n, RandBasis.mt0.uniform)
+    val q = DenseVector.rand[Double](n, basis.uniform)
     val A = DenseMatrix.eye[Double](n) + q * q.t
     val B = inv(A)
     val u = DenseVector.zeros[Double](n)

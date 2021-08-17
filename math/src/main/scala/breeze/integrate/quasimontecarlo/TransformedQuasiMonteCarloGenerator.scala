@@ -1,5 +1,7 @@
 package breeze.integrate.quasimontecarlo
 
+import breeze.stats.distributions.{Exponential, RandBasis}
+
 /*
  Copyright 2016 Chris Stucchio
 
@@ -55,7 +57,7 @@ trait ProvidesTransformedQuasiMonteCarlo {
     def compute(x: Array[Double], position: Int): Double
   }
 
-  implicit class DistributionRandomVariableSpec(icdfProvider: breeze.stats.distributions.HasInverseCdf)
+  class DistributionRandomVariableSpec(icdfProvider: breeze.stats.distributions.HasInverseCdf)
       extends TransformingQuasiRandomVariableSpec {
     val numInputs = 1
     def transform(x: Array[Double], position: Int): Double = icdfProvider.inverseCdf(x(position))
@@ -69,7 +71,7 @@ trait ProvidesTransformedQuasiMonteCarlo {
       require(alpha > 0)
       require(beta > 0)
       if (alpha == 1.0) {
-        breeze.stats.distributions.Exponential(1/beta)
+        new DistributionRandomVariableSpec(Exponential(1/beta)(RandBasis.mt0))
       } else if (alpha > 1) {
         GammaQuasiRandomVariableSpecAlphaGeq1(alpha, beta)
       } else {

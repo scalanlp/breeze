@@ -1,5 +1,6 @@
 package breeze.compat
 
+@FunctionalInterface
 trait ConversionOrSubtype[T, +U] extends Conversion[T, U] {
 
 }
