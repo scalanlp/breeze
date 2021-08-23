@@ -25,13 +25,9 @@ case class BroadcastedRows[T, RowType](underlying: T) extends BroadcastedLike[T,
   }
 }
 
-object BroadcastedRows {
+trait BroadcastedRowsOps {
 
-  implicit class BroadcastRowsDMToIndexedSeq[T](bc: BroadcastedRows[DenseMatrix[T], DenseVector[T]]) {
-    def toIndexedSeq: IndexedSeq[Transpose[DenseVector[T]]] = new BroadcastedDMRowsISeq(bc.underlying)
-  }
-
-  implicit def canMapValues[T, RowType, ResultRow, Result](
+  implicit def canMapValues_BRows[T, RowType, ResultRow, Result](
       implicit cc: CanCollapseAxis[T, Axis._1.type, RowType, ResultRow, Result])
     : CanMapValues[BroadcastedRows[T, RowType], RowType, ResultRow, Result] = {
     new CanMapValues[BroadcastedRows[T, RowType], RowType, ResultRow, Result] {
@@ -44,9 +40,7 @@ object BroadcastedRows {
     }
   }
 
-  implicit def scalarOf[T, RowType]: ScalarOf[BroadcastedRows[T, RowType], RowType] = ScalarOf.dummy
-
-  implicit def broadcastOp[Op, T, RowType, OpResult, Result](
+  implicit def broadcastOp_BRows[Op, T, RowType, OpResult, Result](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._1.type, RowType],
       op: UImpl[Op, RowType, OpResult],
       cc: CanCollapseAxis[T, Axis._1.type, RowType, OpResult, Result])
@@ -58,7 +52,7 @@ object BroadcastedRows {
     }
   }
 
-  implicit def broadcastInplaceOp[Op, T, RowType, RHS, OpResult](
+  implicit def broadcastInplaceOp_BRows[Op, T, RowType, RHS, OpResult](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._1.type, RowType],
       op: InPlaceImpl[Op, RowType],
       cc: CanTraverseAxis[T, Axis._1.type, RowType]): InPlaceImpl[Op, BroadcastedRows[T, RowType]] = {
@@ -69,7 +63,7 @@ object BroadcastedRows {
     }
   }
 
-  implicit def broadcastOp2[Op, T, RowType, RHS, OpResult, Result](
+  implicit def broadcastOp2_BRows[Op, T, RowType, RHS, OpResult, Result](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._1.type, RowType],
       op: UImpl2[Op, RowType, RHS, OpResult],
       cc: CanCollapseAxis[T, Axis._1.type, RowType, OpResult, Result])
@@ -81,7 +75,7 @@ object BroadcastedRows {
     }
   }
 
-  implicit def broadcastOp2_2[Op, T, RowType, LHS, OpResult, Result](
+  implicit def broadcastOp2_2_BRows[Op, T, RowType, LHS, OpResult, Result](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._1.type, RowType],
       op: UImpl2[Op, LHS, RowType, OpResult],
       cc: CanCollapseAxis[T, Axis._1.type, RowType, OpResult, Result])
@@ -93,7 +87,7 @@ object BroadcastedRows {
     }
   }
 
-  implicit def broadcastInplaceOp2[Op, T, RowType, RHS, OpResult](
+  implicit def broadcastInplaceOp2_BRows[Op, T, RowType, RHS, OpResult](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._1.type, RowType],
       op: InPlaceImpl2[Op, RowType, RHS],
       cc: CanTraverseAxis[T, Axis._1.type, RowType]): InPlaceImpl2[Op, BroadcastedRows[T, RowType], RHS] = {
@@ -104,7 +98,7 @@ object BroadcastedRows {
     }
   }
 
-  implicit def canForeachRows[T, RowType, ResultRow, Result](implicit iter: CanTraverseAxis[T, Axis._1.type, RowType])
+  implicit def canForeachRows_BRows[T, RowType, ResultRow, Result](implicit iter: CanTraverseAxis[T, Axis._1.type, RowType])
     : CanForeachValues[BroadcastedRows[T, RowType], RowType] = {
     new CanForeachValues[BroadcastedRows[T, RowType], RowType] {
 
@@ -116,13 +110,24 @@ object BroadcastedRows {
 
   }
 
+
+}
+
+object BroadcastedRows {
   // This is a more memory efficient representation if the sequence is long-lived but rarely accessed.
   @SerialVersionUID(1L)
   class BroadcastedDMRowsISeq[T](val underlying: DenseMatrix[T])
-      extends IndexedSeq[Transpose[DenseVector[T]]]
+    extends IndexedSeq[Transpose[DenseVector[T]]]
       with Serializable {
     override def length: Int = underlying.rows
 
     override def apply(idx: Int): Transpose[DenseVector[T]] = underlying(idx, ::)
   }
+
+  implicit def scalarOf_BRows[T, RowType]: ScalarOf[BroadcastedRows[T, RowType], RowType] = ScalarOf.dummy
+
+  implicit class BroadcastRowsDMToIndexedSeq[T](bc: BroadcastedRows[DenseMatrix[T], DenseVector[T]]) {
+    def toIndexedSeq: IndexedSeq[Transpose[DenseVector[T]]] = new BroadcastedRows.BroadcastedDMRowsISeq[T](bc.underlying)
+  }
 }
+

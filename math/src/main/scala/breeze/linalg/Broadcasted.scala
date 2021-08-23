@@ -71,3 +71,6 @@ object Broadcaster {
     }
   }
 }
+
+
+trait BroadcastedOps extends BroadcastedColumnsOps with BroadcastedRowsOps

@@ -2,6 +2,7 @@ package breeze.linalg
 
 import breeze.generic.UFunc
 import breeze.linalg.operators.OpDiv
+import breeze.linalg.support.ScalarOf
 
 /**
  * Normalizes the argument such that its norm is 1.0 (with respect to the argument n).
@@ -21,7 +22,9 @@ object normalize extends UFunc with normalizeLowPrio {
   }
 
   implicit def normalizeFloatImpl[T, U >: T](
-      implicit div: OpDiv.Impl2[T, Float, U],
+      implicit
+      scalarOf: ScalarOf[T, Float],
+      div: OpDiv.Impl2[T, Float, U],
       canNorm: norm.Impl2[T, Double, Double]): Impl2[T, Float, U] = {
     new Impl2[T, Float, U] {
       def apply(t: T, n: Float): U = {
@@ -56,7 +59,7 @@ object normalize extends UFunc with normalizeLowPrio {
     }
   }
 
-  implicit def normalizeImpl[T, U >: T](implicit impl: Impl2[T, Double, U]): Impl[T, U] = {
+  implicit def normalizeImpl[T, U](implicit impl: Impl2[T, Double, U]): Impl[T, U] = {
     new Impl[T, U] {
       def apply(v: T): U = impl(v, 2.0)
     }

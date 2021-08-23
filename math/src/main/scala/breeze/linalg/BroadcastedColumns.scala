@@ -45,14 +45,11 @@ case class BroadcastedColumns[T, ColType](underlying: T)
 
 }
 
-object BroadcastedColumns {
+trait BroadcastedColumnsOps {
 
-  implicit class BroadcastColumnsDMToIndexedSeq[T](bc: BroadcastedColumns[DenseMatrix[T], DenseVector[T]]) {
-    def toIndexedSeq: IndexedSeq[DenseVector[T]] = new BroadcastedDMColsISeq(bc.underlying)
-  }
 
   // TODO: sparsity?
-  implicit def canMapValues[T, ColumnType, ResultColumn, Result](
+  implicit def canMapValues_BCols[T, ColumnType, ResultColumn, Result](
       implicit cc: CanCollapseAxis[T, Axis._0.type, ColumnType, ResultColumn, Result])
     : CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] = {
     new CanMapValues[BroadcastedColumns[T, ColumnType], ColumnType, ResultColumn, Result] {
@@ -66,9 +63,8 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def scalarOf[T, ColumnType]: ScalarOf[BroadcastedColumns[T, ColumnType], ColumnType] = ScalarOf.dummy
 
-  implicit def broadcastOp[Op, T, ColumnType, OpResult, Result](
+  implicit def broadcastOp_BCols[Op, T, ColumnType, OpResult, Result](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: UImpl[Op, ColumnType, OpResult],
       cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result])
@@ -80,7 +76,7 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def broadcastInplaceOp[Op, T, ColumnType, RHS, OpResult](
+  implicit def broadcastInplaceOp_BCols[Op, T, ColumnType, RHS, OpResult](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: InPlaceImpl[Op, ColumnType],
       cc: CanTraverseAxis[T, Axis._0.type, ColumnType]): InPlaceImpl[Op, BroadcastedColumns[T, ColumnType]] = {
@@ -91,7 +87,7 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def broadcastOp2[Op, T, ColumnType, RHS, OpResult, Result](
+  implicit def broadcastOp2_BCols[Op, T, ColumnType, RHS, OpResult, Result](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: UImpl2[Op, ColumnType, RHS, OpResult],
       cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result])
@@ -103,7 +99,7 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def broadcastOp2_2[Op, T, ColumnType, LHS, OpResult, Result](
+  implicit def broadcastOp2_2_BCols[Op, T, ColumnType, LHS, OpResult, Result](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: UImpl2[Op, LHS, ColumnType, OpResult],
       cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result])
@@ -115,7 +111,7 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def broadcastInplaceOp2[Op, T, ColumnType, RHS, OpResult](
+  implicit def broadcastInplaceOp2_BCols[Op, T, ColumnType, RHS, OpResult](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: InPlaceImpl2[Op, ColumnType, RHS],
       cc: CanTraverseAxis[T, Axis._0.type, ColumnType]): InPlaceImpl2[Op, BroadcastedColumns[T, ColumnType], RHS] = {
@@ -126,7 +122,7 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def broadcastOp3_1[Op, T, A1, ColumnType, RHS, OpResult, Result](
+  implicit def broadcastOp3_1_BCols[Op, T, A1, ColumnType, RHS, OpResult, Result](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: UImpl3[Op, A1, ColumnType, RHS, OpResult],
       cc: CanCollapseAxis[T, Axis._0.type, ColumnType, OpResult, Result])
@@ -138,7 +134,7 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def broadcastInplaceOp3_1[Op, A1, T, ColumnType, RHS, OpResult](
+  implicit def broadcastInplaceOp3_1_BCols[Op, A1, T, ColumnType, RHS, OpResult](
       implicit handhold: CanCollapseAxis.HandHold[T, Axis._0.type, ColumnType],
       op: InPlaceImpl3[Op, A1, ColumnType, RHS],
       cc: CanTraverseAxis[T, Axis._0.type, ColumnType])
@@ -151,7 +147,7 @@ object BroadcastedColumns {
     }
   }
 
-  implicit def canForeachColumns[T, ColumnType, ResultColumn, Result](
+  implicit def canForeachColumns_BCols[T, ColumnType, ResultColumn, Result](
       implicit iter: CanTraverseAxis[T, Axis._0.type, ColumnType])
     : CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] = {
     new CanForeachValues[BroadcastedColumns[T, ColumnType], ColumnType] {
@@ -164,11 +160,21 @@ object BroadcastedColumns {
 
   }
 
+}
+
+object BroadcastedColumns {
   // This is a more memory efficient representation if the sequence is long-lived but rarely accessed.
   @SerialVersionUID(1L)
   class BroadcastedDMColsISeq[T](val underlying: DenseMatrix[T]) extends IndexedSeq[DenseVector[T]] with Serializable {
     override def length: Int = underlying.cols
 
     override def apply(idx: Int): DenseVector[T] = underlying(::, idx)
+  }
+
+  implicit def scalarOf[T, ColumnType]: ScalarOf[BroadcastedColumns[T, ColumnType], ColumnType] = ScalarOf.dummy
+
+
+  implicit class BroadcastColumnsDMToIndexedSeq[T](bc: BroadcastedColumns[DenseMatrix[T], DenseVector[T]]) {
+    def toIndexedSeq: IndexedSeq[DenseVector[T]] = new BroadcastedDMColsISeq(bc.underlying)
   }
 }
