@@ -173,7 +173,7 @@ trait LowPrioritySliceMatrix {  self: SliceMatrix.type =>
   // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
   // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
   // return a SliceMatrix
-  implicit def canSliceWeirdRows[K1, K2, V: Semiring: ClassTag]
+  implicit def canSliceWeirdRows_SM[K1, K2, V: Semiring: ClassTag]
     : CanSlice2[SliceMatrix[K1, K2, V], Seq[Int], ::.type, SliceMatrix[K1, K2, V]] = {
     new CanSlice2[SliceMatrix[K1, K2, V], Seq[Int], ::.type, SliceMatrix[K1, K2, V]] {
       def apply(from: SliceMatrix[K1, K2, V], rows: Seq[Int], ignored: ::.type): SliceMatrix[K1, K2, V] = {
@@ -185,7 +185,7 @@ trait LowPrioritySliceMatrix {  self: SliceMatrix.type =>
   // Note: can't have a separate implicit for Range and Seq since they will be ambiguous as both will return a
   // SliceMatrix which differs from dense matrix where a Range will return another DenseMatrix and only a seq will
   // return a SliceMatrix
-  implicit def canSliceWeirdCols[K1, K2, V: Semiring: ClassTag]
+  implicit def canSliceWeirdCols_SM[K1, K2, V: Semiring: ClassTag]
     : CanSlice2[SliceMatrix[K1, K2, V], ::.type, Seq[Int], SliceMatrix[K1, K2, V]] = {
     new CanSlice2[SliceMatrix[K1, K2, V], ::.type, Seq[Int], SliceMatrix[K1, K2, V]] {
       def apply(from: SliceMatrix[K1, K2, V], ignored: ::.type, cols: Seq[Int]): SliceMatrix[K1, K2, V] = {
@@ -194,14 +194,14 @@ trait LowPrioritySliceMatrix {  self: SliceMatrix.type =>
     }
   }
 
-  implicit def handholdCanMapRows[K1, K2, V]
+  implicit def handholdCanMapRows_SM[K1, K2, V]
     : CanCollapseAxis.HandHold[SliceMatrix[K1, K2, V], Axis._0.type, Vector[V]] =
     new CanCollapseAxis.HandHold[SliceMatrix[K1, K2, V], Axis._0.type, Vector[V]]()
-  implicit def handholdCanMapCols[K1, K2, V]
+  implicit def handholdCanMapCols_SM[K1, K2, V]
     : CanCollapseAxis.HandHold[SliceMatrix[K1, K2, V], Axis._1.type, Vector[V]] =
     new CanCollapseAxis.HandHold[SliceMatrix[K1, K2, V], Axis._1.type, Vector[V]]()
 
-  implicit def canCollapseRows[K1, K2, V: Semiring: ClassTag, R: ClassTag: Zero]
+  implicit def canCollapseRows_SliceMatrix[K1, K2, V: Semiring: ClassTag, R: ClassTag: Zero]
     : CanCollapseAxis[SliceMatrix[K1, K2, V], Axis._0.type, Vector[V], R, Transpose[Vector[R]]] =
     new CanCollapseAxis[SliceMatrix[K1, K2, V], Axis._0.type, Vector[V], R, Transpose[Vector[R]]] {
       def apply(from: SliceMatrix[K1, K2, V], axis: Axis._0.type)(f: (Vector[V]) => R): Transpose[Vector[R]] = {
@@ -213,7 +213,7 @@ trait LowPrioritySliceMatrix {  self: SliceMatrix.type =>
       }
     }
 
-  implicit def canCollapseCols[K1, K2, V: Semiring: ClassTag, R: ClassTag: Zero]
+  implicit def canCollapseCols_SliceMatrix[K1, K2, V: Semiring: ClassTag, R: ClassTag: Zero]
     : CanCollapseAxis[SliceMatrix[K1, K2, V], Axis._1.type, Vector[V], R, Vector[R]] = {
     new CanCollapseAxis[SliceMatrix[K1, K2, V], Axis._1.type, Vector[V], R, Vector[R]] {
       def apply(from: SliceMatrix[K1, K2, V], axis: Axis._1.type)(f: (Vector[V]) => R): Vector[R] = {
