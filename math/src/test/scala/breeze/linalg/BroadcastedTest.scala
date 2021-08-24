@@ -129,4 +129,12 @@ class BroadcastedTest extends AnyFunSuite {
     v /:/ m(::, *)
   }
 
+  test("#821 broadcast map regression") {
+    val dataMatrix: DenseMatrix[Double] = DenseMatrix.rand[Double](10, 5)
+    val rows = dataMatrix(*, ::)
+    val denseV: DenseVector[scala.Vector[Double]] = rows.map(dv => dv.toScalaVector)
+    val cols = dataMatrix(::, *)
+    val denseV2 = cols.map(dv => dv.toScalaVector)
+  }
+
 }

@@ -1279,9 +1279,8 @@ trait DenseMatrix_SetOps extends DenseMatrix_SlicingOps {
     }
   }
 
-  implicit def setDMDM[V]: OpSet.InPlaceImpl2[DenseMatrix[V], DenseMatrix[V]] = new SetDMDMOp[V]
-  implicit def setDMDV[V]: OpSet.InPlaceImpl2[DenseMatrix[V], DenseVector[V]] = new SetDMDVOp[V]
-  implicit def setDMS[V]: OpSet.InPlaceImpl2[DenseMatrix[V], V] = new SetMSOp[V]
+  implicit def impl_OpMulSet_InPlace_DM_DM[V]: OpSet.InPlaceImpl2[DenseMatrix[V], DenseMatrix[V]] = new SetDMDMOp[V]
+  implicit def impl_OpMulSet_InPlace_DM_S[V]: OpSet.InPlaceImpl2[DenseMatrix[V], V] = new SetMSOp[V]
 
   // </editor-fold>
 
@@ -1295,11 +1294,11 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseRows[V, R: ClassTag: Zero]
+  implicit def canCollapseRows_DM[V, R: ClassTag]
     : CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, Transpose[DenseVector[R]]] =
     new CanCollapseAxis[DenseMatrix[V], Axis._0.type, DenseVector[V], R, Transpose[DenseVector[R]]] {
       def apply(from: DenseMatrix[V], axis: Axis._0.type)(f: (DenseVector[V]) => R): Transpose[DenseVector[R]] = {
-        val result = DenseVector.zeros[R](from.cols)
+        val result = new DenseVector[R](from.cols)
         cforRange(0 until from.cols) { c =>
           result(c) = f(from(::, c))
         }
@@ -1313,10 +1312,10 @@ trait LowPriorityDenseMatrix1 {
    * @tparam R
    * @return
    */
-  implicit def canCollapseCols[V, R: ClassTag: Zero]: CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] =
+  implicit def canCollapseCols_DM[V, R: ClassTag]: CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] =
     new CanCollapseAxis[DenseMatrix[V], Axis._1.type, DenseVector[V], R, DenseVector[R]] {
       def apply(from: DenseMatrix[V], axis: Axis._1.type)(f: (DenseVector[V]) => R): DenseVector[R] = {
-        val result = DenseVector.zeros[R](from.rows)
+        val result = new DenseVector[R](from.rows)
         val t = from.t
         cforRange(0 until from.rows) { r =>
           result(r) = f(t(::, r))
@@ -1342,28 +1341,6 @@ trait LowPriorityDenseMatrix1 {
         }
       }
     }
-  }
-
-  // TODO: I don't like this op. remove?
-  implicit def impl_OpSet_InPlace_DM_V[@specialized(Int, Float, Long, Double) V]: OpSet.InPlaceImpl2[DenseMatrix[V], Vector[V]] = {
-      (a: DenseMatrix[V], b: Vector[V]) => {
-        require(
-          a.rows == b.length && a.cols == 1 || a.cols == b.length && a.rows == 1,
-          "DenseMatrix must have same number of rows, or same number of columns, as DenseVector, and the other dim must be 1."
-        )
-        val ad = a.data
-        var i = 0
-        var c = 0
-        while (c < a.cols) {
-          var r = 0
-          while (r < a.rows) {
-            ad(a.linearIndex(r, c)) = b(i)
-            r += 1
-            i += 1
-          }
-          c += 1
-        }
-      }
   }
 
   // </editor-fold>
