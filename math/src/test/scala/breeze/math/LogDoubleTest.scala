@@ -60,7 +60,7 @@ class LogDoubleTest extends AnyFunSuite with Checkers {
   test("division") {
     check {
       Prop.forAll { (d: Double, e: Double) =>
-        e != 0.0 || (d.toLogDouble / e.toLogDouble).value =~= d / e
+        e == 0.0 || (d.toLogDouble / e.toLogDouble).value =~= d / e
       }
     }
     check {

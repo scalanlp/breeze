@@ -167,12 +167,18 @@ package object plot {
         override def getItemPaint(series: Int, item: Int): java.awt.Paint =
           paintScale(items(item))
         override def getItemStroke(series: Int, item: Int) = stroke
+
+        // i dunno why we need this all of a sudden
+        override def clone(): AnyRef = super.clone()
       }
 
       val tooltipGenerator = new org.jfree.chart.labels.XYToolTipGenerator() {
         override def generateToolTip(dataset: org.jfree.data.xy.XYDataset, series: Int, item: Int): String = {
           dataset.asInstanceOf[XYZDataset[_]].getTip(0, item)
         }
+
+        // i dunno why we need this all of a sudden
+        override def clone(): AnyRef = super.clone()
       }
       renderer.setSeriesToolTipGenerator(0, tooltipGenerator)
 
@@ -180,6 +186,8 @@ package object plot {
         override def generateLabel(dataset: org.jfree.data.xy.XYDataset, series: Int, item: Int): String = {
           dataset.asInstanceOf[XYZDataset[_]].getLabel(0, item)
         }
+        // i dunno why we need this all of a sudden
+        override def clone(): AnyRef = super.clone()
       }
       renderer.setSeriesItemLabelGenerator(0, labelGenerator)
       renderer.setSeriesItemLabelsVisible(0, labels != null)
