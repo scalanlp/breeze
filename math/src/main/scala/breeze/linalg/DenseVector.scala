@@ -15,7 +15,6 @@ package breeze.linalg
  limitations under the License.
  */
 
-
 import scala.{specialized => spec}
 import breeze.generic._
 import breeze.linalg.support._
@@ -247,7 +246,8 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
   }
 
   /** Returns true if this overlaps any content with the other vector */
-  private[linalg] def overlaps(other: DenseVector[V]): Boolean = (this.data eq other.data) && RangeUtils.overlaps(footprint, other.footprint)
+  private[linalg] def overlaps(other: DenseVector[V]): Boolean =
+    (this.data eq other.data) && RangeUtils.overlaps(footprint, other.footprint)
 
   private def footprint: Range = {
     if (length == 0) {
@@ -406,13 +406,7 @@ object DenseVector extends VectorConstructors[DenseVector] {
       }
     }
 
-  implicit def canCopyDenseVector[V: ClassTag]: CanCopy[DenseVector[V]] = {
-    new CanCopy[DenseVector[V]] {
-      def apply(v1: DenseVector[V]): DenseVector[V] = {
-        v1.copy
-      }
-    }
-  }
+  implicit def canCopyDenseVector[V: ClassTag]: CanCopy[DenseVector[V]] = DenseVectorDeps.canCopyDenseVector[V]
 
   implicit def DV_canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](
       implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
@@ -507,7 +501,6 @@ object DenseVector extends VectorConstructors[DenseVector] {
 
   implicit def DV_scalarOf[T]: ScalarOf[DenseVector[T], T] = ScalarOf.dummy
 
-
   class CanZipMapValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV: ClassTag]
       extends CanZipMapValues[DenseVector[V], V, RV, DenseVector[RV]] {
     def create(length: Int) = DenseVector(new Array[RV](length))
@@ -552,7 +545,6 @@ object DenseVector extends VectorConstructors[DenseVector] {
   }
 
   implicit def zipMapKV[V, R: ClassTag]: CanZipMapKeyValuesDenseVector[V, R] = new CanZipMapKeyValuesDenseVector[V, R]
-
 
   // this produces bad spaces for builtins (inefficient because of bad implicit lookup)
   implicit def space[E](
@@ -622,3 +614,12 @@ object DenseVector extends VectorConstructors[DenseVector] {
   private def init() = {}
 }
 
+/** Static initialization of [[DenseVector]] depends on initializing [[operators.HasOps]], whose static
+ * initialization in turn depends one some of the implicits in [[DenseVector]]. This object extracts out
+ * the definitions of implicits that were known to cause deadlock in initialization
+ * (see https://github.com/scalanlp/breeze/issues/825). */
+private[linalg] object DenseVectorDeps {
+  implicit def canCopyDenseVector[V: ClassTag]: CanCopy[DenseVector[V]] = new CanCopy[DenseVector[V]] {
+    def apply(v1: DenseVector[V]): DenseVector[V] = v1.copy
+  }
+}
