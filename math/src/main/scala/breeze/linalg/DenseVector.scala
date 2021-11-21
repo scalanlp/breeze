@@ -15,6 +15,7 @@ package breeze.linalg
  limitations under the License.
  */
 
+
 import scala.{specialized => spec}
 import breeze.generic._
 import breeze.linalg.support._
@@ -246,8 +247,7 @@ class DenseVector[@spec(Double, Int, Float, Long) V](
   }
 
   /** Returns true if this overlaps any content with the other vector */
-  private[linalg] def overlaps(other: DenseVector[V]): Boolean =
-    (this.data eq other.data) && RangeUtils.overlaps(footprint, other.footprint)
+  private[linalg] def overlaps(other: DenseVector[V]): Boolean = (this.data eq other.data) && RangeUtils.overlaps(footprint, other.footprint)
 
   private def footprint: Range = {
     if (length == 0) {
@@ -501,6 +501,7 @@ object DenseVector extends VectorConstructors[DenseVector] {
 
   implicit def DV_scalarOf[T]: ScalarOf[DenseVector[T], T] = ScalarOf.dummy
 
+
   class CanZipMapValuesDenseVector[@spec(Double, Int, Float, Long) V, @spec(Int, Double) RV: ClassTag]
       extends CanZipMapValues[DenseVector[V], V, RV, DenseVector[RV]] {
     def create(length: Int) = DenseVector(new Array[RV](length))
@@ -545,6 +546,7 @@ object DenseVector extends VectorConstructors[DenseVector] {
   }
 
   implicit def zipMapKV[V, R: ClassTag]: CanZipMapKeyValuesDenseVector[V, R] = new CanZipMapKeyValuesDenseVector[V, R]
+
 
   // this produces bad spaces for builtins (inefficient because of bad implicit lookup)
   implicit def space[E](

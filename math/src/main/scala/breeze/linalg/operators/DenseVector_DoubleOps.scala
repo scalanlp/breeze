@@ -43,16 +43,13 @@ trait DenseVector_DoubleOps extends DenseVectorExpandOps {
     }
 
   }
-  implicitly[TernaryUpdateRegistry[Vector[Double], Double, Vector[Double], scaleAdd.type]]
-    .register(impl_scaleAdd_InPlace_DV_T_DV_Double)
+  implicitly[TernaryUpdateRegistry[Vector[Double], Double, Vector[Double], scaleAdd.type]].register(impl_scaleAdd_InPlace_DV_T_DV_Double)
 
   // TODO: try deleting? (pure)
-  implicit val impl_OpAdd_DV_DV_eq_DV_Double
-    : OpAdd.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
+  implicit val impl_OpAdd_DV_DV_eq_DV_Double: OpAdd.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
     pureFromUpdate(implicitly, implicitly)
   }
-  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpAdd.type, Vector[Double]]]
-    .register(impl_OpAdd_DV_DV_eq_DV_Double)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpAdd.type, Vector[Double]]].register(impl_OpAdd_DV_DV_eq_DV_Double)
 
   implicit val impl_OpSub_InPlace_DV_DV_Double: OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpSub.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
@@ -65,12 +62,10 @@ trait DenseVector_DoubleOps extends DenseVectorExpandOps {
   }
 
   // TODO: try removing
-  implicit val impl_OpSub_DV_DV_eq_DV_Double
-    : OpSub.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
+  implicit val impl_OpSub_DV_DV_eq_DV_Double: OpSub.Impl2[DenseVector[Double], DenseVector[Double], DenseVector[Double]] = {
     pureFromUpdate(implicitly, implicitly)
   }
-  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpSub.type, Vector[Double]]]
-    .register(impl_OpSub_DV_DV_eq_DV_Double)
+  implicitly[BinaryRegistry[Vector[Double], Vector[Double], OpSub.type, Vector[Double]]].register(impl_OpSub_DV_DV_eq_DV_Double)
 
   implicit object canDotD extends OpMulInner.Impl2[DenseVector[Double], DenseVector[Double], Double] {
     def apply(a: DenseVector[Double], b: DenseVector[Double]) = {
@@ -134,7 +129,7 @@ trait DenseVector_FloatOps extends DenseVectorExpandOps {
   import DenseVectorDeps.canCopyDenseVector
 
   implicit object impl_scaledAdd_InPlace_DV_S_DV_Float
-      extends scaleAdd.InPlaceImpl3[DenseVector[Float], Float, DenseVector[Float]]
+    extends scaleAdd.InPlaceImpl3[DenseVector[Float], Float, DenseVector[Float]]
       with Serializable {
     def apply(y: DenseVector[Float], a: Float, x: DenseVector[Float]): Unit = {
       require(x.length == y.length, s"Vectors must have same length")
@@ -175,8 +170,7 @@ trait DenseVector_FloatOps extends DenseVectorExpandOps {
   implicit val impl_OpAdd_DV_DV_eq_DV_Float: OpAdd.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
     pureFromUpdate(implicitly, implicitly)
   }
-  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpAdd.type, Vector[Float]]]
-    .register(impl_OpAdd_DV_DV_eq_DV_Float)
+  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpAdd.type, Vector[Float]]].register(impl_OpAdd_DV_DV_eq_DV_Float)
 
   implicit val impl_OpSub_InPlace_DV_DV_Float: OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] = {
     new OpSub.InPlaceImpl2[DenseVector[Float], DenseVector[Float]] {
@@ -190,11 +184,10 @@ trait DenseVector_FloatOps extends DenseVectorExpandOps {
   implicit val impl_OpSub_DV_DV_eq_DV_Float: OpSub.Impl2[DenseVector[Float], DenseVector[Float], DenseVector[Float]] = {
     pureFromUpdate(implicitly, implicitly)
   }
-  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpSub.type, Vector[Float]]]
-    .register(impl_OpSub_DV_DV_eq_DV_Float)
+  implicitly[BinaryRegistry[Vector[Float], Vector[Float], OpSub.type, Vector[Float]]].register(impl_OpSub_DV_DV_eq_DV_Float)
 
   implicit val impl_OpMulInner_DV_DV_eq_S_Float
-    : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] = {
+  : breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] = {
     new breeze.linalg.operators.OpMulInner.Impl2[DenseVector[Float], DenseVector[Float], Float] {
       def apply(a: DenseVector[Float], b: DenseVector[Float]) = {
         require(a.length == b.length, s"Vectors must have same length")
