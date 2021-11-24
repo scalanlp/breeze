@@ -7,6 +7,10 @@ import dev.ludovic.netlib.BLAS.{getInstance => blas}
 
 trait DenseVector_DoubleOps extends DenseVectorExpandOps {
 
+  // This takes higher precedence than [[DenseVector.canCopyDenseVector]] to avoid deadlock in
+  // static initialization. See comment on [[DenseVectorDeps]].
+  import DenseVectorDeps.canCopyDenseVector
+
   // TODO: try deleting (axpy)
   implicit val impl_OpAdd_InPlace_DV_DV_Double: OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] = {
     new OpAdd.InPlaceImpl2[DenseVector[Double], DenseVector[Double]] {
@@ -119,6 +123,10 @@ trait DenseVector_DoubleOps extends DenseVectorExpandOps {
 }
 
 trait DenseVector_FloatOps extends DenseVectorExpandOps {
+
+  // This takes higher precedence than [[DenseVector.canCopyDenseVector]] to avoid deadlock in
+  // static initialization. See comment on [[DenseVectorDeps]].
+  import DenseVectorDeps.canCopyDenseVector
 
   implicit object impl_scaledAdd_InPlace_DV_S_DV_Float
     extends scaleAdd.InPlaceImpl3[DenseVector[Float], Float, DenseVector[Float]]

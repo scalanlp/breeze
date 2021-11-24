@@ -406,13 +406,7 @@ object DenseVector extends VectorConstructors[DenseVector] {
       }
     }
 
-  implicit def canCopyDenseVector[V: ClassTag]: CanCopy[DenseVector[V]] = {
-    new CanCopy[DenseVector[V]] {
-      def apply(v1: DenseVector[V]): DenseVector[V] = {
-        v1.copy
-      }
-    }
-  }
+  implicit def canCopyDenseVector[V: ClassTag]: CanCopy[DenseVector[V]] = DenseVectorDeps.canCopyDenseVector[V]
 
   implicit def DV_canMapValues[@specialized(Int, Float, Double) V, @specialized(Int, Float, Double) V2](
       implicit man: ClassTag[V2]): CanMapValues[DenseVector[V], V, V2, DenseVector[V2]] = {
@@ -622,3 +616,12 @@ object DenseVector extends VectorConstructors[DenseVector] {
   private def init() = {}
 }
 
+/** Static initialization of [[DenseVector]] depends on initializing [[operators.HasOps]], whose static
+ * initialization in turn depends one some of the implicits in [[DenseVector]]. This object extracts out
+ * the definitions of implicits that were known to cause deadlock in initialization
+ * (see https://github.com/scalanlp/breeze/issues/825). */
+private[linalg] object DenseVectorDeps {
+  implicit def canCopyDenseVector[V: ClassTag]: CanCopy[DenseVector[V]] = new CanCopy[DenseVector[V]] {
+    def apply(v1: DenseVector[V]): DenseVector[V] = v1.copy
+  }
+}
