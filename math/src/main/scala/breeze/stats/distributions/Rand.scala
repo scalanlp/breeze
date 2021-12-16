@@ -233,7 +233,7 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
     fromBody((t._1.draw(), t._2.draw(), t._3.draw(), t._4.draw()))
 
   /**
-   * Uniformly samples in [0,1]
+   * Uniformly samples in [0,1)
    */
   val uniform: Rand[Double] = new Rand[Double] {
     def draw() = generator.nextDouble
@@ -271,8 +271,13 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Uniformly samples a long integer in [0,n)
    */
   def randLong(n: Long): Rand[Long] = new Rand[Long] {
-    def draw() = {
-      val value = generator.nextLong & Long.MaxValue
+    require(n > 0)
+    def draw(): Long = {
+      val maxVal = Long.MaxValue - (Long.MaxValue % n) - 1
+      var value = (generator.nextLong() & Long.MaxValue)
+      while ( value > maxVal ) {
+        value = (generator.nextLong() & Long.MaxValue)
+      }
       value % n
     }
   }
@@ -281,9 +286,9 @@ class RandBasis(val generator: RandomGenerator) extends Serializable {
    * Uniformly samples a long integer in [n,m)
    */
   def randLong(n: Long, m: Long): Rand[Long] = new Rand[Long] {
+    val inner = randLong(m - n)
     def draw() = {
-      val value = generator.nextLong & Long.MaxValue
-      value % (m - n) + n
+      inner.draw() + n
     }
   }
 
