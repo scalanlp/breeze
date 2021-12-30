@@ -12,11 +12,11 @@ libraryDependencies ++= Seq(
   "org.apache.commons" % "commons-math3" % "3.2",
 //  ("com.chuusai" %% "shapeless" % "2.3.3").withDottyCompat(scalaVersion.value),
   "org.slf4j" % "slf4j-api" % "1.7.5",
-  ("org.typelevel" %% "spire" % "0.17.0").cross(CrossVersion.for3Use2_13),
+  "org.typelevel" %% "spire" % "0.18.0-M2",
   "org.apache.logging.log4j" % "log4j-slf4j-impl" % "2.17.0" % "test",
   "org.apache.logging.log4j" % "log4j-core" % "2.17.0" % "test",
   "org.apache.logging.log4j" % "log4j-api" % "2.17.0" % "test",
-//  ("org.scala-lang.modules" %% "scala-collection-compat" % "2.1.1").withDottyCompat(scalaVersion.value)
+  "org.scala-lang.modules" %% "scala-collection-compat" % "2.6.0"
 )
 
 // see https://github.com/typesafehub/scalalogging/issues/23
