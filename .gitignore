@@ -1,5 +1,11 @@
 target/
 project
+
+.bloop/
+.bsp/
+.vscode/
+.metals/
+
 *target*
 */target/
 *class
