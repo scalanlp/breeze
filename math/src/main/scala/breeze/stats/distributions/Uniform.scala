@@ -12,7 +12,7 @@ case class Uniform(low: Double, high: Double)(implicit rand: RandBasis)
     with Moments[Double, Double]
     with HasCdf
     with HasInverseCdf {
-  require(low <= high)
+  require(low < high)
   def draw(): Double = rand.uniform.draw() * (high - low) + low
 
   def unnormalizedLogPdf(x: Double): Double = {
