@@ -218,6 +218,6 @@ class ProjectedQuasiNewtonTest
       .minimizeAndReturnState(cost, DenseVector.zeros[Double](25))
 
     println(s"L1 projection iter ${pqnResult.iter}")
-    assert(norm(pqnResult.x - octaveL1, 2) < 1.15e-4)
+    assert(norm(pqnResult.x - octaveL1, 2) < 1e-4)
   }
 }
