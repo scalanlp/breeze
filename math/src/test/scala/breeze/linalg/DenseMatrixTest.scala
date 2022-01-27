@@ -853,4 +853,5 @@ trait MatrixTestUtils {
     for (i <- 0 until A.rows; j <- 0 until A.cols)
       A(i, j) should be(B(i, j) +- threshold)
   }
+
 }

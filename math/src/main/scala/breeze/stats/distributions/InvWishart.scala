@@ -4,7 +4,7 @@ package distributions
 import breeze.linalg._
 import breeze.numerics.{log, multidigammalog}
 
-case class InvWishart(df: Int, scale: DenseMatrix[Double])(implicit rand: RandBasis)
+case class InvWishart(df: Double, scale: DenseMatrix[Double])(implicit rand: RandBasis)
   extends ContinuousDistr[DenseMatrix[Double]]
     with Moments[DenseMatrix[Double], DenseMatrix[Double]]
 {
@@ -16,21 +16,21 @@ case class InvWishart(df: Int, scale: DenseMatrix[Double])(implicit rand: RandBa
 
   def mean: DenseMatrix[Double] = {
     require(df > p + 1)
-    scale /:/ (df.toDouble - p - 1)
+    scale /:/ (df - p - 1)
   }
 
   def variance: DenseMatrix[Double] = {
     require(df > p + 3)
-    val a = (scale *:* scale) *:* (df - p + 1).toDouble
+    val a = (scale *:* scale) *:* (df - p + 1)
     val d = diag(scale).toDenseMatrix
-    val b = (d.t * d) *:* (df - p - 1).toDouble
+    val b = (d.t * d) *:* (df - p - 1)
 
-    (a + b) /:/ ((df - p) * (df - p - 1) * (df - p - 1) * (df - p - 3)).toDouble
+    (a + b) /:/ ((df - p) * (df - p - 1) * (df - p - 1) * (df - p - 3))
   }
 
   def entropy: Double = Double.NaN
 
-  def mode: DenseMatrix[Double] = scale /:/ (df.toDouble - p - 1)
+  def mode: DenseMatrix[Double] = scale /:/ (df - p - 1)
 
   def unnormalizedLogPdf(x: DenseMatrix[Double]): Double = (
     - log(det(x)) * 0.5 * (df + p + 1)

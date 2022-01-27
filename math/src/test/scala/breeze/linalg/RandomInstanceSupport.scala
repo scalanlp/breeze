@@ -18,7 +18,9 @@
 
 package breeze.linalg
 
+import breeze.linalg.operators.OpAdd
 import breeze.math.Semiring
+import breeze.numerics.abs
 import breeze.storage.Zero
 import org.scalacheck.{Arbitrary, Gen}
 
@@ -94,4 +96,13 @@ object RandomInstanceSupport {
       new DenseMatrix(r, c, list.toArray)
     }
 
+  def genPositiveDefiniteMatrix(dim: Int): Gen[DenseMatrix[Double]] = {
+    for {
+      m <- genDenseMatrix(dim, dim, reasonableDouble(lower=1E-4, upper=1).arbitrary)
+    } yield {
+      val m2 = (m + m.t)/ 2.0
+      diag(m2) += (dim * 1.0)
+      m2
+    }
+  }
 }
