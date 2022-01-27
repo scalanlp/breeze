@@ -222,4 +222,20 @@ class DescriptiveStatsTest2 extends AnyFunSuite {
     assertThrows[IllegalArgumentException](median(DenseVector(0.0, 1.0, 2.0, Double.NaN)))
     assertThrows[IllegalArgumentException](median(DenseVector(0.0f, 1.0f, 2.0f, Float.NaN)))
   }
+
+  test("mean over collection of dense vectors") {
+    val r = new Random(0)
+    val data = Array(0.0, 1.0, 2.0, 3.0, 4.0)
+    val mean1 = mean(data.map(DenseVector(_)))
+    val mean2 = mean(data)
+    assert(mean1(0) == mean2)
+  }
+
+  test("mean over collection of dense matrices") {
+    val r = new Random(0)
+    val data = Array(0.0, 1.0, 2.0, 3.0, 4.0)
+    val mean1 = mean(data.map(DenseVector(_).toDenseMatrix))
+    val mean2 = mean(data)
+    assert(mean1(0, 0) == mean2)
+  }
 }

@@ -1,6 +1,8 @@
 package breeze.stats
 
-import breeze.linalg.operators.{OpLT, OpLTE}
+import breeze.linalg.operators.{OpAdd, OpDiv, OpLT, OpLTE, OpSet}
+import breeze.linalg.scaleAdd
+import breeze.linalg.support.CanCreateZerosLike
 import breeze.stats.meanAndVariance.MeanAndVariance
 import breeze.stats.stddev.Impl
 import breeze.stats.stddev.population.Impl
@@ -9,6 +11,7 @@ import breeze.stats.variance.Impl
 import scala.reflect.ClassTag
 import util.Sorting
 import breeze.util.{quickSelect, quickSelectImpl}
+
 import scala.collection.compat._
 
 /*
@@ -64,10 +67,62 @@ object accumulateAndCount extends UFunc {
     }
 }
 
+sealed trait meanLowPriority { self: mean.type =>
+  implicit def canMeanGeneric[S, T](implicit iter: CanTraverseValues[T, S],
+                                    zerosLike: CanCreateZerosLike[S, S],
+                                    setInto: OpSet.InPlaceImpl2[S, S],
+                                    axpy: scaleAdd.InPlaceImpl3[S, Double, S],
+                                    canMulIntoVS: OpDiv.InPlaceImpl2[S, Double],
+                                   ): Impl[T, S] =
+    new Impl[T, S] {
+      def apply(v: T): S = {
+        object visit extends ValuesVisitor[S] {
+          var runningMean: S = _
+          var scratch: S = _
+          var count = 0L
+
+          def visit(y: S): Unit = {
+            if (count == 0) {
+              init(y)
+              count += 1
+            } else {
+              count += 1
+              // runningMean = runningMean + (y - runningMean) / count
+              setInto(scratch, y)
+              scaleAdd.inPlace(scratch, -1.0, runningMean)
+              scaleAdd.inPlace(runningMean, 1.0 / count, scratch)
+            }
+          }
+
+          private def init(y: S) = {
+            runningMean = zerosLike(y)
+            setInto(runningMean, y)
+            scratch = zerosLike(y)
+          }
+
+          def zeros(numZero: Int, zeroValue: S): Unit = {
+            if (count == 0) {
+              init(zeroValue)
+            } else {
+              if (numZero != 0)
+                canMulIntoVS(runningMean, count / (count + numZero))
+            }
+            count += numZero
+          }
+        }
+
+        iter.traverse(v, visit)
+        if (visit.count == 0) throw new IllegalArgumentException("empty collection")
+        else visit.runningMean
+      }
+    }
+}
+
+
 /**
  * A [[breeze.generic.UFunc]] for computing the mean of objects
  */
-object mean extends UFunc {
+object mean extends UFunc with meanLowPriority {
   @expand
   implicit def reduce[@expand.args(Float, Double, Complex) S, T](
       implicit iter: CanTraverseValues[T, S],
