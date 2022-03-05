@@ -22,7 +22,7 @@ class WishartTest extends AnyFunSuite with Checkers {
   test("mean") {
     check(Prop.forAll { (distr: Wishart) =>
       val sample = distr.sample(numSamples)
-      val m = mean(sample)
+      val m = mean(sample)(mean.canMeanGeneric[IndexedSeq[DenseMatrix[Double]], DenseMatrix[Double]])
       if (max(abs(m - distr.mean)) / (max(abs(distr.mean)).max(1)) > 1E-1) {
         println("Expected " + distr.mean + " but got " + m)
         false

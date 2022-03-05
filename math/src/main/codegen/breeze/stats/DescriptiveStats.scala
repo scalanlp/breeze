@@ -2,7 +2,7 @@ package breeze.stats
 
 import breeze.linalg.operators.{OpAdd, OpDiv, OpLT, OpLTE, OpSet}
 import breeze.linalg.scaleAdd
-import breeze.linalg.support.CanCreateZerosLike
+import breeze.linalg.support.{CanCreateZerosLike, ScalarOf}
 import breeze.stats.meanAndVariance.MeanAndVariance
 import breeze.stats.stddev.Impl
 import breeze.stats.stddev.population.Impl
@@ -68,7 +68,8 @@ object accumulateAndCount extends UFunc {
 }
 
 sealed trait meanLowPriority { self: mean.type =>
-  implicit def canMeanGeneric[S, T](implicit iter: CanTraverseValues[T, S],
+  implicit def canMeanGeneric[T, S](implicit
+                                    iter: CanTraverseValues[T, S],
                                     zerosLike: CanCreateZerosLike[S, S],
                                     setInto: OpSet.InPlaceImpl2[S, S],
                                     axpy: scaleAdd.InPlaceImpl3[S, Double, S],
