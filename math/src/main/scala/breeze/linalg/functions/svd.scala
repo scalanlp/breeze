@@ -1,8 +1,8 @@
 package breeze.linalg
 
 import breeze.generic.UFunc
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
-import dev.ludovic.netlib.ARPACK
+import dev.ludovic.netlib.lapack.LAPACK.{getInstance => lapack}
+import dev.ludovic.netlib.arpack.ARPACK
 import org.netlib.util.intW
 import org.netlib.util.doubleW
 import breeze.linalg.operators.OpMulMatrix

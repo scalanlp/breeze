@@ -2,7 +2,7 @@ package breeze.stats.regression
 
 import breeze.generic.UFunc
 import breeze.linalg._
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
+import dev.ludovic.netlib.lapack.LAPACK.{getInstance => lapack}
 import breeze.macros.cforRange
 
 private case class LassoCalculator(

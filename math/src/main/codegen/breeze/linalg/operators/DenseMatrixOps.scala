@@ -9,8 +9,8 @@ import breeze.macros.expand
 import breeze.math.{Field, Semiring}
 import breeze.storage.Zero
 import breeze.util.{ArrayUtil, ReflectionUtil}
-import dev.ludovic.netlib.BLAS.{getInstance => blas}
-import dev.ludovic.netlib.LAPACK.{getInstance => lapack}
+import dev.ludovic.netlib.blas.BLAS.{getInstance => blas}
+import dev.ludovic.netlib.lapack.LAPACK.{getInstance => lapack}
 import org.netlib.util.intW
 import breeze.macros._
 import breeze.macros._

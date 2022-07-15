@@ -3,7 +3,7 @@ package breeze.linalg.operators
 import breeze.linalg._
 import breeze.macros.cforRange
 import breeze.macros.require
-import dev.ludovic.netlib.BLAS.{getInstance => blas}
+import dev.ludovic.netlib.blas.BLAS.{getInstance => blas}
 
 trait DenseVector_DoubleOps extends DenseVectorExpandOps {
 
