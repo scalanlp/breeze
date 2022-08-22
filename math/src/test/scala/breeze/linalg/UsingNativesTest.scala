@@ -21,9 +21,9 @@ class UsingNativesTest extends AnyFunSuite with Checkers {
 
   test("Using natives") {
     if (!usingNatives) {
-      assert(dev.ludovic.netlib.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.JavaBLAS])
+      assert(dev.ludovic.netlib.blas.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.blas.JavaBLAS])
     } else {
-      assert(dev.ludovic.netlib.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.NativeBLAS])
+      assert(dev.ludovic.netlib.blas.BLAS.getInstance.isInstanceOf[dev.ludovic.netlib.blas.NativeBLAS])
     }
   }
 
