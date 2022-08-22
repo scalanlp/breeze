@@ -242,50 +242,16 @@ trait CSCMatrixExpandedOps extends MatrixOps with CSCMatrixOps_Ring {
         require(rows == b.rows, "Matrices must have same number of rows!")
         require(cols == b.cols, "Matrices must have same number of cols!")
 
-        val nData = Array.fill[T](rows * cols)(mZero)
-        // fill in data from a
-        var ci = 0
-        var apStop = a.colPtrs(0)
-        while (ci < cols) {
-          val ci1 = ci + 1
-          var ap = apStop
-          apStop = a.colPtrs(ci1)
-          while (ap < apStop) {
-            val ar = a.rowIndices(ap)
-            nData(ci * rows + ar) = a.data(ap)
-            ap += 1
-          }
-          ci = ci1
+        val resultBuilder = new CSCMatrix.Builder[T](rows, cols, rows * cols)
+
+        cforRange2(0 until cols, 0 until rows) { (j, i) =>
+          val aVal = a(i, j)
+          val bVal = b(i, j)
+          val res = op(aVal, bVal)
+          if (res != mZero) resultBuilder.add(i, j, res)
         }
 
-        // compute operations
-        ci = 0
-        var bpStop = b.colPtrs(0)
-        while (ci < cols) {
-          val ci1 = ci + 1
-          var bp = bpStop
-          bpStop = b.colPtrs(ci1)
-          if (bp == bpStop) {
-            // No data in column
-            computeZeroOpOnRange(nData, ci * cols, ci1 * cols)
-          } else {
-            // data in column
-            var rL = 0
-            while (bp < bpStop) {
-              val br = b.rowIndices(bp)
-              val ndi = ci * rows + br
-              if (rL < br - 1)
-                computeZeroOpOnRange(nData, ci * rows + rL, ndi)
-              nData(ndi) = op(nData(ndi), b.data(bp))
-              rL = br
-              bp += 1
-            }
-          }
-          ci = ci1
-        }
-        val colPtrs: Array[Int] = Array.tabulate[Int](cols + 1)((i: Int) => i * rows)
-        val rowIndices: Array[Int] = Array.tabulate[Int](nData.length)((i: Int) => i % rows)
-        new CSCMatrix[T](nData, rows, cols, colPtrs, nData.length, rowIndices)
+        resultBuilder.result(true, true)
       }
     }
   }

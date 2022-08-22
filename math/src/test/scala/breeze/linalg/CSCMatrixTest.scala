@@ -474,4 +474,10 @@ class CSCMatrixTest extends AnyFunSuite with Checkers with MatrixTestUtils {
 
   }
 
+  test("CSCMatrix element-wise division bug #844") {
+    val a = CSCMatrix((1.0, 0.0, 0.0), (0.0, 0.0, 0.0), (1.0, 0.0, 0.0))
+    val r = a /:/ a
+    assert(r(0, 0) == 1.0)
+  }
+
 }
