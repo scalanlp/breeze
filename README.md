@@ -4,7 +4,7 @@ Breeze is a library for numerical processing. It aims to be generic, clean, and 
 
 This is the 2.x branch. The 1.x branch is `1.x`.
 
-The latest release is 2.0.1-RC1, which is cross-built against Scala 3.0, 2.12, and 2.13.
+The latest release is 2.1.0, which is cross-built against Scala 3.1, 2.12, and 2.13.
 
 ## Documentation
 
@@ -27,11 +27,11 @@ For SBT, add these lines to your SBT project definition:
 ```scala
 libraryDependencies  ++= Seq(
   // Last stable release
-  "org.scalanlp" %% "breeze" % "2.0.1-RC1",
+  "org.scalanlp" %% "breeze" % "2.1.0",
   
   // The visualization library is distributed separately as well.
   // It depends on LGPL code
-  "org.scalanlp" %% "breeze-viz" % "2.0.1-RC1"
+  "org.scalanlp" %% "breeze-viz" % "2.1.0"
 )
 
 
@@ -48,12 +48,12 @@ Maven looks like this:
 <dependency>
   <groupId>org.scalanlp</groupId>
   <artifactId>breeze_2.13</artifactId>
-  <version>2.0.1-RC1</version>
+  <version>2.1.0</version>
 </dependency>
 ```
 
 ### Other build tools
-[http://mvnrepository.com/artifact/org.scalanlp/breeze_2.12/2.0.1-RC1] (as an example) is a great resource for finding other configuration examples for other build tools.
+[http://mvnrepository.com/artifact/org.scalanlp/breeze_2.12/2.1.0] (as an example) is a great resource for finding other configuration examples for other build tools.
 
 See documentation (linked above!) for more information on using Breeze.
 
