@@ -4,10 +4,15 @@ name := "breeze-macros"
 
 libraryDependencies ++= {
   CrossVersion.partialVersion(scalaVersion.value) match {
-    case Some((2, _)) => 
+    case Some((2, 12)) =>
       Seq(
         "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}",
-        "org.typelevel" %% "spire" % "0.18.0-M3",
+        "org.typelevel" %% "spire" % "0.17.0"
+      )
+    case Some((2, 13)) =>
+      Seq(
+        "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}",
+        "org.typelevel" %% "spire" % "0.18.0-M3"
       )
     case Some((3, _)) => Seq(
     )

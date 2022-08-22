@@ -4,8 +4,6 @@ import breeze.codegen.plugin.SbtBreezeCodegenPlugin.breezeCodegenSettings
 import xerial.sbt.Sonatype.autoImport.{sonatypeProfileName, sonatypeProjectHosting, sonatypePublishTo}
 import xerial.sbt.Sonatype._
 
-//import dotty.tools.sbtplugin.DottyPlugin.autoImport._
-
 object Common {
 
   def priorTo2_13(scalaVersion: String): Boolean = {
@@ -15,7 +13,7 @@ object Common {
     }
   }
 
-  val buildCrossScalaVersions = Seq("3.1.2", "2.12.15", "2.13.8")
+  val buildCrossScalaVersions = Seq("3.1.3", "2.12.15", "2.13.8")
 
   lazy val buildScalaVersion = buildCrossScalaVersions.head
 
@@ -101,4 +99,5 @@ object Common {
      // }
    // }
   ) ++ breezeCodegenSettings
+
 }
