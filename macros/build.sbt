@@ -12,7 +12,7 @@ libraryDependencies ++= {
     case Some((2, 13)) =>
       Seq(
         "org.scala-lang" % "scala-reflect" % s"${scalaVersion.value}",
-        "org.typelevel" %% "spire" % "0.18.0-M3"
+        "org.typelevel" %% "spire" % "0.18.0"
       )
     case Some((3, _)) => Seq(
     )

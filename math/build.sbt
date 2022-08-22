@@ -24,7 +24,7 @@ libraryDependencies += {
   if (priorTo2_13(scalaVersion.value)) {
     "org.typelevel" %% "spire" % "0.17.0"
   } else {
-    "org.typelevel" %% "spire" % "0.18.0-M3"
+    "org.typelevel" %% "spire" % "0.18.0"
   }
 }
 
