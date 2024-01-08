@@ -1,20 +1,13 @@
 package breeze.stats.regression
 
-
 import breeze.generic.UFunc
 import breeze.linalg._
+import breeze.linalg.operators.{OpMulInner, OpMulMatrix}
 import org.netlib.util.intW
 import dev.ludovic.netlib.lapack.LAPACK.{getInstance => lapack}
 
 import java.util.Arrays
 
-
-trait NumericType[T]
-
-object NumericType {
-  implicit object FloatIsNumeric extends NumericType[Float]
-  implicit object DoubleIsNumeric extends NumericType[Double]
-}
 private object leastSquaresImplementation {
 
 
@@ -89,34 +82,14 @@ private object leastSquaresImplementation {
 
 
 
-case class LeastSquaresRegressionResult[T](coefficients: DenseVector[T], rSquared: T)(implicit ev: NumericType[T])
+case class LeastSquaresRegressionResult[T](coefficients: DenseVector[T], rSquared: T)(implicit can_dot: OpMulInner.Impl2[DenseVector[T], DenseVector[T], T])
   extends RegressionResult[DenseVector[T], T] {
 
-  def apply(x: DenseVector[T]): T = ev match {
+  def apply(x: DenseVector[T]): T = coefficients.dot(x)
 
-    case _: NumericType[Float]  =>
-      val coeffs = coefficients.asInstanceOf[DenseVector[Float]]
-      val x_ins = x.asInstanceOf[DenseVector[Float]]
-      (coeffs .dot(x_ins)).asInstanceOf[T]
-    case _: NumericType[Double]  =>
-      val coeffs = coefficients.asInstanceOf[DenseVector[Double]]
-      val x_ins = x.asInstanceOf[DenseVector[Double]]
-      (coeffs .dot(x_ins)).asInstanceOf[T]
-    case _ => throw new UnsupportedOperationException("Unsupported numeric type. Only Float and Double are supported")
 
-  }
-  def apply(X: DenseMatrix[T]): DenseVector[T] = ev match {
-    case _: NumericType[Float]  =>
-        val coeffs = coefficients.asInstanceOf[DenseVector[Float]]
-        val mat = X.asInstanceOf[DenseMatrix[Float]]
-        (mat * coeffs).asInstanceOf[DenseVector[T]]
-
-    case _: NumericType[Double]  =>
-        val coeffs = coefficients.asInstanceOf[DenseVector[Double]]
-        val mat = X.asInstanceOf[DenseMatrix[Double]]
-        (mat * coeffs).asInstanceOf[DenseVector[T]]
-
-      case _ => throw new UnsupportedOperationException("Unsupported numeric type. Only Float and Double are supported")
+  def apply(X: DenseMatrix[T])(implicit can_dot: OpMulMatrix.Impl2[DenseMatrix[T], DenseVector[T], DenseVector[T]]): DenseVector[T]  = {
+       X * coefficients
     }
 }
 
