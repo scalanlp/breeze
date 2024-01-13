@@ -91,7 +91,7 @@ private case class LassoCalculator(
     r2
   }
 
-  private def estimateOneColumn(column: Int): LeastSquaresRegressionResult = {
+  private def estimateOneColumn(column: Int): LeastSquaresRegressionResult[Double] = {
     /*
      * Goal of this routine is to use the specified column to explain as much of the residual
      * as possible, after using the already specified values in other columns.
