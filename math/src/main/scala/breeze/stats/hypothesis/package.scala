@@ -31,7 +31,7 @@ package object hypothesis {
     val tScore = (mu1 - mu2) / sqrt((var1 / n1) + (var2 / n2)) // T statistic
     val dof = pow((var1 / n1) + (var2 / n2), 2) / (pow(var1, 2) / (pow(n1, 2) * (n1 - 1)) +
       pow(var2, 2) / (pow(n2, 2) * (n2 - 1))) //Welch–Satterthwaite equation
-    new StudentsT(dof)(RandBasis.mt0).unnormalizedPdf(tScore) //return p value
+    new StudentsT(dof)(RandBasis.mt0).cdf(tScore) //return p value
   }
 
   def tTest[T](it1: Traversable[T])(implicit numeric: Numeric[T]): Double =
@@ -40,7 +40,7 @@ package object hypothesis {
     val MeanAndVariance(mu1, var1, n1) = meanAndVariance(it1)
     val Z = mu1 / sqrt(var1 / n1)
     val dof = n1 - 1
-    new StudentsT(dof)(RandBasis.mt0).unnormalizedPdf(Z) //return p value
+    new StudentsT(dof)(RandBasis.mt0).cdf(Z) //return p value
   }
 
   case class Chi2Result(chi2: Double, pVal: Double)
