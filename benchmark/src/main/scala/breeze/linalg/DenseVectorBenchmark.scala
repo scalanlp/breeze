@@ -7,14 +7,14 @@ import breeze.macros._
 object DenseVectorBenchmark extends MyRunner(classOf[DenseVectorBenchmark])
 
 trait BuildsRandomVectors {
-  private val uniform = Uniform(0, 1)
+  private val uniform = Uniform(0, 1)(RandBasis.mt0)
   def randomArray(size: Int, offset: Int = 0, stride: Int = 1): DenseVector[Double] = {
     require(offset >= 0)
     require(stride >= 1)
     val result = new DenseVector(new Array[Double](offset + stride * size), offset, stride, size)
     var i = 0
     while (i < size) {
-      result.unsafeUpdate(i, uniform.draw())
+      result.update(i, uniform.draw())
       i += 1
     }
     result
@@ -83,7 +83,7 @@ class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
 
   def timeValueAt(reps: Int) = valueAtBench(reps, 1024 * 8, 1)
   def timeValueAtStride4(reps: Int) = valueAtBench(reps, 1024 * 8, 4)
-  
+
   def updateBench(reps: Int, size: Int, stride: Int) =
     runWith(reps, { randomArray(size, stride = stride) })(arr => {
       var i = 0
@@ -101,7 +101,7 @@ class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
     runWith(reps, { randomArray(size, stride = stride) })(arr => {
       var i = 0
       while (i < arr.size) {
-        arr.unsafeUpdate(i, i.toDouble)
+        arr.update(i, i.toDouble)
         i += 1
       }
       arr
