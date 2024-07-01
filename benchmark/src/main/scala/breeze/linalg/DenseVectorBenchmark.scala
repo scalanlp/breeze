@@ -83,22 +83,7 @@ class DenseVectorBenchmark extends BreezeBenchmark with BuildsRandomVectors {
 
   def timeValueAt(reps: Int) = valueAtBench(reps, 1024 * 8, 1)
   def timeValueAtStride4(reps: Int) = valueAtBench(reps, 1024 * 8, 4)
-
-  def unsafeValueAtBench(reps: Int, size: Int, stride: Int) =
-    runWith(reps, { randomArray(size, stride = stride) })(arr => {
-      var i = 0
-      var t: Double = 0
-      while (i < arr.size) {
-        t += arr
-          .unsafeValueAt(i) //This is not strictly part of the benchmark, but done so that the JIT doensn't eliminate everything
-        i += 1
-      }
-      t
-    })
-
-  def timeUnsafeValueAt(reps: Int) = unsafeValueAtBench(reps, 1024 * 8, 1)
-  def timeUnsafeValueAtStride4(reps: Int) = unsafeValueAtBench(reps, 1024 * 8, 4)
-
+  
   def updateBench(reps: Int, size: Int, stride: Int) =
     runWith(reps, { randomArray(size, stride = stride) })(arr => {
       var i = 0
