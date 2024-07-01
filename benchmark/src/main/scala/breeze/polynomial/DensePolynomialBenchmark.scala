@@ -4,6 +4,7 @@ import breeze.benchmark._
 import breeze.linalg.BuildsRandomVectors
 import breeze.stats.distributions._
 
+import algebra.instances.all.doubleAlgebra
 import spire.math._
 import spire.math.poly._
 import breeze.macros._
