@@ -18,12 +18,15 @@
 
 package breeze.benchmark
 
-import com.google.caliper.{Runner, SimpleBenchmark}
+import breeze.stats.distributions.RandBasis
+import com.google.caliper.Benchmark
+import com.google.caliper.runner.CaliperMain
 
 /**
  * Extend this to create an actual benchmarking class.
  */
-trait BreezeBenchmark extends SimpleBenchmark {
+trait BreezeBenchmark {
+  implicit val randBasis: RandBasis = RandBasis.mt0
 
   /**
    * Sugar to run 'f' for 'reps' number of times.
@@ -68,6 +71,6 @@ trait BreezeBenchmark extends SimpleBenchmark {
 /**
  * Extend this to create a main object which will run 'cls' (a benchmark).
  */
-abstract class MyRunner(val cls: java.lang.Class[_ <: com.google.caliper.Benchmark]) {
-  def main(args: Array[String]): Unit = Runner.main(cls, args: _*)
+abstract class MyRunner(val cls: java.lang.Class[_]) {
+  def main(args: Array[String]): Unit = CaliperMain.main(cls, args)
 }

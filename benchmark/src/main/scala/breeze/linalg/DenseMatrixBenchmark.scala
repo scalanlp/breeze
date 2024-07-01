@@ -8,7 +8,7 @@ import breeze.macros._
 object DenseMatrixBenchmark extends MyRunner(classOf[DenseMatrixBenchmark])
 
 trait BuildsRandomMatrices {
-  private val uniform = Uniform(0, 1)
+  private val uniform = Uniform(0, 1)(RandBasis.mt0)
   def randomMatrix(m: Int, n: Int, transpose: Boolean = false): DenseMatrix[Double] = {
     if (!transpose) {
       DenseMatrix.rand[Double](m, n)
@@ -52,7 +52,7 @@ class DenseMatrixBenchmark extends BreezeBenchmark with BuildsRandomMatrices {
 //    sin(dm)
 //  }
 
-  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(2500, 2500)): Unit = { dm =>
+  def timeIntMatrixMultiply(reps: Int) = runWith(reps, randomIntMatrix(2500, 2500)) { dm =>
     dm * dm
   }
 }

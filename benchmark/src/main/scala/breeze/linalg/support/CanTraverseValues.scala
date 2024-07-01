@@ -23,7 +23,7 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
     sum(arr)
   })
 
-  def timePrimitiveSum(reps: Int) = runWith(reps, {randomArray(1024 * 8)}): Unit = { arr =>
+  def timePrimitiveSum(reps: Int) = runWith(reps, {randomArray(1024 * 8)}){ arr =>
     val d = arr.data
     var sum = 0.0
     import breeze.macros._
@@ -37,7 +37,7 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
     sum(arr(0 to -1 by 5))
   })
 
-  def timePrimitiveSumStrided(reps: Int) = runWith(reps, {randomArray(1024 * 8 * 5)}): Unit = { arr =>
+  def timePrimitiveSumStrided(reps: Int) = runWith(reps, {randomArray(1024 * 8 * 5)}){ arr =>
     val d = arr.data
     var sum = 0.0
     import breeze.macros._
@@ -49,15 +49,15 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
    */
 
   /*
-  def timeSumMatrix(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}): Unit = { arr =>
+  def timeSumMatrix(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}){ arr =>
     sum(arr)
   }
 
-  def timeSumMatrixRows(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}): Unit = { arr =>
+  def timeSumMatrixRows(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}){ arr =>
     sum(arr(*, ::))
   }
 
-  def timeSumMatrixRowsLoop(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}): Unit = { arr =>
+  def timeSumMatrixRowsLoop(reps: Int) = runWith(reps, {randomMatrix(1024, 40)}){ arr =>
     val result = DenseVector.zeros[Double](1024)
     for (i <- 0 until arr.cols) {
       result += arr(::, i)
@@ -65,11 +65,11 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
     result
   }
 
-  def timeSumMatrixCols(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}): Unit = { arr =>
+  def timeSumMatrixCols(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}){ arr =>
     sum(arr(::, *))
   }
 
-  def timeSumMatrixColsLoop(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}): Unit = { arr =>
+  def timeSumMatrixColsLoop(reps: Int) = runWith(reps, {randomMatrix(40, 1024)}){ arr =>
     val result = DenseVector.zeros[Double](1024)
     for (i <- 0 until arr.rows) {
       result += arr(i, ::).t
@@ -78,19 +78,19 @@ class CanTraverseValuesBenchmark extends BreezeBenchmark with BuildsRandomVector
   }
    */
 
-  def timeMaxMatrixCols(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }): Unit = { arr =>
+  def timeMaxMatrixCols(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }) { arr =>
     max(arr(::, *))
   }
 
-  def timeMaxMatrixRows(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }): Unit = { arr =>
+  def timeMaxMatrixRows(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }) { arr =>
     max(arr(*, ::))
   }
 
-  def timeMinMatrixCols(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }): Unit = { arr =>
+  def timeMinMatrixCols(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }) { arr =>
     min(arr(::, *))
   }
 
-  def timeMinMatrixRows(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }): Unit = { arr =>
+  def timeMinMatrixRows(reps: Int) = runWith(reps, { randomMatrix(40, 1024) }) { arr =>
     max(arr(*, ::))
   }
 
