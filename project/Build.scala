@@ -31,7 +31,7 @@ object Common {
       Resolver.sonatypeRepo("releases"),
       Resolver.typesafeRepo("releases")
     ),
-    testOptions in Test += Tests.Argument("-oDF"),
+    Test / testOptions += Tests.Argument("-oDF"),
 
     // test dependencies
     libraryDependencies ++= Seq(
@@ -63,7 +63,7 @@ object Common {
     },
 
     // stuff related to publishing
-    publishArtifact in Test := false,
+    Test / publishArtifact := false,
     pomIncludeRepository := { _ =>
       false
     },
@@ -73,7 +73,7 @@ object Common {
     publishTo := sonatypePublishTo.value,
     sonatypeProjectHosting := Some(GitHubHosting("scalanlp", "breeze", "David Hall", "david.lw.hall@gmail.com")),
 
-    unmanagedSourceDirectories in Compile ++= {
+    Compile / unmanagedSourceDirectories ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, 11|12)) => Seq(
           baseDirectory.value / "src" / "main" / "scala_2.11_2.12",
