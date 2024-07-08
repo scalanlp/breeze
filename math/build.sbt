@@ -29,7 +29,7 @@ libraryDependencies += {
 }
 
 // see https://github.com/typesafehub/scalalogging/issues/23
-testOptions in Test += Tests.Setup(classLoader =>
+Test / testOptions += Tests.Setup(classLoader =>
   try {
     classLoader
       .loadClass("org.slf4j.LoggerFactory")
@@ -39,9 +39,6 @@ testOptions in Test += Tests.Setup(classLoader =>
     case _: Exception =>
 })
 
-fork in Test := true
+Test / fork := true
 
 javaOptions := Seq("-Xmx4g", "-Xss10m")
-
-
-
