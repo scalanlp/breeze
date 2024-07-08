@@ -184,7 +184,7 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
         low = c
         if (t == bound) {
           logger.debug(
-            "Reach bound, satisfy sufficent decrease condition," +
+            "Reach bound, satisfy sufficient decrease condition," +
               " but not curvature condition satisfied.")
           return bound
         } else {
@@ -192,7 +192,7 @@ class StrongWolfeLineSearch(maxZoomIter: Int, maxLineSearchIter: Int) extends Cu
           if (t > bound) {
             t = bound
           }
-          logger.debug("Sufficent Decrease condition but not curvature condition satisfied. Increased t to: " + t)
+          logger.debug("Sufficient Decrease condition but not curvature condition satisfied. Increased t to: " + t)
         }
       }
     }

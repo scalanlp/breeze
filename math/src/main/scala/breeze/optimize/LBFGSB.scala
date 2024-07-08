@@ -22,7 +22,7 @@ import breeze.util.SerializableLogging
 import breeze.macros._
 
 /**
- * This algorithm is refered the paper
+ * This algorithm is referred the paper
  * "A LIMITED MEMOR Y ALGORITHM F OR BOUND CONSTRAINED OPTIMIZA TION" written by
  * Richard H.Byrd   Peihuang Lu   Jorge Nocedal  and Ciyou Zhu
  * Created by fanming.chen on 2015/3/7 0007.

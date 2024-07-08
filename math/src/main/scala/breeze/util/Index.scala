@@ -63,7 +63,7 @@ trait Index[T] extends Iterable[T] with (T => Int) with Serializable {
   def indexOf(t: T): Int =
     apply(t)
 
-  /** Returns the indexed items along with their indicies */
+  /** Returns the indexed items along with their indices */
   def pairs: Iterator[(T, Int)]
 
   /**
@@ -415,7 +415,7 @@ object EnumerationIndex {
      */
     def unapply(i: Int): Option[t.Value] = Some[t.Value](t(i))
 
-    /** Returns the indexed items along with their indicies */
+    /** Returns the indexed items along with their indices */
     def pairs: Iterator[(t.Value, Int)] = for (v <- t.values.iterator) yield v -> v.id
 
     def iterator: Iterator[t.Value] = t.values.iterator

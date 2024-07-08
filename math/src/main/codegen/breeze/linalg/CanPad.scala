@@ -50,7 +50,7 @@ object CanPadRight {
         v.length match {
           case optDim.n1 => v.copy
           case num: Int if num < optDim.n1 => DenseVector(v.toArray ++ Array.tabulate(optDim.n1 - num)(p => padValue))
-          //ToDo 4: DenseVector.vertcat does not work due to implict problems
+          //ToDo 4: DenseVector.vertcat does not work due to implicit problems
           //case num: Int if num < optDim.n1 => DenseVector.vertcat( v, DenseVector.tabulate(optDim.n1 - num)(p => padValue) )
           case num: Int if optDim.n1 < num => v(0 until optDim.n1).copy //function should return a copy
           case _ => throw new IllegalArgumentException("(n) specification incorrect: " + optDim.toString + " !")

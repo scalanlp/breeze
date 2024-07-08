@@ -3,7 +3,7 @@ package breeze.linalg
 import scala.collection.immutable.IndexedSeq
 
 /**
- * Utility class that handles negative row/column indicies and OOB checking
+ * Utility class that handles negative row/column indices and OOB checking
  *
  * @author Michael Petnuch
  */
