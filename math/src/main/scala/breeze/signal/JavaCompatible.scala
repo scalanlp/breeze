@@ -18,8 +18,8 @@ object JavaCompatible {
   // <editor-fold defaultstate="collapsed" desc=" discrete Fourier transforms ">
 
   /**Returns the discrete fourier transform.
-   * Use fourierTrC instead for complex array imput.
-   * Use fourierTr2/2C instead for 2D Fourier tranform.
+   * Use fourierTrC instead for complex array input.
+   * Use fourierTr2/2C instead for 2D Fourier transform.
    *
    *
    * @return

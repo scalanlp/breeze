@@ -43,7 +43,7 @@ import spire.math.ULong
  * both positive and negative values of Int64 (this is compatible with + and -, for use as timestamps, for example,
  * but is of course not compatible with * and / operations)
  *
- * *implementation note: this class was not overriden from java.io.RandomAccessFile or implicitly "pimped," but instead
+ * *implementation note: this class was not overridden from java.io.RandomAccessFile or implicitly "pimped," but instead
  * passes through to java.io.RandomAccessFile. This is mainly because the java.io.RandomAccessFile.readXXX functions are
  * declared final, and cannot be overridden.
  */

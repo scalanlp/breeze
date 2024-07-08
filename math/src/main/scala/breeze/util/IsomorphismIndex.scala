@@ -16,7 +16,7 @@ class IsomorphismIndex[T, U](val innerIndex: Index[T])(implicit iso: Isomorphism
    */
   def unapply(i: Int): Option[U] = innerIndex.unapply(i).map(iso.forward)
 
-  /** Returns the indexed items along with their indicies */
+  /** Returns the indexed items along with their indices */
   def pairs: Iterator[(U, Int)] = innerIndex.pairs.map(pair => (iso.forward(pair._1), pair._2))
 
   def iterator: Iterator[U] = innerIndex.iterator.map(iso.forward)

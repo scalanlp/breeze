@@ -351,7 +351,7 @@ class DenseVectorTest extends AnyFunSuite with Checkers {
 
   }
 
-  test("Negation Tranpose") {
+  test("Negation Transpose") {
     val a1 = DenseVector(1.0, 2.0, 3.0)
     assert(-a1.t == DenseVector(-1.0, -2.0, -3.0).t)
 
@@ -456,7 +456,7 @@ class DenseVectorTest extends AnyFunSuite with Checkers {
     assert(dv === DenseVector(1, 1, 2, 3, 4, 5, 6, 7, 8, 8))
   }
 
-  test("clip tranpose") {
+  test("clip transpose") {
     val dv = DenseVector.range(0, 10)
     assert(clip(dv.t, 1, 8) === DenseVector(1, 1, 2, 3, 4, 5, 6, 7, 8, 8).t)
     clip.inPlace(dv.t, 1, 8)

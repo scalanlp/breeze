@@ -111,7 +111,7 @@ class DenseMatrixTest extends AnyFunSuite with Checkers with DoubleImplicits wit
   test("Sliced Transpose") {
     val m = DenseMatrix((0, 1, 2), (3, 4, 5))
 
-    // column of original looks same as row of tranpose
+    // column of original looks same as row of transpose
     val sm1 = m(::, 1)
     val smt1 = m.t(1, ::)
     assert(sm1.t === smt1)

@@ -171,7 +171,7 @@ object PaintScale {
   }
 
   //
-  // A large pallete of color literals from ProtoVis
+  // A large palette of color literals from ProtoVis
   //
   val aliceblue = Color.decode("#f0f8ff")
   val antiquewhite = Color.decode("#faebd7")
