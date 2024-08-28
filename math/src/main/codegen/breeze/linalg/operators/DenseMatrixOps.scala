@@ -301,9 +301,9 @@ trait DenseMatrixMultiplyOps extends DenseMatrixExpandedOps with DenseMatrixMult
 
       // if we have a weird stride...
       val a: DenseMatrix[Double] =
-        if (_a.majorStride < math.max(if (_a.isTranspose) _a.cols else _a.rows, 1)) _a.copy else _a
+        if (_a.majorStride > math.max(if (_a.isTranspose) _a.cols else _a.rows, 1)) _a.copy else _a
       val b: DenseMatrix[Double] =
-        if (_b.majorStride < math.max(if (_b.isTranspose) _b.cols else _b.rows, 1)) _b.copy else _b
+        if (_b.majorStride > math.max(if (_b.isTranspose) _b.cols else _b.rows, 1)) _b.copy else _b
 
       blas.dgemm(
         transposeString(a),

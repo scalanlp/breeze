@@ -846,6 +846,17 @@ class DenseMatrixTest extends AnyFunSuite with Checkers with DoubleImplicits wit
     assert(sm == sm.copy)
   }
 
+  test("#850 - transpose slice multiply bug") {
+    val Jɴ = DenseMatrix( (0.75,  -0.25), (-0.25,  0.75))
+    val matB = DenseMatrix(
+      (67.0, 33.0),
+      (69.0, 78.0),
+      (93.0, 57.0)
+    ).t
+    val B = matB(::, 1 until matB.cols)
+    Jɴ * B      // should not crash
+  }
+
 }
 
 trait MatrixTestUtils {
