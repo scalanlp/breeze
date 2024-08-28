@@ -1,3 +1,7 @@
+## Breeze is mostly retired at this point. 
+
+I (@dlwh) will review bug fix PRs and sometimes answer questions, but that's about all I can offer. If someone wants to take of the reins I'd be happy to hand it off.
+
 # Breeze [![Build Status](https://travis-ci.org/scalanlp/breeze.svg?branch=master)](https://travis-ci.org/scalanlp/breeze)
 
 Breeze is a library for numerical processing. It aims to be generic, clean, and powerful without sacrificing (much) efficiency.
