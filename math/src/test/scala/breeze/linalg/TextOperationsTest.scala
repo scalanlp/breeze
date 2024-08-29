@@ -7,9 +7,10 @@ import org.scalatest.funsuite.AnyFunSuite
  * Created by Luca Puggini: lucapuggio@gmail.com on 19/02/16.
  */
 class TextOperationsTest extends AnyFunSuite {
+  System.err.println(new File(".").getAbsolutePath)
   test("csvread and String2File methods") {
     // A csv file can be read both using the java File function and the toFile method of the string class
-    val file_path = if (new File(".").getAbsolutePath.endsWith("math/.")) {
+    val file_path = if (new File(".").getAbsolutePath.replace('\\', '/').endsWith("math/.")) {
       "src/test/resources/glass_data.txt"
     } else {
       "./math/src/test/resources/glass_data.txt"
