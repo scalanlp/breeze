@@ -159,6 +159,27 @@ class LinearAlgebraTest extends AnyFunSuite with Checkers with DoubleImplicits {
     matricesNearlyEqual(mi * m, eye)
   }
 
+  test("pinv test singular values cutoff doubles: #864") {
+    val m = DenseMatrix((0.1d, 0.1d, 0d), (0.1d, 0.1d, 0d), (0d, 0d, 0d))
+    val mi = pinv(m)
+    val expected = DenseMatrix((2.5d, 2.5d, 0d), (2.5d, 2.5d, 0d), (0d, 0d, 0d))
+    matricesNearlyEqual(mi, expected)
+  }
+
+  test("pinv test singular values cutoff floats: #864") {
+    // Cutoff needs to be to a more strict value than for Doubles
+    val m = DenseMatrix((0.1f, 0.1f, 0f), (0.1f, 0.1f, 0f), (0f, 0f, 0f))
+    val mi = pinv(m, 1e-7f)
+    val expected = DenseMatrix((2.5f, 2.5f, 0f), (2.5f, 2.5f, 0f), (0f, 0f, 0f))
+    matricesNearlyEqual_Float(mi, expected)
+  }
+
+  test("pinv test bad conditioned matrix, no cutoff: #864") {
+    val m = DenseMatrix((0.1d, 0.1d, 0d), (0.1d, 0.1d, 0d), (0d, 0d, 0d))
+    val mi = pinv(m, 0.0)
+    mi(0,0) should be > 1e10
+  }
+
   test("cross") {
     // specific example; with prime elements
     val (v1, v2, r) = (DenseVector(13, 3, 7), DenseVector(5, 11, 17), DenseVector(-26, -186, 128))
