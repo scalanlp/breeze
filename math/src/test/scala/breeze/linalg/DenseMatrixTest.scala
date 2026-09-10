@@ -857,6 +857,27 @@ class DenseMatrixTest extends AnyFunSuite with Checkers with DoubleImplicits wit
     Jɴ * B      // should not crash
   }
 
+  test("isContiguous is false for strided views") {
+    val m = DenseMatrix.tabulate(3, 3)((i, j) => (i * 3 + j).toDouble)
+    // v is strided (majorStride = 3 > rows = 2), but cols == majorStride used
+    // to make isContiguous return true, so ops gated on it flat-copied the
+    // parent's array
+    val v = m(0 until 2, ::)
+    assert(!v.isContiguous)
+    assert(v.toArray.toIndexedSeq == IndexedSeq(0.0, 3.0, 1.0, 4.0, 2.0, 5.0))
+
+    val dst = DenseMatrix.zeros[Double](3, 3)
+    dst(0 until 2, ::) := v
+    assert(dst === DenseMatrix((0.0, 1.0, 2.0), (3.0, 4.0, 5.0), (0.0, 0.0, 0.0)))
+
+    // compact matrices are contiguous whatever their shape
+    assert(DenseMatrix.zeros[Double](3, 2).isContiguous)
+    assert(DenseMatrix.zeros[Double](2, 3).isContiguous)
+
+    // a reversed full slice spans the whole array but with a negative stride
+    assert(!m(::, 2 to 0 by -1).isContiguous)
+  }
+
 }
 
 trait MatrixTestUtils {

@@ -322,7 +322,7 @@ final class DenseMatrix[@spec(Double, Int, Float, Long) V](
   private def footprint = majorSize * majorStride
 
   /** Returns true if this dense matrix takes up a contiguous segment of the array */
-  def isContiguous: Boolean = majorSize == majorStride
+  def isContiguous: Boolean = minorSize == majorStride
 
   /** Returns true if this dense matrix overlaps any content with the other matrix */
   private[linalg] def overlaps(other: DenseMatrix[V]): Boolean = (this.data eq other.data) && {
